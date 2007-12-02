@@ -14,6 +14,7 @@ sbindir=@sbindir@
 libdir=@libdir@
 includedir=${prefix}/include
 libexecdir=@libexecdir@
+datarootdir = @datarootdir@
 mandir=@mandir@
 mansubdir=@mansubdir@
 docdir=${prefix}/@docdir@
