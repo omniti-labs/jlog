@@ -31,6 +31,7 @@
  */
 
 #include <stdio.h>
+#include <pthread.h>
 
 #include "jlog_config.h"
 #include "jlog.h"
