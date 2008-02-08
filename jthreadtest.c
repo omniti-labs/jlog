@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <pthread.h>
+#include <unistd.h>
 
 #include "jlog_config.h"
 #include "jlog.h"

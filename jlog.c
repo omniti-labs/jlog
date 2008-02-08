@@ -70,6 +70,12 @@
 
 #include "jlog_config.h"
 #include "jlog_private.h"
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
 #if HAVE_DIRENT_H
 #include <dirent.h>
 #endif
@@ -81,6 +87,9 @@
 #endif
 #if HAVE_TIME_H
 #include <time.h>
+#endif
+#if HAVE_SYS_MMAN_H
+#include <sys/mman.h>
 #endif
 
 #define BUFFERED_INDICES 1024
@@ -104,7 +113,7 @@ int jlog_snprint_logid(char *b, int n, const jlog_id *id) {
 int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
 {
   jlog_message_header hdr;
-  char *this, *next, *afternext, *mmap_end;
+  char *this, *next, *afternext = NULL, *mmap_end;
   int i, invalid_count = 0;
   struct {
     off_t start, end;
@@ -247,12 +256,12 @@ int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log)
     i++;
     if (hdr.reserved != 0) {
       fprintf(stderr, "Message %d at [%ld] has invalid reserved value %u\n",
-              i, this - (char *)ctx->mmap_base, hdr.reserved);
+              i, (long int)(this - (char *)ctx->mmap_base), hdr.reserved);
       return 1;
     }
 
     fprintf(stderr, "Message %d at [%ld] of (%lu+%u)", i, 
-            this - (char *)ctx->mmap_base, sizeof(hdr), hdr.mlen);
+            (long int)(this - (char *)ctx->mmap_base), sizeof(hdr), hdr.mlen);
 
     next = this + sizeof(hdr) + hdr.mlen;
     if (next <= (char *)ctx->mmap_base) {
@@ -271,7 +280,8 @@ int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log)
     this = next;
   }
   if (this < mmap_end) {
-    fprintf(stderr, "%ld bytes of junk at the end\n", mmap_end - this);
+    fprintf(stderr, "%ld bytes of junk at the end\n",
+            (long int)(mmap_end - this));
     return 1;
   }
 

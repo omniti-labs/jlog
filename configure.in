@@ -43,7 +43,7 @@ AC_FUNC_STRFTIME
 # Checks for header files.
 AC_CHECK_HEADERS(sys/file.h sys/types.h dirent.h sys/param.h fcntl.h errno.h limits.h \
                  sys/resource.h pthread.h semaphore.h pwd.h stdio.h stdlib.h string.h \
-                 ctype.h unistd.h time.h sys/stat.h)
+                 ctype.h unistd.h time.h sys/stat.h sys/time.h unistd.h sys/mman.h)
 
 AC_CACHE_CHECK([for u_int type], ac_cv_have_u_int, [
 	AC_TRY_COMPILE(

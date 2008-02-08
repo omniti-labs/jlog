@@ -34,6 +34,9 @@
 #include "jlog_private.h"
 #include "getopt_long.h"
 #include <stdio.h>
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #if HAVE_ERRNO_H
 #include <errno.h>
 #endif
