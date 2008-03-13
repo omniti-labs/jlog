@@ -30,10 +30,10 @@ all:	libjlog.a jlogctl test
 test:	jthreadtest
 
 jlogctl:	libjlog.a jlogctl.o
-	$(CC) $(CFLAGS) -o jlogctl jlogctl.o libjlog.a $(LIBS)
+	$(CC) $(CFLAGS) -o jlogctl jlogctl.o libjlog.a $(LDFLAGS) $(LIBS)
 
 jthreadtest:	libjlog.a jthreadtest.o
-	$(CC) $(CFLAGS) -o jthreadtest jthreadtest.o libjlog.a $(LIBS)
+	$(CC) $(CFLAGS) -o jthreadtest jthreadtest.o libjlog.a $(LDFLAGS) $(LIBS)
 
 libjlog.a:	$(LIBOBJS)
 	$(AR) cq libjlog.a $(LIBOBJS)
