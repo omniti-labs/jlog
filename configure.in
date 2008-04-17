@@ -3,6 +3,7 @@ AC_CONFIG_HEADER(jlog_config.h)
 
 AC_PROG_CC
 AC_C_INLINE
+AC_CANONICAL_HOST
 AC_C_BIGENDIAN
 AC_PROG_CPP
 AC_PROG_RANLIB
@@ -196,6 +197,32 @@ mansubdir="man"
 AC_SUBST(docdir)
 AC_SUBST(mansubdir)
 
+AC_CHECK_LIB(pthread, pthread_create)
+
+case $host in
+  *-*-solaris*)
+    RLDFLAG="-R"
+    ;;
+  *)
+    RLDFLAG="-Wl,--rpath="
+    ;;
+esac
+AC_SUBST(RLDFLAG)
+
+case $host in
+  *linux*)
+    case `uname -a` in
+      x86_64)
+        CFLAGS="$CFLAGS -fPIC"
+        ;;
+    esac
+    CFLAGS="$CFLAGS -shared"
+    SHLD="$CC -shared -rdynamic"
+    ;;
+esac
+AC_SUBST(SHLD)
+
 AC_OUTPUT([
 Makefile
+perl/Makefile.PL
 ])

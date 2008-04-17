@@ -1,3 +1,4 @@
+# vim:ts=2:sw=2:noet:
 CC=@CC@
 CPPFLAGS=@CPPFLAGS@
 CFLAGS=@CFLAGS@
@@ -6,6 +7,7 @@ AR=@AR@
 RANLIB=@RANLIB@
 LIBS=@LIBS@
 INSTALL=@INSTALL@
+SHLD=@SHLD@
 
 prefix=@prefix@
 exec_prefix=@exec_prefix@
@@ -25,7 +27,7 @@ top_srcdir=@top_srcdir@
 LIBOBJS= \
 	jlog.o jlog_hash.o jlog_io.o
 
-all:	libjlog.a jlogctl test
+all:	libjlog.so libjlog.a jlogctl test
 
 test:	jthreadtest
 
@@ -34,6 +36,9 @@ jlogctl:	libjlog.a jlogctl.o
 
 jthreadtest:	libjlog.a jthreadtest.o
 	$(CC) $(CFLAGS) -o jthreadtest jthreadtest.o libjlog.a $(LDFLAGS) $(LIBS)
+
+libjlog.so: $(LIBOBJS)
+	$(SHLD) -o libjlog.so $(LIBOBJS) $(LIBS)
 
 libjlog.a:	$(LIBOBJS)
 	$(AR) cq libjlog.a $(LIBOBJS)
@@ -52,3 +57,4 @@ install:
 
 clean:
 	rm -f *.o libjlog.a jthreadtest
+	-if test -f perl/Makefile ; then cd perl ; make clean ; fi
