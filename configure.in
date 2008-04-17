@@ -211,8 +211,8 @@ AC_SUBST(RLDFLAG)
 
 case $host in
   *linux*)
-    case `uname -a` in
-      x86_64)
+    case `uname -m` in
+      *x86_64*)
         CFLAGS="$CFLAGS -fPIC"
         ;;
     esac
