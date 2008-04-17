@@ -8,6 +8,7 @@ RANLIB=@RANLIB@
 LIBS=@LIBS@
 INSTALL=@INSTALL@
 SHLD=@SHLD@
+PERL=@PERL@
 
 prefix=@prefix@
 exec_prefix=@exec_prefix@
@@ -27,9 +28,13 @@ top_srcdir=@top_srcdir@
 LIBOBJS= \
 	jlog.o jlog_hash.o jlog_io.o
 
-all:	libjlog.so libjlog.a jlogctl test
+all:	libjlog.so libjlog.a jlogctl test jlogperl
 
 test:	jthreadtest
+
+jlogperl:
+	cd perl ; $(PERL) Makefile.PL
+	cd perl ; make
 
 jlogctl:	libjlog.a jlogctl.o
 	$(CC) $(CFLAGS) -o jlogctl jlogctl.o libjlog.a $(LDFLAGS) $(LIBS)
@@ -53,7 +58,9 @@ install:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(includedir)
 	$(INSTALL) -m 0755 jlogctl $(DESTDIR)$(bindir)/jlogctl
 	$(INSTALL) -m 0755 libjlog.a $(DESTDIR)$(libdir)/libjlog.a
+	$(INSTALL) -m 0755 libjlog.so $(DESTDIR)$(libdir)/libjlog.so
 	$(INSTALL) -m 0644 jlog.h $(DESTDIR)$(includedir)/jlog.h
+	cd perl ; make install DESTDIR=$(DESTDIR)
 
 clean:
 	rm -f *.o libjlog.a jthreadtest
