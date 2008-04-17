@@ -13,7 +13,7 @@ WriteMakefile(
     PREREQ_PM         => {},
     ($] >= 5.005 ? 
       (ABSTRACT_FROM  => 'lib/JLog.pm',
-       AUTHOR         => 'George Schlossnagle <george@int.omniti.net>') : ()),
+       AUTHOR         => 'George Schlossnagle <george@omniti.com>') : ()),
     LDDLFLAGS         => "$Config{lddlflags} @RLDFLAG@@libdir@",
     LIBS              => ["-L@libdir@ -L.. -ljlog"],
     INC               => '-I.. -I. -I../..',

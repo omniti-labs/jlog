@@ -7,13 +7,25 @@ PHP_ARG_WITH(jlog, jlog,[  --with-jlog[=DIR]    With jlog support])
 
 if test "$PHP_JLOG" != "no"; then
   if test "$PHP_JLOG" == "yes"; then
-    PHP_JLOG="/opt/ecelerity"
+	if test -d /opt/msys ; then
+      PHP_JLOG="/opt/msys/jlog"
+	else
+      PHP_JLOG="/opt/ecelerity"
+    fi
   fi
   export CPPFLAGS="$CPPFLAGS $INCLUDES -DHAVE_JLOG"
   
   PHP_ADD_INCLUDE(..)
   PHP_ADD_INCLUDE(../..)
   PHP_ADD_INCLUDE(.)
+  PHP_ADD_INCLUDE($PHP_JLOG/include)
+  case $PHP_JLOG in
+    *ecelerity*)
+      dnl has architecture specific include dir
+      archdir=`uname -p`
+  		PHP_ADD_INCLUDE($PHP_JLOG/include/$archdir)
+      ;;
+  esac
   export OLD_CPPFLAGS="$CPPFLAGS"
   export CPPFLAGS="$CPPFLAGS $INCLUDES -DHAVE_JLOG"
   AC_CHECK_HEADER([jlog.h], [], AC_MSG_ERROR('jlog.h' header not found))

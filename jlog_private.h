@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007, OmniTI Computer Consulting, Inc.
+ * Copyright (c) 2005-2008, Message Systems, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,7 +12,7 @@
  *      copyright notice, this list of conditions and the following
  *      disclaimer in the documentation and/or other materials provided
  *      with the distribution.
- *    * Neither the name OmniTI Computer Consulting, Inc. nor the names
+ *    * Neither the name Message Systems, Inc. nor the names
  *      of its contributors may be used to endorse or promote products
  *      derived from this software without specific prior written
  *      permission.

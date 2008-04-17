@@ -185,6 +185,6 @@ JLog::Writer
 
 =head1 COPYRIGHT
 
-Copyright (C) 2006 by OmniTI, Inc.
+Copyright (C) 2006-2008 by Message Systems, Inc.
 
 =cut

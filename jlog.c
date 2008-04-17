@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005-2007, OmniTI Computer Consulting, Inc.
+ * Copyright (c) 2005-2008, Message Systems, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -12,7 +12,7 @@
  *      copyright notice, this list of conditions and the following
  *      disclaimer in the documentation and/or other materials provided
  *      with the distribution.
- *    * Neither the name OmniTI Computer Consulting, Inc. nor the names
+ *    * Neither the name Message Systems, Inc. nor the names
  *      of its contributors may be used to endorse or promote products
  *      derived from this software without specific prior written
  *      permission.
@@ -149,10 +149,10 @@ int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
     SYS_FAIL(JLOG_ERR_FILE_READ);
 
   orig_len = ctx->mmap_len;
-  mmap_end = ctx->mmap_base + ctx->mmap_len;
+  mmap_end = (char*)ctx->mmap_base + ctx->mmap_len;
   /* these values will cause us to fall right into the error clause and
    * start searching for a valid header from offset 0 */
-  this = ctx->mmap_base - sizeof(hdr);
+  this = (char*)ctx->mmap_base - sizeof(hdr);
   hdr.reserved = 0;
   hdr.mlen = 0;
 
@@ -248,7 +248,7 @@ int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log)
   if (__jlog_mmap_reader(ctx, log) != 0)
     SYS_FAIL(JLOG_ERR_FILE_READ);
 
-  mmap_end = ctx->mmap_base + ctx->mmap_len;
+  mmap_end = (char*)ctx->mmap_base + ctx->mmap_len;
   this = ctx->mmap_base;
   i = 0;
   while (this + sizeof(hdr) <= mmap_end) {
@@ -859,6 +859,8 @@ restart:
 
     if (!jlog_file_pread(ctx->data, &logmhdr, sizeof(logmhdr), data_off))
       SYS_FAIL(JLOG_ERR_FILE_READ);
+    if (logmhdr.reserved != 0)
+      SYS_FAIL(JLOG_ERR_FILE_CORRUPT);
     if ((next_off += sizeof(logmhdr) + logmhdr.mlen) > data_len)
       break;
 
