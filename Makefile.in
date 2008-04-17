@@ -9,6 +9,7 @@ LIBS=@LIBS@
 INSTALL=@INSTALL@
 SHLD=@SHLD@
 PERL=@PERL@
+SHCFLAGS=@SHCFLAGS@
 
 prefix=@prefix@
 exec_prefix=@exec_prefix@
@@ -25,10 +26,18 @@ sysconfdir=@sysconfdir@
 srcdir=@srcdir@
 top_srcdir=@top_srcdir@
 
-LIBOBJS= \
+AOBJS= \
 	jlog.o jlog_hash.o jlog_io.o
+SOOBJS= \
+	jlog.lo jlog_hash.lo jlog_io.lo
 
 all:	libjlog.so libjlog.a jlogctl test jlogperl
+
+.c.o:
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
+
+.c.lo:
+	$(CC) $(CPPFLAGS) $(SHCFLAGS) -c $< -o $@
 
 test:	jthreadtest
 
@@ -36,21 +45,18 @@ jlogperl:
 	cd perl ; $(PERL) Makefile.PL
 	cd perl ; make
 
-jlogctl:	libjlog.a jlogctl.o
-	$(CC) $(CFLAGS) -o jlogctl jlogctl.o libjlog.a $(LDFLAGS) $(LIBS)
+jlogctl:	libjlog.a jlogctl.o getopt_long.o
+	$(CC) $(CFLAGS) -o jlogctl jlogctl.o getopt_long.o libjlog.a $(LDFLAGS) $(LIBS)
 
-jthreadtest:	libjlog.a jthreadtest.o
-	$(CC) $(CFLAGS) -o jthreadtest jthreadtest.o libjlog.a $(LDFLAGS) $(LIBS)
+jthreadtest:	libjlog.a jthreadtest.o getopt_long.o
+	$(CC) $(CFLAGS) -o jthreadtest jthreadtest.o getopt_long.o libjlog.a $(LDFLAGS) $(LIBS)
 
-libjlog.so: $(LIBOBJS)
-	$(SHLD) -o libjlog.so $(LIBOBJS) $(LIBS)
+libjlog.so: $(SOOBJS)
+	$(SHLD) -o libjlog.so $(SOOBJS) $(LIBS)
 
-libjlog.a:	$(LIBOBJS)
-	$(AR) cq libjlog.a $(LIBOBJS)
+libjlog.a:	$(AOBJS)
+	$(AR) cq libjlog.a $(AOBJS)
 	$(RANLIB) libjlog.a
-
-.c.o:
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
 
 install:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(bindir)
@@ -63,5 +69,7 @@ install:
 	cd perl ; make install DESTDIR=$(DESTDIR)
 
 clean:
-	rm -f *.o libjlog.a jthreadtest
+	rm -f *.o *.lo *.so *.a jthreadtest
 	-if test -f perl/Makefile ; then cd perl ; make clean ; fi
+
+.SUFFIXES: .c .o .lo

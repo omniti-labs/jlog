@@ -213,14 +213,15 @@ case $host in
   *linux*)
     case `uname -m` in
       *x86_64*)
-        CFLAGS="$CFLAGS -fPIC"
+        SHCFLAGS="$SHCFLAGS -fPIC"
         ;;
     esac
-    CFLAGS="$CFLAGS -shared"
+    SHCFLAGS="$SHCFLAGS -shared"
     SHLD="$CC -shared -rdynamic"
     ;;
 esac
 AC_SUBST(SHLD)
+AC_SUBST(SHCFLAGS)
 
 AC_OUTPUT([
 Makefile
