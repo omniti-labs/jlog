@@ -66,7 +66,7 @@ install:
 	$(INSTALL) -m 0755 libjlog.a $(DESTDIR)$(libdir)/libjlog.a
 	$(INSTALL) -m 0755 libjlog.so $(DESTDIR)$(libdir)/libjlog.so
 	$(INSTALL) -m 0644 jlog.h $(DESTDIR)$(includedir)/jlog.h
-	cd perl ; make install DESTDIR=$(DESTDIR)
+	cd perl ; make install DESTDIR=$(DESTDIR) INSTALLDIRS=vendor
 
 clean:
 	rm -f *.o *.lo *.so *.a jthreadtest
