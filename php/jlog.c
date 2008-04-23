@@ -33,6 +33,7 @@
 #include "php.h"
 #include "php_ini.h"
 #include "php_jlog.h"
+#include <fcntl.h>
 
 #if HAVE_JLOG
 
