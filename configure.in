@@ -1,3 +1,4 @@
+dnl vim:ts=2:sw=2:et:
 AC_INIT(jlog.c)
 AC_CONFIG_HEADER(jlog_config.h)
 
@@ -210,6 +211,10 @@ esac
 AC_SUBST(RLDFLAG)
 
 case $host in
+  *solaris*)
+    SHCFLAGS="$SHCFLAGS -KPIC"
+    SHLD="$CC -G"
+    ;;
   *linux*)
     case `uname -m` in
       *x86_64*)
@@ -218,6 +223,10 @@ case $host in
     esac
     SHCFLAGS="$SHCFLAGS -shared"
     SHLD="$CC -shared -rdynamic"
+    ;;
+  *)
+    AC_MSG_ERROR(need to handle this case)
+    exit 1
     ;;
 esac
 AC_SUBST(SHLD)
