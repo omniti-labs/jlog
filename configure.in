@@ -210,6 +210,7 @@ case $host in
 esac
 AC_SUBST(RLDFLAG)
 
+DOTSO=so
 case $host in
   *solaris*)
     SHCFLAGS="$SHCFLAGS -KPIC"
@@ -224,11 +225,18 @@ case $host in
     SHCFLAGS="$SHCFLAGS -shared"
     SHLD="$CC -shared -rdynamic"
     ;;
+  *darwin*)
+    RLDFLAG="-R"
+    DOTSO=dylib
+    SHCFLAGS="$CFLAGS"
+    SHLD="$CC -dynamiclib -single_module -undefined dynamic_lookup -install_name \$(libdir)/\$@"
+    ;;
   *)
     AC_MSG_ERROR(need to handle this case)
     exit 1
     ;;
 esac
+AC_SUBST(DOTSO)
 AC_SUBST(SHLD)
 AC_SUBST(SHCFLAGS)
 
