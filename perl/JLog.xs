@@ -224,18 +224,31 @@ SV *JLOG_W_open(my_obj)
   OUTPUT:
     RETVAL
 
-SV *JLOG_W_write(my_obj, buffer_sv)
+SV *JLOG_W_write(my_obj, buffer_sv, ...)
   JLog_Writer my_obj;
   SV *buffer_sv;
   CODE:
     {
       char *buffer;
+      int ts = 0;
+      jlog_message m;
+      struct timeval t;
       STRLEN buffer_len;
+
       if(!my_obj || !my_obj->ctx) { 
         croak("invalid jlog context");
       }
+      if(items > 2) {
+        ts = (time_t) SvIV(ST(2));
+      }
+
       buffer = SvPVx(buffer_sv, buffer_len);
-      if(jlog_ctx_write(my_obj->ctx, buffer, buffer_len) < 0) {
+      m.mess = buffer;
+      m.mess_len = buffer_len;
+      t.tv_sec = ts;
+      t.tv_usec = 0;
+
+      if(jlog_ctx_write_message(my_obj->ctx, &m, ts?&t:NULL) < 0) {
         RETVAL = &PL_sv_no;
       } else {
         RETVAL = &PL_sv_yes;

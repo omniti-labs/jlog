@@ -120,7 +120,7 @@ Opens the JLog for writing.
 
 =head3 write
 
-  $w->write( $message );
+  $w->write( $message [, $ts ] );
 
 Write a message to the JLog.
 
@@ -129,6 +129,10 @@ Write a message to the JLog.
 =item $message
 
 The message to write.
+
+=item $ts 
+
+The timestamp (in epoch seconds) to set the record timestamp to.  The default is time().
 
 =back
 
