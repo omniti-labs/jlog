@@ -213,7 +213,16 @@ AC_SUBST(RLDFLAG)
 DOTSO=so
 case $host in
   *solaris*)
-    SHCFLAGS="$SHCFLAGS -KPIC"
+    if test "x$ac_compiler_gnu" = "xyes" ; then
+       # GCC
+       SHCFLAGS="$SHCFLAGS -fPIC -pthreads"
+       CFLAGS="$CFLAGS -pthreads"
+    else
+       # Sun C compiler
+       SHCFLAGS="$SHCFLAGS -KPIC -mt"
+       CFLAGS="$CFLAGS -mt"
+       LIBS="-mt $LIBS"
+    fi
     SHLD="$CC -G"
     ;;
   *linux*)
