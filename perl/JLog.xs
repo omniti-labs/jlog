@@ -10,6 +10,7 @@ typedef struct {
   char *path;
   jlog_id start;
   jlog_id last;
+  jlog_id prev;
   jlog_id end;
   int auto_checkpoint;
 } jlog_obj;
@@ -333,6 +334,7 @@ SV * JLOG_R_read(my_obj)
         my_obj->end = epoch;
       } else {
         /* update last */
+        my_obj->prev = my_obj->last;
         my_obj->last = cur;
         /* if we've reaached the end, clear interval so we'll re-read it */
         if(!memcmp(&my_obj->last, &my_obj->end, sizeof(jlog_id))) {
@@ -343,6 +345,19 @@ SV * JLOG_R_read(my_obj)
       RETVAL = newSVpv(message.mess, message.mess_len);
 end:
       ;
+    }
+  OUTPUT:
+    RETVAL
+
+SV *JLOG_R_rewind(my_obj)
+  JLog_Reader my_obj;
+  CODE:
+    {
+      if(!my_obj || !my_obj->ctx) { 
+        croak("invalid jlog context");
+      }
+      my_obj->last = my_obj->prev;
+      RETVAL = newSVsv(ST(0));
     }
   OUTPUT:
     RETVAL
