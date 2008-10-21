@@ -197,6 +197,31 @@ void JLOG_close(my_obj)
       my_obj->ctx = NULL;
     }
 
+SV* JLOG_inspect(my_obj)
+  JLog my_obj;
+  CODE:
+    {
+      HV *rh;
+      char start[20], last[20], prev[20], end[20];
+      rh = (HV *)sv_2mortal((SV *)newHV());
+      jlog_snprint_logid(start, sizeof(start), &my_obj->start);
+      hv_store(rh, "start", sizeof("start") - 1, newSVpv(start, 0), 0);
+
+      jlog_snprint_logid(last, sizeof(last), &my_obj->last);
+      hv_store(rh, "last", sizeof("last") - 1, newSVpv(last, 0), 0);
+
+      jlog_snprint_logid(prev, sizeof(prev), &my_obj->prev);
+      hv_store(rh, "prev", sizeof("prev") - 1, newSVpv(prev, 0), 0);
+
+      jlog_snprint_logid(end, sizeof(end), &my_obj->end);
+      hv_store(rh, "end", sizeof("end") - 1, newSVpv(end, 0), 0);
+
+      hv_store(rh, "path", sizeof("path") - 1, newSVpv(my_obj->path, 0), 0);
+      RETVAL = newRV((SV *)rh);
+    }
+  OUTPUT:
+    RETVAL
+
 void JLOG_DESTROY(my_obj)
   JLog my_obj;
   CODE:
@@ -307,15 +332,14 @@ SV * JLOG_R_read(my_obj)
         cur = my_obj->start;
       } else {
         /* if we've already read the end, return; otherwise advance */
-        if (!memcmp(&my_obj->last, &my_obj->end, sizeof(jlog_id))) {
+        cur = my_obj->last;
+        if(!memcmp(&my_obj->prev, &my_obj->end, sizeof(jlog_id))) {
           my_obj->start = epoch;
           my_obj->end = epoch;
           RETVAL = &PL_sv_undef;
           goto end;
-        } else {
-          cur = my_obj->last;
-          JLOG_ID_ADVANCE(&cur);
         }
+        jlog_ctx_advance_id(my_obj->ctx, &my_obj->last, &cur, &my_obj->end);
       }
 
       if(jlog_ctx_read_message(my_obj->ctx, &cur, &message) != 0) {
@@ -337,10 +361,6 @@ SV * JLOG_R_read(my_obj)
         my_obj->prev = my_obj->last;
         my_obj->last = cur;
         /* if we've reaached the end, clear interval so we'll re-read it */
-        if(!memcmp(&my_obj->last, &my_obj->end, sizeof(jlog_id))) {
-          my_obj->start = epoch;
-          my_obj->end = epoch;
-        }
       }
       RETVAL = newSVpv(message.mess, message.mess_len);
 end:

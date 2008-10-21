@@ -1442,4 +1442,20 @@ int jlog_ctx_last_log_id(jlog_ctx *ctx, jlog_id *id) {
   return -1;
 }
 
+int jlog_ctx_advance_id(jlog_ctx *ctx, jlog_id *cur, 
+                        jlog_id *start, jlog_id *finish)
+{
+  int rv;
+  if(memcmp(cur, finish, sizeof(jlog_id))) {
+    start->marker++;
+  } else {
+    if((rv = __jlog_find_first_log_after(ctx, cur, start, finish)) != 0) {
+      return rv;
+    }
+    if(cur->log != start->log) start->marker = 1;
+    else start->marker = cur->marker;
+  }
+  return 0;
+}
+
 /* vim:se ts=2 sw=2 et: */

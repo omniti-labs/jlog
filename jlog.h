@@ -150,5 +150,8 @@ JLOG_API(int)       jlog_snprint_logid(char *buff, int n, const jlog_id *checkpo
 
 JLOG_API(int)       __jlog_pending_readers(jlog_ctx *ctx, u_int32_t log);
 JLOG_API(int)       jlog_ctx_last_log_id(jlog_ctx *ctx, jlog_id *id);
+JLOG_API(int)       jlog_ctx_advance_id(jlog_ctx *ctx, jlog_id *cur, 
+                                        jlog_id *start, jlog_id *finish);
+
 
 #endif
