@@ -13,6 +13,7 @@ typedef struct {
   jlog_id prev;
   jlog_id end;
   int auto_checkpoint;
+  int error;
 } jlog_obj;
 
 typedef jlog_obj * JLog;
@@ -316,8 +317,9 @@ SV * JLOG_R_read(my_obj)
         croak("invalid jlog context");
       }
       /* if start is unset, we need to read the interval (again) */
-      if(!memcmp(&my_obj->start, &epoch, sizeof(jlog_id))) 
+      if(my_obj->error || !memcmp(&my_obj->start, &epoch, sizeof(jlog_id))) 
       {
+        my_obj->error = 0;
         cnt = jlog_ctx_read_interval(my_obj->ctx, &my_obj->start, &my_obj->end);
         if(cnt == -1) SYS_CROAK("jlog_ctx_read_interval failed");
         if(cnt == 0) {
@@ -340,13 +342,16 @@ SV * JLOG_R_read(my_obj)
           goto end;
         }
         jlog_ctx_advance_id(my_obj->ctx, &my_obj->last, &cur, &my_obj->end);
+        if(!memcmp(&my_obj->last, &cur, sizeof(jlog_id))) {
+	  my_obj->start = epoch;
+	  my_obj->end = epoch;
+	  RETVAL = &PL_sv_undef;
+	  goto end;
+        }
       }
-
       if(jlog_ctx_read_message(my_obj->ctx, &cur, &message) != 0) {
         /* read failed; croak, but recover if the read is retried */
-        my_obj->start = epoch;
-        my_obj->last = epoch;
-        my_obj->end = epoch;
+	my_obj->error = 1;
         SYS_CROAK("read failed");
       }
       if(my_obj->auto_checkpoint) {
@@ -354,6 +359,7 @@ SV * JLOG_R_read(my_obj)
           SYS_CROAK("checkpoint failed");
         /* we have to re-read the interval after a checkpoint */
         my_obj->last = epoch;
+        my_obj->prev = epoch;
         my_obj->start = epoch;
         my_obj->end = epoch;
       } else {
