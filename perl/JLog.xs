@@ -321,13 +321,13 @@ SV * JLOG_R_read(my_obj)
       {
         my_obj->error = 0;
         cnt = jlog_ctx_read_interval(my_obj->ctx, &my_obj->start, &my_obj->end);
-        if(cnt == -1) SYS_CROAK("jlog_ctx_read_interval failed");
-        if(cnt == 0) {
+        if(cnt == 0 || (cnt == -1 && jlog_ctx_err(my_obj->ctx) == JLOG_ERR_FILE_OPEN)) {
           my_obj->start = epoch;
           my_obj->end = epoch;
           RETVAL = &PL_sv_undef;
           goto end;
         }
+        else if(cnt == -1) SYS_CROAK("jlog_ctx_read_interval failed");
       }
       /* if last is unset, start at the beginning */
       if(!memcmp(&my_obj->last, &epoch, sizeof(jlog_id))) {
@@ -350,6 +350,12 @@ SV * JLOG_R_read(my_obj)
         }
       }
       if(jlog_ctx_read_message(my_obj->ctx, &cur, &message) != 0) {
+        if(jlog_ctx_err(my_obj->ctx) == JLOG_ERR_FILE_OPEN) {
+          my_obj->start = epoch;
+          my_obj->end = epoch;
+          RETVAL = &PL_sv_undef;
+          goto end;
+	}
         /* read failed; croak, but recover if the read is retried */
 	my_obj->error = 1;
         SYS_CROAK("read failed");
