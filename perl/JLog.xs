@@ -351,8 +351,7 @@ SV * JLOG_R_read(my_obj)
       }
       if(jlog_ctx_read_message(my_obj->ctx, &cur, &message) != 0) {
         if(jlog_ctx_err(my_obj->ctx) == JLOG_ERR_FILE_OPEN) {
-          my_obj->start = epoch;
-          my_obj->end = epoch;
+	  my_obj->error = 1;
           RETVAL = &PL_sv_undef;
           goto end;
 	}
