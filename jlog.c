@@ -1281,11 +1281,29 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
  attempt:
   if(__jlog_resync_index(ctx, start->log, &last, &closed) != 0) {
     if(ctx->last_error == JLOG_ERR_FILE_OPEN &&
-       ctx->last_errno == ENOENT) {
+        ctx->last_errno == ENOENT) {
+      char file[MAXPATHLEN];
+      int ferr;
+      struct stat sb = {0};
+
+      STRSETDATAFILE(ctx, file, start->log + 1);
+      while((ferr = stat(file, &sb)) == -1 && errno == EINTR);
       /* That file doesn't exist... bad, but we can fake a recovery by
          advancing the next file that does exist */
       ctx->last_error = JLOG_ERR_SUCCESS;
-      if(start->log >= ctx->storage.log) {
+      if(start->log >= ctx->storage.log || ferr != 0 || sb.st_size == 0) {
+        /* We don't advance past where people are writing */
+        memcpy(finish, start, sizeof(*start));
+        return 0;
+      }
+      if(__jlog_resync_index(ctx, start->log + 1, &last, &closed) != 0) {
+        /* We don't advance past where people are writing */
+        memcpy(finish, start, sizeof(*start));
+        return 0;
+      }
+      strcat(file, INDEX_EXT);
+      while((ferr = stat(file, &sb)) == -1 && errno == EINTR);
+      if(ferr != 0 || sb.st_size == 0) {
         /* We don't advance past where people are writing */
         memcpy(finish, start, sizeof(*start));
         return 0;
@@ -1302,13 +1320,25 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
     memcpy(start, &last, sizeof(*start));
 
   if(!memcmp(start, &last, sizeof(last)) && closed) {
-    /* the chkpt is the last of the index and the index is closed...
-       next please */
-#ifdef DEBUG
-    fprintf(stderr, "checkpoint at end of file... advancing [%08x]\n",
-            start->log+1);
-#endif
-    if(start->log >= ctx->storage.log) {
+    char file[MAXPATHLEN];
+    int ferr;
+    struct stat sb = {0};
+
+    STRSETDATAFILE(ctx, file, start->log + 1);
+    while((ferr = stat(file, &sb)) == -1 && errno == EINTR);
+    if(start->log >= ctx->storage.log || ferr != 0 || sb.st_size == 0) {
+      /* We don't advance past where people are writing */
+      memcpy(finish, start, sizeof(*start));
+      return 0;
+    }
+    if(__jlog_resync_index(ctx, start->log + 1, &last, &closed) != 0) {
+      /* We don't advance past where people are writing */
+      memcpy(finish, start, sizeof(*start));
+      return 0;
+    }
+    strcat(file, INDEX_EXT);
+    while((ferr = stat(file, &sb)) == -1 && errno == EINTR);
+    if(ferr != 0 || sb.st_size == 0) {
       /* We don't advance past where people are writing */
       memcpy(finish, start, sizeof(*start));
       return 0;
@@ -1327,8 +1357,9 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
   ctx->last_error = JLOG_ERR_SUCCESS;
   if (ctx->context_mode != JLOG_READ)
     SYS_FAIL(JLOG_ERR_ILLEGAL_WRITE);
-  if (id->marker < 1)
+  if (id->marker < 1) {
     SYS_FAIL(JLOG_ERR_ILLEGAL_LOGID);
+  }
 
   __jlog_open_reader(ctx, id->log);
   if(!ctx->data)
@@ -1341,8 +1372,9 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
     SYS_FAIL(JLOG_ERR_IDX_SEEK);
   if (index_len % sizeof(u_int64_t))
     SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
-  if (id->marker * sizeof(u_int64_t) > index_len)
+  if (id->marker * sizeof(u_int64_t) > index_len) {
     SYS_FAIL(JLOG_ERR_ILLEGAL_LOGID);
+  }
 
   if (!jlog_file_pread(ctx->index, &data_off, sizeof(u_int64_t),
                        (id->marker - 1) * sizeof(u_int64_t)))
@@ -1452,7 +1484,9 @@ int jlog_ctx_advance_id(jlog_ctx *ctx, jlog_id *cur,
     if((rv = __jlog_find_first_log_after(ctx, cur, start, finish)) != 0) {
       return rv;
     }
-    if(cur->log != start->log) start->marker = 1;
+    if(cur->log != start->log) {
+      start->marker = 1;
+    }
     else start->marker = cur->marker;
   }
   return 0;
