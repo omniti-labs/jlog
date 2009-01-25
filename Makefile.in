@@ -66,6 +66,8 @@ install:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(libdir)
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(includedir)
 	$(INSTALL) -m 0755 jlogctl $(DESTDIR)$(bindir)/jlogctl
+	$(INSTALL) -m 0755 jlog_change_endian.pl $(DESTDIR)$(bindir)/jlog_change_endian
+	$(INSTALL) -m 0755 jlog_sanity_check.pl $(DESTDIR)$(bindir)/jlog_sanity_check
 	$(INSTALL) -m 0755 libjlog.a $(DESTDIR)$(libdir)/libjlog.a
 	$(INSTALL) -m 0755 libjlog.$(DOTSO) $(DESTDIR)$(libdir)/libjlog.$(DOTSO)
 	$(INSTALL) -m 0644 jlog.h $(DESTDIR)$(includedir)/jlog.h
