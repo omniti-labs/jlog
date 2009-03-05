@@ -240,13 +240,13 @@ case $host in
     SHCFLAGS="$CFLAGS"
     SHLD="$CC -dynamiclib -single_module -undefined dynamic_lookup -install_name \$(libdir)/\$@"
     ;;
-  *)
-    AC_MSG_ERROR(need to handle this case)
-    exit 1
-    ;;
   *freebsd*)
     SHCFLAGS="$CFLAGS -fPIC -pthread"
     SHLD="$CC -shared -rdynamic"
+    ;;
+  *)
+    AC_MSG_ERROR(need to handle this case)
+    exit 1
     ;;
 esac
 AC_SUBST(DOTSO)
