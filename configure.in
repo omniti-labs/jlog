@@ -244,6 +244,10 @@ case $host in
     AC_MSG_ERROR(need to handle this case)
     exit 1
     ;;
+  *freebsd*)
+    SHCFLAGS="$CFLAGS -fPIC -pthread"
+    SHLD="$CC -shared -rdynamic"
+    ;;
 esac
 AC_SUBST(DOTSO)
 AC_SUBST(SHLD)
