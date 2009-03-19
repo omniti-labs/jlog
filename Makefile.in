@@ -55,7 +55,7 @@ jthreadtest:	libjlog.a jthreadtest.o getopt_long.o
 	$(CC) $(CFLAGS) -o jthreadtest jthreadtest.o getopt_long.o libjlog.a $(LDFLAGS) $(LIBS)
 
 libjlog.$(DOTSO): $(SOOBJS)
-	$(SHLD) -o libjlog.$(DOTSO) $(SOOBJS) $(LIBS)
+	$(SHLD) -o libjlog.$(DOTSO) $(SOOBJS) $(LDFLAGS) $(LIBS)
 
 libjlog.a:	$(AOBJS)
 	$(AR) cq libjlog.a $(AOBJS)

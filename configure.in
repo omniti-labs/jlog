@@ -223,7 +223,7 @@ case $host in
        SHCFLAGS="$SHCFLAGS -KPIC -mt"
        CFLAGS="$CFLAGS -mt"
        LIBS="-mt $LIBS"
-      SHLD="$CC -G"
+       SHLD="$CC -G"
     fi
     ;;
   *linux*)
@@ -253,6 +253,7 @@ esac
 AC_SUBST(DOTSO)
 AC_SUBST(SHLD)
 AC_SUBST(SHCFLAGS)
+AC_SUBST(LDFLAGS)
 
 AC_OUTPUT([
 Makefile
