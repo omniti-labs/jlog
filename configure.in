@@ -217,13 +217,14 @@ case $host in
        # GCC
        SHCFLAGS="$SHCFLAGS -fPIC -pthreads"
        CFLAGS="$CFLAGS -pthreads"
+       SHLD="$CC -shared"
     else
        # Sun C compiler
        SHCFLAGS="$SHCFLAGS -KPIC -mt"
        CFLAGS="$CFLAGS -mt"
        LIBS="-mt $LIBS"
+      SHLD="$CC -G"
     fi
-    SHLD="$CC -G"
     ;;
   *linux*)
     case `uname -m` in
