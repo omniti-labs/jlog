@@ -1241,6 +1241,7 @@ int jlog_ctx_remove_subscriber(jlog_ctx *ctx, const char *s) {
 
 int jlog_ctx_add_subscriber(jlog_ctx *ctx, const char *s, jlog_position whence) {
   jlog_id chkpt;
+  jlog_ctx *tmpctx = NULL;
   jlog_file *jchkpt;
   ctx->last_error = JLOG_ERR_SUCCESS;
 
@@ -1261,7 +1262,27 @@ int jlog_ctx_add_subscriber(jlog_ctx *ctx, const char *s, jlog_position whence) 
     }
     return 0;
   }
+  if(whence == JLOG_END) {
+    jlog_id start, finish;
+    memset(&chkpt, 0, sizeof(chkpt));
+    if(__jlog_open_metastore(ctx) != 0) SYS_FAIL(JLOG_ERR_META_OPEN);
+    if(__jlog_restore_metastore(ctx, 0))
+      SYS_FAIL(JLOG_ERR_META_OPEN);
+    chkpt.log = ctx->storage.log;
+    if(__jlog_set_checkpoint(ctx, s, &chkpt) != 0)
+      SYS_FAIL(JLOG_ERR_CHECKPOINT);
+    tmpctx = jlog_new(ctx->path);
+    if(jlog_ctx_open_reader(tmpctx, s) < 0) goto finish;
+    if(jlog_ctx_read_interval(tmpctx, &start, &finish) < 0) goto finish;
+    jlog_ctx_close(tmpctx);
+    tmpctx = NULL;
+    if(__jlog_set_checkpoint(ctx, s, &finish) != 0)
+      SYS_FAIL(JLOG_ERR_CHECKPOINT);
+    return 0;
+  }
   ctx->last_error = JLOG_ERR_NOT_SUPPORTED;
+ finish:
+  if(tmpctx) jlog_ctx_close(tmpctx);
   return -1;
 }
 
