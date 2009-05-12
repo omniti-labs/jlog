@@ -87,7 +87,7 @@ struct _jlog_meta_info {
 #define STRLOGID(s, logid) do { \
   int __i; \
   for(__i=0;__i<8;__i++) \
-    (s)[__i] = __jlog_hexchars[(logid >> (32 - ((__i+1)*4))) & 0xf]; \
+    (s)[__i] = __jlog_hexchars[((logid) >> (32 - ((__i+1)*4))) & 0xf]; \
   (s)[__i] = '\0'; \
 } while(0)
 
