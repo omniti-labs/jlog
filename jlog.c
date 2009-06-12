@@ -328,6 +328,7 @@ finish:
 
 static int __jlog_unlink_datafile(jlog_ctx *ctx, u_int32_t log) {
   char file[MAXPATHLEN];
+  int len;
 
   if(ctx->current_log == log) {
     __jlog_close_reader(ctx);
@@ -340,7 +341,9 @@ static int __jlog_unlink_datafile(jlog_ctx *ctx, u_int32_t log) {
 #endif
   unlink(file);
 
-  strcat(file, INDEX_EXT);
+  len = strlen(file);
+  if((len + sizeof(INDEX_EXT)) > sizeof(file)) return -1;
+  memcpy(file + len, INDEX_EXT, sizeof(INDEX_EXT));
 #ifdef DEBUG
   fprintf(stderr, "unlinking %s\n", file);
 #endif
@@ -356,10 +359,17 @@ static int __jlog_open_metastore(jlog_ctx *ctx)
 #ifdef DEBUG
   fprintf(stderr, "__jlog_open_metastore\n");
 #endif
-  strcpy(file, ctx->path);
   len = strlen(ctx->path);
+  if((len + 1 /* IFS_CH */ + 9 /* "metastore" */ + 1) > MAXPATHLEN) {
+#ifdef ENAMETOOLONG
+    ctx->last_errno = ENAMETOOLONG;
+#endif
+    ctx->last_error = JLOG_ERR_CREATE_META;
+    return -1;
+  }
+  memcpy(file, ctx->path, len);
   file[len++] = IFS_CH;
-  strcpy(&file[len], "metastore");
+  memcpy(&file[len], "metastore", 10); /* "metastore" + '\0' */
 
   ctx->metastore = jlog_file_open(file, O_CREAT, ctx->file_mode);
 
@@ -386,16 +396,20 @@ int __jlog_pending_readers(jlog_ctx *ctx, u_int32_t log) {
   dir = opendir(ctx->path);
   if (!dir) return -1;
   
-  strcpy(file, ctx->path);
   len = strlen(ctx->path);
+  if(len + 2 > sizeof(file)) return -1;
+  memcpy(file, ctx->path, len);
   file[len++] = IFS_CH;
   file[len] = '\0';
 
   while ((ent = readdir(dir))) {
     if (ent->d_name[0] == 'c' && ent->d_name[1] == 'p' && ent->d_name[2] == '.') {
       jlog_file *cp;
+      int dlen;
 
-      strcpy(file + len, ent->d_name);
+      dlen = strlen(ent->d_name);
+      if((len + dlen + 1) > sizeof(file)) continue;
+      memcpy(file + len, ent->d_name, dlen + 1); /* include \0 */
 #ifdef DEBUG
       fprintf(stderr, "Checking if %s needs %s...\n", ent->d_name, ctx->path);
 #endif
@@ -619,7 +633,7 @@ static char *compute_checkpoint_filename(jlog_ctx *ctx, const char *subscriber, 
 
   /* build checkpoint filename */
   len = strlen(ctx->path);
-  strcpy(name, ctx->path);
+  memcpy(name, ctx->path, len);
   name[len++] = IFS_CH;
   name[len++] = 'c';
   name[len++] = 'p';
@@ -735,6 +749,7 @@ static int __jlog_close_checkpoint(jlog_ctx *ctx) {
 
 static jlog_file *__jlog_open_indexer(jlog_ctx *ctx, u_int32_t log) {
   char file[MAXPATHLEN];
+  int len;
 
   if(ctx->current_log != log) {
     __jlog_close_reader(ctx);
@@ -744,7 +759,10 @@ static jlog_file *__jlog_open_indexer(jlog_ctx *ctx, u_int32_t log) {
     return ctx->index;
   }
   STRSETDATAFILE(ctx, file, log);
-  strcat(file, INDEX_EXT);
+
+  len = strlen(file);
+  if((len + sizeof(INDEX_EXT)) > sizeof(file)) return NULL;
+  memcpy(file + len, INDEX_EXT, sizeof(INDEX_EXT));
 #ifdef DEBUG
   fprintf(stderr, "opening index file: '%s'\n", idx);
 #endif
@@ -969,7 +987,11 @@ size_t jlog_raw_size(jlog_ctx *ctx) {
   filename[len++] = IFS_CH;
   while((de = readdir(d)) != NULL) {
     struct stat sb;
-    strcpy(filename+len, de->d_name);
+    int dlen;
+
+    dlen = strlen(de->d_name);
+    if((len + dlen + 1) > sizeof(filename)) continue;
+    memcpy(filename+len, de->d_name, dlen + 1); /* include \0 */
     while((ferr = stat(filename, &sb)) == -1 && errno == EINTR);
     if(ferr == 0 && S_ISREG(sb.st_mode)) totalsize += sb.st_size;
   }
@@ -1255,6 +1277,7 @@ int jlog_ctx_add_subscriber(jlog_ctx *ctx, const char *s, jlog_position whence) 
   
   if(whence == JLOG_BEGIN) {
     memset(&chkpt, 0, sizeof(chkpt));
+    jlog_ctx_first_log_id(ctx, &chkpt);
     if(__jlog_set_checkpoint(ctx, s, &chkpt) != 0) {
       ctx->last_error = JLOG_ERR_CHECKPOINT;
       ctx->last_errno = 0;
@@ -1304,7 +1327,7 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
     if(ctx->last_error == JLOG_ERR_FILE_OPEN &&
         ctx->last_errno == ENOENT) {
       char file[MAXPATHLEN];
-      int ferr;
+      int ferr, len;
       struct stat sb = {0};
 
       STRSETDATAFILE(ctx, file, start->log + 1);
@@ -1322,7 +1345,9 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
         memcpy(finish, start, sizeof(*start));
         return 0;
       }
-      strcat(file, INDEX_EXT);
+      len = strlen(file);
+      if((len + sizeof(INDEX_EXT)) > sizeof(file)) return -1;
+      memcpy(file + len, INDEX_EXT, sizeof(INDEX_EXT));
       while((ferr = stat(file, &sb)) == -1 && errno == EINTR);
       if(ferr != 0 || sb.st_size == 0) {
         /* We don't advance past where people are writing */
@@ -1342,7 +1367,7 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
 
   if(!memcmp(start, &last, sizeof(last)) && closed) {
     char file[MAXPATHLEN];
-    int ferr;
+    int ferr, len;
     struct stat sb = {0};
 
     STRSETDATAFILE(ctx, file, start->log + 1);
@@ -1357,7 +1382,9 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
       memcpy(finish, start, sizeof(*start));
       return 0;
     }
-    strcat(file, INDEX_EXT);
+    len = strlen(file);
+    if((len + sizeof(INDEX_EXT)) > sizeof(file)) return -1;
+    memcpy(file + len, INDEX_EXT, sizeof(INDEX_EXT));
     while((ferr = stat(file, &sb)) == -1 && errno == EINTR);
     if(ferr != 0 || sb.st_size == 0) {
       /* We don't advance past where people are writing */
@@ -1480,6 +1507,39 @@ int jlog_ctx_read_interval(jlog_ctx *ctx, jlog_id *start, jlog_id *finish) {
  finish:
   if(ctx->last_error == JLOG_ERR_SUCCESS) return count;
   return -1;
+}
+
+int jlog_ctx_first_log_id(jlog_ctx *ctx, jlog_id *id) {
+  DIR *d;
+  struct dirent *de;
+  ctx->last_error = JLOG_ERR_SUCCESS;
+  u_int32_t log;
+  int found = 0;
+
+  id->log = 0xffffffff;
+  id->marker = 0;
+  d = opendir(ctx->path);
+  if (!d) return -1;
+
+  while ((de = readdir(d))) {
+    int i;
+    char *cp = de->d_name;
+    if(strlen(cp) != 8) continue;
+    log = 0;
+    for(i=0;i<8;i++) {
+      log <<= 4;
+      if(cp[i] >= '0' && cp[i] <= '9') log |= (cp[i] - '0');
+      else if(cp[i] >= 'a' && cp[i] <= 'f') log |= (cp[i] - 'a');
+      else if(cp[i] >= 'A' && cp[i] <= 'F') log |= (cp[i] - 'A');
+      else break;
+    }
+    if(i != 8) continue;
+    found = 1;
+    if(log < id->log) id->log = log;
+  }
+  if(!found) id->log = 0;
+  closedir(d);
+  return 0;
 }
 
 int jlog_ctx_last_log_id(jlog_ctx *ctx, jlog_id *id) {

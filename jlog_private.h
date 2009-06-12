@@ -94,7 +94,7 @@ struct _jlog_meta_info {
 #define STRSETDATAFILE(ctx, file, log) do { \
   int __len; \
   __len = strlen((ctx)->path); \
-  strcpy((file), (ctx)->path); \
+  memcpy((file), (ctx)->path, __len); \
   (file)[__len] = IFS_CH; \
   STRLOGID((file)+(__len+1), log); \
 } while(0)
