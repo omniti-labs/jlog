@@ -191,7 +191,7 @@ static void process_jlog(const char *file, const char *sub) {
         } else {
           readers = __jlog_pending_readers(log, logid);
           if(!quiet) printf("\t%8s [%9llu bytes] %d pending readers\n",
-                            de->d_name, st.st_size, readers);
+                            de->d_name, (unsigned long long)st.st_size, readers);
           if(show_index_info && !quiet) {
             struct stat sb;
             if (stat(fullidx, &sb)) {
