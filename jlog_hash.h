@@ -33,7 +33,11 @@
 #ifndef _JLOG_HASH_H
 #define _JLOG_HASH_H
 
+#ifdef _MSC_VER
+#include "jlog_config_win32.h"
+#else
 #include "jlog_config.h"
+#endif
 
 typedef void (*JLogHashFreeFunc)(void *);
 

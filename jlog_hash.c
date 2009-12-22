@@ -30,7 +30,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef _MSC_VER
+#include "jlog_config_win32.h"
+#else
 #include "jlog_config.h"
+#endif
 #include "jlog_hash.h"
 
 /* This is from http://burtleburtle.net/bob/hash/doobs.html */
@@ -113,7 +117,8 @@ jlog_hash_bucket *jlog_hash__new_bucket(const char *k, int klen, void *data) {
   return b;
 }
 void jlog_hash__rebucket(jlog_hash_table *h, int newsize) {
-  int i, newoff;
+  unsigned int i;
+  int newoff;
   jlog_hash_bucket **newbuckets, *b, *n;
 
   if (h->dont_rebucket) return;
@@ -246,7 +251,7 @@ int jlog_hash_delete(jlog_hash_table *h, const char *k, int klen,
 }
 
 void jlog_hash_delete_all(jlog_hash_table *h, JLogHashFreeFunc keyfree, JLogHashFreeFunc datafree) {
-  int i;
+  unsigned int i;
   jlog_hash_bucket *b, *tofree;
   for(i=0; i<h->table_size; i++) {
     b = h->buckets[i];
@@ -273,7 +278,7 @@ int jlog_hash_next(jlog_hash_table *h, jlog_hash_iter *iter,
                 const char **k, int *klen, void **data) {
   jlog_hash_bucket *b;
  next_row:
-  if(iter->p1 < 0 || iter->p1 >= h->table_size) return 0;
+  if(iter->p1 < 0 || (unsigned int) iter->p1 >= h->table_size) return 0;
   if(iter->p2 == NULL) iter->p2 = (void *)h->buckets[iter->p1];
   if(iter->p2 == NULL) {
     iter->p1++;
@@ -289,7 +294,7 @@ int jlog_hash_next(jlog_hash_table *h, jlog_hash_iter *iter,
 }
 
 int jlog_hash_firstkey(jlog_hash_table *h, const char **k, int *klen) {
-  int i;
+  unsigned int i;
   for(i=0;i<h->table_size;i++) {
     if(h->buckets[i]) {
       *k = h->buckets[i]->k;
@@ -300,7 +305,7 @@ int jlog_hash_firstkey(jlog_hash_table *h, const char **k, int *klen) {
   return 0;
 }
 int jlog_hash_nextkey(jlog_hash_table *h, const char **k, int *klen, const char *lk, int lklen) {
-  int off;
+  unsigned int off;
   jlog_hash_bucket *b;
 
   if(h->table_size == 0) return 0;
