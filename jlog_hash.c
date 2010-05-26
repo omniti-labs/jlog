@@ -219,7 +219,6 @@ int jlog_hash_retrieve(jlog_hash_table *h, const char *k, int klen, void **data)
 int jlog_hash_delete(jlog_hash_table *h, const char *k, int klen,
                   JLogHashFreeFunc keyfree, JLogHashFreeFunc datafree) {
   int off;
-  void *data;
   jlog_hash_bucket *b, *prev = NULL;
 
   if(h->table_size == 0) jlog_hash_init(h);
@@ -231,7 +230,6 @@ int jlog_hash_delete(jlog_hash_table *h, const char *k, int klen,
     b = b->next;
   }
   if(!b) return 0; /* No match */
-  data = b->data;
   if(!prev) h->buckets[off] = h->buckets[off]->next;
   else prev->next = b->next;
   if(keyfree) keyfree((void *)b->k);

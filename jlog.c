@@ -208,7 +208,6 @@ int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
 
   if (invalid_count > 0) {
     __jlog_munmap_reader(ctx);
-    src = 0;
     dst = invalid[0].start;
     for (i = 0; i < invalid_count - 1; ) {
       src = invalid[i].end;
