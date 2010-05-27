@@ -642,7 +642,7 @@ static char *compute_checkpoint_filename(jlog_ctx *ctx, const char *subscriber, 
     name[len++] = __jlog_hexchars[(*sub & 0x0f)];
     sub++;
   }
-  name[len++] = '\0';
+  name[len] = '\0';
 
 #ifdef DEBUG
   fprintf(stderr, "checkpoint %s filename is %s\n", subscriber, name);
