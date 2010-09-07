@@ -78,4 +78,7 @@ clean:
 	rm -f *.o *.lo *.$(DOTSO) *.a jthreadtest
 	-if test -f perl/Makefile ; then cd perl ; make clean ; fi
 
+distclean: 	clean
+	rm -f Makefile jlog_config.h perl/Makefile.PL
+
 .SUFFIXES: .c .o .lo
