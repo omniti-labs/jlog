@@ -1528,8 +1528,8 @@ int jlog_ctx_first_log_id(jlog_ctx *ctx, jlog_id *id) {
     for(i=0;i<8;i++) {
       log <<= 4;
       if(cp[i] >= '0' && cp[i] <= '9') log |= (cp[i] - '0');
-      else if(cp[i] >= 'a' && cp[i] <= 'f') log |= (cp[i] - 'a');
-      else if(cp[i] >= 'A' && cp[i] <= 'F') log |= (cp[i] - 'A');
+      else if(cp[i] >= 'a' && cp[i] <= 'f') log |= (cp[i] - 'a' + 0xa);
+      else if(cp[i] >= 'A' && cp[i] <= 'F') log |= (cp[i] - 'A' + 0xa);
       else break;
     }
     if(i != 8) continue;
