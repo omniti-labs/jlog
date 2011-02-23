@@ -30,6 +30,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * We want the single unix spec, so this define is needed on
+ * the identity crisis that is Linux. pread()/pwrite()
+ */
+#define _XOPEN_SOURCE 500
+
 #include "jlog_config.h"
 #include "jlog_hash.h"
 #include "jlog_io.h"
@@ -39,11 +45,6 @@
 #include <pthread.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-/*
- * We want the single unix spec, so this define is needed on
- * the identity crisis that is Linux. pread()/pwrite()
- */
-#define _XOPEN_SOURCE 500
 #include <unistd.h>
 
 static pthread_mutex_t jlog_files_lock = PTHREAD_MUTEX_INITIALIZER;
