@@ -260,7 +260,8 @@ int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log)
     }
 
     fprintf(stderr, "Message %d at [%ld] of (%lu+%u)", i, 
-            (long int)(this - (char *)ctx->mmap_base), sizeof(hdr), hdr.mlen);
+            (long int)(this - (char *)ctx->mmap_base),
+            (long unsigned int)sizeof(hdr), hdr.mlen);
 
     next = this + sizeof(hdr) + hdr.mlen;
     if (next <= (char *)ctx->mmap_base) {
