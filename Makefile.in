@@ -13,6 +13,8 @@ SHLD=@SHLD@
 PERL=@PERL@
 SHCFLAGS=@SHCFLAGS@
 DOTSO=@DOTSO@
+JAVAC=@JAVAC@
+JAR=@JAR@
 
 prefix=@prefix@
 exec_prefix=@exec_prefix@
@@ -34,7 +36,7 @@ AOBJS= \
 SOOBJS= \
 	jlog.lo jlog_hash.lo jlog_io.lo
 
-all:	libjlog.$(DOTSO) libjlog.a jlogctl test jlogperl
+all:	libjlog.$(DOTSO) libjlog.a jlogctl test jlogperl @JAVA_BITS@
 
 .c.o:
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
@@ -44,9 +46,11 @@ all:	libjlog.$(DOTSO) libjlog.a jlogctl test jlogperl
 
 test:	jthreadtest
 
-jlogperl:
-	cd perl ; $(PERL) Makefile.PL
-	cd perl ; make
+perl/Makefile:	perl/Makefile.PL
+	cd perl && $(PERL) Makefile.PL
+
+jlogperl:	perl/Makefile
+	@cd perl && make
 
 jlogctl:	libjlog.a jlogctl.o getopt_long.o
 	$(CC) $(CFLAGS) -o jlogctl jlogctl.o getopt_long.o libjlog.a $(LDFLAGS) $(LIBS)
@@ -60,6 +64,23 @@ libjlog.$(DOTSO): $(SOOBJS)
 libjlog.a:	$(AOBJS)
 	$(AR) cq libjlog.a $(AOBJS)
 	$(RANLIB) libjlog.a
+
+java-bits: java/jlog.jar java/libjlog.jnilib java/jlogTest.class
+
+java/jlog.jar:	java/jlog.java
+	mkdir -p java_tmp && \
+	$(JAVAC) -d java_tmp java/jlog.java && \
+	$(JAR) -cf $@ -C java_tmp com && \
+	rm -rf java_tmp
+
+java/jlogTest.class:	java/jlogTest.java java/jlog.jar
+	cd java && $(JAVAC) -cp jlog.jar jlogTest.java
+
+java/com_omniti_labs_jlog.lo:	java/com_omniti_labs_jlog.c
+	$(CC) -Wall -I. $(CPPFLAGS) $(SHCFLAGS) -c $< -o $@
+
+java/libjlog.jnilib:	java/com_omniti_labs_jlog.lo $(SOOBJS)
+	$(SHLD) -o $@ java/com_omniti_labs_jlog.lo $(SOOBJS) $(LDFLAGS) $(LIBS)
 
 install:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(bindir)
@@ -76,6 +97,7 @@ install:
 
 clean:
 	rm -f *.o *.lo *.$(DOTSO) *.a jthreadtest
+	rm -f java/*.jar java/*.jnilib java/*.lo
 	-if test -f perl/Makefile ; then cd perl ; make clean ; fi
 
 distclean: 	clean

@@ -12,6 +12,8 @@ AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PATH_PROG(AR, ar)
 AC_PATH_PROGS(PERL, perl)
+AC_PATH_PROGS(JAVAC, javac)
+AC_PATH_PROGS(JAR, jar)
 AC_SUBST(PERL)
 
 # Checks for data types
@@ -45,7 +47,14 @@ AC_FUNC_STRFTIME
 # Checks for header files.
 AC_CHECK_HEADERS(sys/file.h sys/types.h dirent.h sys/param.h fcntl.h errno.h limits.h \
                  sys/resource.h pthread.h semaphore.h pwd.h stdio.h stdlib.h string.h \
-                 ctype.h unistd.h time.h sys/stat.h sys/time.h unistd.h sys/mman.h)
+                 ctype.h unistd.h time.h sys/stat.h sys/time.h unistd.h sys/mman.h jni.h)
+
+JAVA_BITS=java-bits
+if test "x$ac_cv_header_jni_h" != "xyes" ; then
+	JAVA_BITS=
+	AC_MSG_WARN([Not building java bits due to jni.h absence (set CPPFLAGS?)])
+fi
+AC_SUBST(JAVA_BITS)
 
 AC_CACHE_CHECK([for u_int type], ac_cv_have_u_int, [
 	AC_TRY_COMPILE(
@@ -55,6 +64,7 @@ AC_CACHE_CHECK([for u_int type], ac_cv_have_u_int, [
 		[ ac_cv_have_u_int="no" ]
 	)
 ])
+
 if test "x$ac_cv_have_u_int" = "xyes" ; then
 	AC_DEFINE(HAVE_U_INT)
 	have_u_int=1
