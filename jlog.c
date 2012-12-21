@@ -1269,8 +1269,11 @@ int jlog_ctx_add_subscriber(jlog_ctx *ctx, const char *s, jlog_position whence) 
 
   jchkpt = __jlog_open_named_checkpoint(ctx, s, O_CREAT|O_EXCL);
   if(!jchkpt) {
-    ctx->last_error = JLOG_ERR_SUBSCRIBER_EXISTS;
-    ctx->last_errno = EEXIST;
+    ctx->last_errno = errno;
+    if(errno == EEXIST)
+      ctx->last_error = JLOG_ERR_SUBSCRIBER_EXISTS;
+    else
+      ctx->last_error = JLOG_ERR_OPEN;
     return -1;
   }
   jlog_file_close(jchkpt);
