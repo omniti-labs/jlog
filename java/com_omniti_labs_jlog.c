@@ -295,6 +295,8 @@ void Java_com_omniti_labs_jlog_open_1reader
   if(rv != 0) {
     if(jlog_ctx_err(ctx) == JLOG_ERR_ILLEGAL_OPEN)
       THROW(jenv,"com/omniti/labs/jlog$jlogAlreadyOpenedException",jlog_ctx_err_string(ctx));
+    else if(jlog_ctx_err(ctx) == JLOG_ERR_INVALID_SUBSCRIBER)
+      THROW(jenv,"com/omniti/labs/jlog$jlogInvalidSubscriberException",jlog_ctx_err_string(ctx));
     else
       THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
   }

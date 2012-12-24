@@ -114,7 +114,7 @@ public class jlog {
   private String subscriber;
   private native void jlog_ctx_new(String path);
   private native void jlog_ctx_close();
-  private native void jlog_ctx_init();
+  private native void jlog_ctx_init() throws jlogIOException;
   public native long raw_size();
   public native Id get_checkpoint(String subscriber)
     throws jlogIOException;
@@ -125,7 +125,7 @@ public class jlog {
   public native void open_writer()
     throws jlogAlreadyOpenedException, jlogIOException;
   public native void open_reader(String sub)
-    throws jlogAlreadyOpenedException, jlogIOException;
+    throws jlogAlreadyOpenedException, jlogIOException, jlogInvalidSubscriberException;
   public native void close();
   private native void alter_mode(int mode);
   private native void alter_journal_size(long size);
@@ -154,10 +154,10 @@ public class jlog {
   protected void finalize() {
     close();
   }
-  public void init() {
+  public void init() throws jlogIOException {
     jlog_ctx_init();
   }
-  public void init(int mode, long size, jlog_safety safety) {
+  public void init(int mode, long size, jlog_safety safety) throws jlogIOException {
     alter_mode(mode);
     alter_journal_size(size);
     alter_safety(safety);
