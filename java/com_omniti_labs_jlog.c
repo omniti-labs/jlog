@@ -37,6 +37,7 @@ jstring_to_cstring(JNIEnv *jenv, jstring jstr) {
   jsize len;
   const char *jcstr;
   char *rv;
+  if(jstr == NULL) return NULL;
   len = (*jenv)->GetStringUTFLength(jenv, jstr);
   rv = malloc(len+1);
   if(rv == NULL) return NULL;
@@ -97,6 +98,10 @@ void Java_com_omniti_labs_jlog_jlog_1ctx_1new
   char *cpath;
 
   cpath = jstring_to_cstring(jenv, path);
+  if(!cpath) {
+    (*jenv)->ThrowNew(jenv, (*jenv)->FindClass(jenv, "java/lang/NullPointerException"), "");
+    return;
+  }
   ctx = jlog_new(cpath);
   SET_CTX(jenv,self,ctx);
   free(cpath);
@@ -156,6 +161,7 @@ jobject Java_com_omniti_labs_jlog_get_1checkpoint
   if(jlog_get_checkpoint(ctx, subscriber, &id) != 0) {
     free(subscriber);
     THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
+    return NULL;
   }
   free(subscriber);
   return make_jlog_Id(jenv, id);
@@ -176,7 +182,10 @@ jobjectArray Java_com_omniti_labs_jlog_list_1subscribers
   FETCH_CTX(jenv,self,ctx);
 
   cnt = jlog_ctx_list_subscribers(ctx, &subs);
-  if(cnt < 0) THROW(jenv, "com/omniti/labs/jlog$jlogIOException", "directory inaccessible");
+  if(cnt < 0) {
+    THROW(jenv, "com/omniti/labs/jlog$jlogIOException", "directory inaccessible");
+    return NULL;
+  }
   jstringclass = (*jenv)->FindClass(jenv, "Ljava/lang/String;");
   rv = (*jenv)->NewObjectArray(jenv, cnt, jstringclass, NULL);
   for(i=0; i<cnt; i++)
@@ -275,6 +284,7 @@ void Java_com_omniti_labs_jlog_open_1writer
       THROW(jenv,"com/omniti/labs/jlog$jlogAlreadyOpenedException",jlog_ctx_err_string(ctx));
     else
       THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
+    return ;
   }
 }
 
@@ -299,6 +309,7 @@ void Java_com_omniti_labs_jlog_open_1reader
       THROW(jenv,"com/omniti/labs/jlog$jlogInvalidSubscriberException",jlog_ctx_err_string(ctx));
     else
       THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
+    return;
   }
   SET_SUBSCRIBER(jenv,self,sub);
 }
@@ -378,6 +389,7 @@ void Java_com_omniti_labs_jlog_add_1subscriber
       THROW(jenv, "com/omniti/labs/jlog$jlogSubscriberExistsException", "subscriber exists");
     else
       THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
+    return;
   }
 }
 
@@ -399,6 +411,7 @@ void Java_com_omniti_labs_jlog_remove_1subscriber
       THROW(jenv, "com/omniti/labs/jlog$jlogInvalidSubscriberException", "invalid subscriber");
     else
       THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
+    return;
   }
 }
 
@@ -431,6 +444,7 @@ void Java_com_omniti_labs_jlog_write
       THROW(jenv,"com/omniti/labs/jlog$jlogNotWriterException",jlog_ctx_err_string(ctx));
     else
       THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
+    return;
   }
 }
 
@@ -448,11 +462,13 @@ jobject Java_com_omniti_labs_jlog_read_1interval
   if((rv = jlog_ctx_read_interval(ctx, &start, &finish)) < 0) {
     switch(jlog_ctx_err(ctx)) {
      case JLOG_ERR_SUCCESS:
-       return NULL;
+      return NULL;
      case JLOG_ERR_ILLEGAL_WRITE:
       THROW(jenv,"com/omniti/labs/jlog$jlogNotReaderException",jlog_ctx_err_string(ctx));
+      return NULL;
      default:
       THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
+      return NULL;
     }
   }
   return make_jlog_Interval(jenv, start, finish, rv);
@@ -481,12 +497,15 @@ jobject Java_com_omniti_labs_jlog_read
       THROW(jenv,"com/omniti/labs/jlog$jlogNotReaderException",jlog_ctx_err_string(ctx));
     else
       THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
+    return NULL;
   }
   jwhencems = m.header->tv_sec * 1000;
   jwhencems += m.header->tv_usec / 1000;
   jdata = (*jenv)->NewByteArray(jenv, m.mess_len);
-  if(jdata == NULL)
+  if(jdata == NULL) {
     (*jenv)->ThrowNew(jenv, (*jenv)->FindClass(jenv, "java/lang/OutOfMemoryError"), "jlog message would exhaust memory");
+    return NULL;
+  }
   (*jenv)->SetByteArrayRegion(jenv, jdata, 0, m.mess_len, (jbyte *)m.mess);
   jmess_class = (*jenv)->FindClass(jenv, "com/omniti/labs/jlog$Message");
   jmess_constructor = (*jenv)->GetMethodID(jenv, jmess_class, "<init>", "(Lcom/omniti/labs/jlog;J[B)V");
@@ -511,6 +530,7 @@ void Java_com_omniti_labs_jlog_read_1checkpoint
       THROW(jenv,"com/omniti/labs/jlog$jlogNotReaderException",jlog_ctx_err_string(ctx));
     else
       THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
+    return;
   }
 }
 
@@ -529,6 +549,7 @@ jobject Java_com_omniti_labs_jlog_advance
   FETCH_CTX(jenv,self,ctx);
   if(jlog_ctx_advance_id(ctx, &id, &start, &finish) != 0) {
     THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
+    return NULL;
   }
   return make_jlog_Id(jenv, start);
 }
@@ -543,8 +564,10 @@ jobject Java_com_omniti_labs_jlog_first_1log_1id
   jlog_ctx *ctx;
   jlog_id id;
   FETCH_CTX(jenv,self,ctx);
-  if(jlog_ctx_first_log_id(ctx, &id) != 0)
+  if(jlog_ctx_first_log_id(ctx, &id) != 0) {
     THROW(jenv,"com/omniti/labs/jlog$jlogIOException","directory inaccessible");
+    return NULL;
+  }
   return make_jlog_Id(jenv, id);
 }
 
@@ -558,8 +581,10 @@ jobject Java_com_omniti_labs_jlog_last_1log_1id
   jlog_ctx *ctx;
   jlog_id id;
   FETCH_CTX(jenv,self,ctx);
-  if(jlog_ctx_last_log_id(ctx, &id) != 0)
+  if(jlog_ctx_last_log_id(ctx, &id) != 0) {
     THROW(jenv,"com/omniti/labs/jlog$jlogIOException","directory inaccessible");
+    return NULL;
+  }
   return make_jlog_Id(jenv, id);
 }
 
