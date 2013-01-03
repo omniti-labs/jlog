@@ -334,7 +334,7 @@ PHP_METHOD(Jlog_Writer, open)
     php_error(E_WARNING, "jlog_ctx_open_writer failed");
     RETURN_NULL();
   }
-  ZVAL_ADDREF(_this_zval);
+  Z_ADDREF_P(_this_zval);
   return_value = _this_zval;
 }
 /* }}} open */
@@ -414,7 +414,7 @@ PHP_METHOD(Jlog_Reader, open)
   if(jlog_ctx_open_reader(jo->ctx, subscriber) != 0) {
     RETURN_NULL();
   }
-  ZVAL_ADDREF(_this_zval);
+  Z_ADDREF_P(_this_zval);
   return_value = _this_zval;
 }
 /* }}} open */
@@ -525,7 +525,7 @@ PHP_METHOD(Jlog_Reader, checkpoint)
     jo->start = epoch;
     jo->end = epoch;
   }
-  ZVAL_ADDREF(_this_zval);
+  Z_ADDREF_P(_this_zval);
   return_value = _this_zval;
 }
 /* }}} checkpoint */
