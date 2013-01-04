@@ -499,8 +499,9 @@ jobject Java_com_omniti_labs_jlog_read
       THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
     return NULL;
   }
-  jwhencems = m.header->tv_sec * 1000;
-  jwhencems += m.header->tv_usec / 1000;
+  jwhencems = m.header->tv_sec;
+  jwhencems *= 1000;
+  jwhencems += ((m.header->tv_usec % 1000000) / 1000);
   jdata = (*jenv)->NewByteArray(jenv, m.mess_len);
   if(jdata == NULL) {
     (*jenv)->ThrowNew(jenv, (*jenv)->FindClass(jenv, "java/lang/OutOfMemoryError"), "jlog message would exhaust memory");
