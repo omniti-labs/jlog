@@ -43,7 +43,11 @@
 #   define JLOG_API(x) __declspec(dllimport) x
 #  endif
 # else
-#  define JLOG_API(x)  x
+#  ifdef __cplusplus
+#    define JLOG_API(x)  extern "C" x
+#  else
+#    define JLOG_API(x)  x
+#  endif
 # endif
 #endif
 
