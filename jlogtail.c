@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <jlog.h>
+
+#include "jlog.h"
 
 #define SUBSCRIBER "jlog-tail"
 

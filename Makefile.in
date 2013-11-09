@@ -58,6 +58,9 @@ jlogctl:	libjlog.a jlogctl.o getopt_long.o
 jthreadtest:	libjlog.a jthreadtest.o getopt_long.o
 	$(CC) $(CFLAGS) -o jthreadtest jthreadtest.o getopt_long.o libjlog.a $(LDFLAGS) $(LIBS)
 
+jlogtail: libjlog.a jlogtail.o
+	$(CC) $(CFLAGS) -o jlogtail jlogtail.o libjlog.a $(LDFLAGS) $(LIBS)
+
 libjlog.$(DOTSO): $(SOOBJS)
 	$(SHLD) -o libjlog.$(DOTSO) $(SOOBJS) $(LDFLAGS) $(LIBS)
 
