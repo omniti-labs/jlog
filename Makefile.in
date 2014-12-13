@@ -44,7 +44,7 @@ all:	libjlog.$(DOTSO) libjlog.a jlogctl test jlogperl @JAVA_BITS@
 .c.lo:
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(SHCFLAGS) -c $< -o $@
 
-test:	jthreadtest
+test:	jthreadtest jtest
 
 perl/Makefile:	perl/Makefile.PL
 	cd perl && $(PERL) Makefile.PL
@@ -57,6 +57,9 @@ jlogctl:	libjlog.a jlogctl.o getopt_long.o
 
 jthreadtest:	libjlog.a jthreadtest.o getopt_long.o
 	$(CC) $(CFLAGS) -o jthreadtest jthreadtest.o getopt_long.o libjlog.a $(LDFLAGS) $(LIBS)
+
+jtest:	libjlog.a jtest.o
+	$(CC) $(CFLAGS) -o jtest jtest.o libjlog.a $(LDFLAGS) $(LIBS)
 
 jlogtail: libjlog.a jlogtail.o
 	$(CC) $(CFLAGS) -o jlogtail jlogtail.o libjlog.a $(LDFLAGS) $(LIBS)
