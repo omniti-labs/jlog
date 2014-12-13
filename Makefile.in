@@ -36,7 +36,7 @@ AOBJS= \
 SOOBJS= \
 	jlog.lo jlog_hash.lo jlog_io.lo
 
-all:	libjlog.$(DOTSO) libjlog.a jlogctl test jlogperl @JAVA_BITS@
+all:	libjlog.$(DOTSO) libjlog.a jlogctl jlogtail test jlogperl @JAVA_BITS@
 
 .c.o:
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
