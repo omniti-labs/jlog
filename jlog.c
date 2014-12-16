@@ -518,12 +518,21 @@ static int __jlog_save_metastore(jlog_ctx *ctx, int ilocked)
     return -1;
   }
 
-  if (!jlog_file_pwrite(ctx->metastore, ctx->meta, sizeof(*ctx->meta), 0)) {
+  if(ctx->meta_is_mapped) {
+    int rv, flags = MS_INVALIDATE;
+    if(ctx->meta->safety == JLOG_SAFE) flags |= MS_SYNC;
+    rv = msync(ctx->meta, sizeof(*ctx->meta), flags);
     if (!ilocked) jlog_file_unlock(ctx->metastore);
-    return -1;
+    return rv;
   }
-  if (ctx->meta->safety == JLOG_SAFE) {
-    jlog_file_sync(ctx->metastore);
+  else {
+    if (!jlog_file_pwrite(ctx->metastore, ctx->meta, sizeof(*ctx->meta), 0)) {
+      if (!ilocked) jlog_file_unlock(ctx->metastore);
+      return -1;
+    }
+    if (ctx->meta->safety == JLOG_SAFE) {
+      jlog_file_sync(ctx->metastore);
+    }
   }
 
   if (!ilocked) jlog_file_unlock(ctx->metastore);
