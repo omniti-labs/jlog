@@ -68,7 +68,7 @@ libjlog.$(DOTSO): $(SOOBJS)
 	$(SHLD) -o libjlog.$(DOTSO) $(SOOBJS) $(LDFLAGS) $(LIBS)
 
 libjlog.a:	$(AOBJS)
-	$(AR) cq libjlog.a $(AOBJS)
+	$(AR) cr libjlog.a $(AOBJS)
 	$(RANLIB) libjlog.a
 
 java-bits: java/jlog.jar java/libjlog.jnilib java/jlogTest.class
@@ -102,7 +102,7 @@ install:
 	cd perl ; make install DESTDIR=$(DESTDIR) INSTALLDIRS=vendor
 
 clean:
-	rm -f *.o *.lo *.$(DOTSO) *.a jthreadtest
+	rm -f *.o *.lo *.$(DOTSO) *.a jthreadtest jtest jlogctl jlogtail
 	rm -f java/*.jar java/*.jnilib java/*.lo
 	-if test -f perl/Makefile ; then cd perl ; make clean ; fi
 
