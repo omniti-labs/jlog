@@ -126,7 +126,7 @@ JLOG_API(int) jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log);
  * @return 0 OK, 1 segment damaged, -1 other error
  * @internal
  */
-JLOG_API(int) jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log);
+JLOG_API(int) jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log, int verbose);
 /**
  * fetches the last marker in the index and the closedness thereof
  * @return 0 OK, -1 error

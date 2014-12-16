@@ -230,7 +230,7 @@ finish:
   return invalid_count;
 }
 
-int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log)
+int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log, int verbose)
 {
   jlog_message_header hdr;
   char *this, *next, *mmap_end;
@@ -251,6 +251,7 @@ int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log)
   this = ctx->mmap_base;
   i = 0;
   while (this + sizeof(hdr) <= mmap_end) {
+    int initial = 1;
     memcpy(&hdr, this, sizeof(hdr));
     i++;
     if (hdr.reserved != 0) {
@@ -259,16 +260,25 @@ int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log)
       return 1;
     }
 
-    fprintf(stderr, "Message %d at [%ld] of (%lu+%u)", i, 
-            (long int)(this - (char *)ctx->mmap_base),
-            (long unsigned int)sizeof(hdr), hdr.mlen);
+#define PRINTMSGHDR do { if(initial) { \
+  fprintf(stderr, "Message %d at [%ld] of (%lu+%u)", i, \
+          (long int)(this - (char *)ctx->mmap_base), \
+          (long unsigned int)sizeof(hdr), hdr.mlen); \
+  initial = 0; \
+} } while(0)
+
+    if(verbose) {
+      PRINTMSGHDR;
+    }
 
     next = this + sizeof(hdr) + hdr.mlen;
     if (next <= (char *)ctx->mmap_base) {
+      PRINTMSGHDR;
       fprintf(stderr, " WRAPPED TO NEGATIVE OFFSET!\n");
       return 1;
     }
     if (next > mmap_end) {
+      PRINTMSGHDR;
       fprintf(stderr, " OFF THE END!\n");
       return 1;
     }
@@ -276,7 +286,7 @@ int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log)
     timet = hdr.tv_sec;
     localtime_r(&timet, &tm);
     strftime(tbuff, sizeof(tbuff), "%c", &tm);
-    fprintf(stderr, "\n\ttime: %s\n\tmlen: %u\n", tbuff, hdr.mlen);
+    if(verbose) fprintf(stderr, "\n\ttime: %s\n\tmlen: %u\n", tbuff, hdr.mlen);
     this = next;
   }
   if (this < mmap_end) {
