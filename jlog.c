@@ -1382,7 +1382,7 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
                                 jlog_id *start, jlog_id *finish) {
   jlog_id last;
   int closed;
-  
+
   memcpy(start, chkpt, sizeof(*chkpt));
  attempt:
   if(__jlog_resync_index(ctx, start->log, &last, &closed) != 0) {
@@ -1397,7 +1397,7 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
       /* That file doesn't exist... bad, but we can fake a recovery by
          advancing the next file that does exist */
       ctx->last_error = JLOG_ERR_SUCCESS;
-      if(start->log >= ctx->meta->storage_log || ferr != 0 || sb.st_size == 0) {
+      if(start->log >= ctx->meta->storage_log || (ferr != 0 && errno != ENOENT)) {
         /* We don't advance past where people are writing */
         memcpy(finish, start, sizeof(*start));
         return 0;
@@ -1434,7 +1434,15 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
 
     STRSETDATAFILE(ctx, file, start->log + 1);
     while((ferr = stat(file, &sb)) == -1 && errno == EINTR);
-    if(ferr) fprintf(stderr, "stat(%s) error: %s\n", file, strerror(errno));
+    if(ferr) {
+      fprintf(stderr, "stat(%s) error: %s\n", file, strerror(errno));
+      if(start->log < ctx->meta->storage_log - 1) {
+        start->marker = 0;
+        start->log += 2;
+        memcpy(finish, start, sizeof(*start));
+        return 0;
+      }
+    }
     if(start->log >= ctx->meta->storage_log || ferr != 0 || sb.st_size == 0) {
       /* We don't advance past where people are writing */
       memcpy(finish, start, sizeof(*start));
