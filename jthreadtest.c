@@ -80,7 +80,7 @@ void *writer(void *unused) {
   jlog_ctx *ctx;
   int i;
   size_t newsize;
-  char foo[4523];
+  char foo[72];
   ctx = jlog_new(LOGNAME);
   memset(foo, 'X', sizeof(foo)-1);
   foo[sizeof(foo)-1] = '\0';
@@ -89,9 +89,11 @@ void *writer(void *unused) {
     croak();
   }
 
+#ifdef TEST_UNIT_LIMIT
   newsize = 1024*1024 + (((intptr_t)unused) % (1024 * 1024));
   fprintf(stderr, "writer setting new unit_limit to %d\n", (int)newsize);
   jlog_ctx_alter_journal_size(ctx, newsize);
+#endif
   for(i=0;i<10000;i++) {
     int rv;
     rv = jlog_ctx_write(ctx, foo, strlen(foo));
@@ -180,7 +182,7 @@ reader_retry:
   }
   fprintf(stderr, "[%02d] reader read %d, failed %d\n", subno, tcount, fcount);
   jlog_ctx_close(ctx);
-  return (void *)tcount;
+  return (void *)(uintptr_t)tcount;
 }
 
 static void usage(void)
@@ -244,14 +246,14 @@ int main(int argc, char **argv) {
   }
   if(!only_write) {
     for(i=0; i<THRCNT; i++) {
-      pthread_create(&tid[i], NULL, reader, (void *)i);
+      pthread_create(&tid[i], NULL, reader, (void *)(uintptr_t)i);
       fprintf(stderr, "[%d] started reader\n", (int)tid[i]);
     }
   }
   if(!only_read) {
     fprintf(stderr, "starting writers..\n");
     for(i=0; i<WTHRCNT; i++) {
-      pthread_create(&wtid[i], NULL, writer, (void *)i);
+      pthread_create(&wtid[i], NULL, writer, (void *)(uintptr_t)i);
       fprintf(stderr, "[%d] started writer\n", (int)wtid[i]);
     }
   } else {

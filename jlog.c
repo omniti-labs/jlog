@@ -153,7 +153,7 @@ int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
   /* these values will cause us to fall right into the error clause and
    * start searching for a valid header from offset 0 */
   this = (char*)ctx->mmap_base - sizeof(hdr);
-  hdr.reserved = 0;
+  hdr.reserved = ctx->meta->hdr_magic;
   hdr.mlen = 0;
 
   while (this + sizeof(hdr) <= mmap_end) {
@@ -165,7 +165,7 @@ int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
     }
     if (next + sizeof(hdr) > mmap_end) goto error;
     memcpy(&hdr, next, sizeof(hdr));
-    if (hdr.reserved != 0) goto error;
+    if (hdr.reserved != ctx->meta->hdr_magic) goto error;
     this = next;
     continue;
   error:
@@ -177,7 +177,7 @@ int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
         if (afternext == mmap_end) break;
         if (afternext + sizeof(hdr) > mmap_end) continue;
         memcpy(&hdr, afternext, sizeof(hdr));
-        if (hdr.reserved == 0) break;
+        if (hdr.reserved == ctx->meta->hdr_magic) break;
       }
     }
     /* correct for while loop entry condition */
@@ -254,7 +254,7 @@ int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log, int verbose)
     int initial = 1;
     memcpy(&hdr, this, sizeof(hdr));
     i++;
-    if (hdr.reserved != 0) {
+    if (hdr.reserved != ctx->meta->hdr_magic) {
       fprintf(stderr, "Message %d at [%ld] has invalid reserved value %u\n",
               i, (long int)(this - (char *)ctx->mmap_base), hdr.reserved);
       return 1;
@@ -394,20 +394,28 @@ static int __jlog_open_metastore(jlog_ctx *ctx)
 
 /* exported */
 int __jlog_pending_readers(jlog_ctx *ctx, u_int32_t log) {
+  return jlog_pending_readers(ctx, log, NULL);
+}
+int jlog_pending_readers(jlog_ctx *ctx, u_int32_t log,
+                         u_int32_t *earliest_out) {
   int readers;
   DIR *dir;
   struct dirent *ent;
   char file[MAXPATHLEN];
-  int len;
+  int len, seen = 0;
+  u_int32_t earliest = 0;
   jlog_id id;
 
   readers = 0;
 
   dir = opendir(ctx->path);
   if (!dir) return -1;
-  
+
   len = strlen(ctx->path);
-  if(len + 2 > sizeof(file)) return -1;
+  if(len + 2 > sizeof(file)) {
+    closedir(dir);
+    return -1;
+  }
   memcpy(file, ctx->path, len);
   file[len++] = IFS_CH;
   file[len] = '\0';
@@ -425,10 +433,19 @@ int __jlog_pending_readers(jlog_ctx *ctx, u_int32_t log) {
 #endif
       if ((cp = jlog_file_open(file, 0, ctx->file_mode))) {
         if (jlog_file_lock(cp)) {
-          jlog_file_pread(cp, &id, sizeof(id), 0);
+          (void) jlog_file_pread(cp, &id, sizeof(id), 0);
 #ifdef DEBUG
           fprintf(stderr, "\t%u <= %u (pending reader)\n", id.log, log);
 #endif
+          if (!seen) {
+            earliest = id.log;
+            seen = 1;
+          }
+          else {
+            if(id.log < earliest) {
+              earliest = id.log;
+            }
+          }
           if (id.log <= log) {
             readers++;
           }
@@ -439,6 +456,7 @@ int __jlog_pending_readers(jlog_ctx *ctx, u_int32_t log) {
     }
   }
   closedir(dir);
+  if(earliest_out) *earliest_out = earliest;
   return readers;
 }
 struct _jlog_subs {
@@ -553,8 +571,22 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
   }
 
   if(ctx->meta_is_mapped == 0) {
-    if(jlog_file_map_rdwr(ctx->metastore, &base, &len) != 1 ||
-       len != sizeof(*ctx->meta)) {
+    int rv;
+    rv = jlog_file_map_rdwr(ctx->metastore, &base, &len);
+    if(rv != 1) {
+      if (!ilocked) jlog_file_unlock(ctx->metastore);
+      return -1;
+    }
+    if(len == 12) {
+      /* old metastore format doesn't have the new magic hdr in it
+       * we need to extend it by four bytes, but we know the hdr was
+       * previously 0, so we write out zero.
+       */
+       uint32_t dummy = 0;
+       jlog_file_pwrite(ctx->metastore, &dummy, sizeof(dummy), 12);
+       rv = jlog_file_map_rdwr(ctx->metastore, &base, &len);
+    }
+    if(rv != 1 || len != sizeof(*ctx->meta)) {
       if (!ilocked) jlog_file_unlock(ctx->metastore);
       return -1;
     }
@@ -564,6 +596,8 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
 
   if (!ilocked) jlog_file_unlock(ctx->metastore);
 
+  if(ctx->meta != &ctx->pre_init)
+    ctx->pre_init.hdr_magic = ctx->meta->hdr_magic;
   return 0;
 }
 
@@ -899,7 +933,7 @@ restart:
 
     if (!jlog_file_pread(ctx->data, &logmhdr, sizeof(logmhdr), data_off))
       SYS_FAIL(JLOG_ERR_FILE_READ);
-    if (logmhdr.reserved != 0) {
+    if (logmhdr.reserved != ctx->meta->hdr_magic) {
 #ifdef DEBUG
       fprintf(stderr, "logmhdr.reserved == %d\n", logmhdr.reserved);
 #endif
@@ -991,6 +1025,7 @@ jlog_ctx *jlog_new(const char *path) {
   ctx->meta = &ctx->pre_init;
   ctx->pre_init.unit_limit = DEFAULT_UNIT_LIMIT;
   ctx->pre_init.safety = DEFAULT_SAFETY;
+  ctx->pre_init.hdr_magic = DEFAULT_HDR_MAGIC;
   ctx->file_mode = DEFAULT_FILE_MODE;
   ctx->context_mode = JLOG_NEW;
   ctx->path = strdup(path);
@@ -1258,7 +1293,7 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
     goto begin;
   }
 
-  hdr.reserved = 0;
+  hdr.reserved = ctx->meta->hdr_magic;
   if (when) {
     hdr.tv_sec = when->tv_sec;
     hdr.tv_usec = when->tv_usec;
@@ -1382,7 +1417,7 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
                                 jlog_id *start, jlog_id *finish) {
   jlog_id last;
   int closed;
-  
+
   memcpy(start, chkpt, sizeof(*chkpt));
  attempt:
   if(__jlog_resync_index(ctx, start->log, &last, &closed) != 0) {
@@ -1397,7 +1432,7 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
       /* That file doesn't exist... bad, but we can fake a recovery by
          advancing the next file that does exist */
       ctx->last_error = JLOG_ERR_SUCCESS;
-      if(start->log >= ctx->meta->storage_log || ferr != 0 || sb.st_size == 0) {
+      if(start->log >= ctx->meta->storage_log || (ferr != 0 && errno != ENOENT)) {
         /* We don't advance past where people are writing */
         memcpy(finish, start, sizeof(*start));
         return 0;
@@ -1434,7 +1469,15 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
 
     STRSETDATAFILE(ctx, file, start->log + 1);
     while((ferr = stat(file, &sb)) == -1 && errno == EINTR);
-    if(ferr) fprintf(stderr, "stat(%s) error: %s\n", file, strerror(errno));
+    if(ferr) {
+      fprintf(stderr, "stat(%s) error: %s\n", file, strerror(errno));
+      if(start->log < ctx->meta->storage_log - 1) {
+        start->marker = 0;
+        start->log += 2;
+        memcpy(finish, start, sizeof(*start));
+        return 0;
+      }
+    }
     if(start->log >= ctx->meta->storage_log || ferr != 0 || sb.st_size == 0) {
       /* We don't advance past where people are writing */
       memcpy(finish, start, sizeof(*start));
@@ -1656,6 +1699,57 @@ int jlog_ctx_advance_id(jlog_ctx *ctx, jlog_id *cur,
     else start->marker = cur->marker;
   }
   return 0;
+}
+
+static int is_datafile(const char *f, u_int32_t *logid) {
+  int i;
+  u_int32_t l = 0;
+  for(i=0; i<8; i++) {
+    if((f[i] >= '0' && f[i] <= '9') ||
+       (f[i] >= 'a' && f[i] <= 'f')) {
+      l <<= 4;
+      l |= (f[i] < 'a') ? (f[i] - '0') : (f[i] - 'a' + 10);
+    }
+    else
+      return 0;
+  }
+  if(f[i] != '\0') return 0;
+  if(logid) *logid = l;
+  return 1;
+}
+
+int jlog_clean(const char *file) {
+  int rv = -1;
+  u_int32_t earliest = 0;
+  jlog_ctx *log;
+  DIR *dir;
+  struct dirent *de;
+
+  log = jlog_new(file);
+  jlog_ctx_open_writer(log);
+  dir = opendir(file);
+  if(!dir) goto out;
+
+  earliest = 0;
+  if(jlog_pending_readers(log, 0, &earliest) < 0) goto out;
+
+  rv = 0;
+  while((de = readdir(dir)) != NULL) {
+    u_int32_t logid;
+    if(is_datafile(de->d_name, &logid) && logid < earliest) {
+      char fullfile[MAXPATHLEN];
+      char fullidx[MAXPATHLEN];
+      snprintf(fullfile, sizeof(fullfile), "%s/%s", file, de->d_name);
+      snprintf(fullidx, sizeof(fullidx), "%s/%s" INDEX_EXT, file, de->d_name);
+      (void)unlink(fullfile);
+      (void)unlink(fullidx); /* this may not exist; don't care */
+      rv++;
+    }
+  }
+  closedir(dir);
+ out:
+  jlog_ctx_close(log);
+  return rv;
 }
 
 /* vim:se ts=2 sw=2 et: */

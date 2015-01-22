@@ -41,6 +41,7 @@
 #define DEFAULT_FILE_MODE 0640
 #define DEFAULT_UNIT_LIMIT (4*1024*1024)
                          /* 4 Megabytes */
+#define DEFAULT_HDR_MAGIC 0x663A7318
 #define DEFAULT_SAFETY JLOG_ALMOST_SAFE
 #define INDEX_EXT ".idx"
 #define MAXLOGPATHLEN (MAXPATHLEN - (8+sizeof(INDEX_EXT)))
@@ -59,6 +60,7 @@ struct _jlog_meta_info {
   u_int32_t storage_log;
   u_int32_t unit_limit;
   u_int32_t safety;
+  u_int32_t hdr_magic;
 };
 
 struct _jlog_ctx {
