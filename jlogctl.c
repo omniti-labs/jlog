@@ -125,12 +125,12 @@ static void process_jlog(const char *file, const char *sub) {
   }
   if(!sub) {
     if(jlog_ctx_open_writer(log)) {
-      fprintf(stderr, "error opening '%s'\n", file);
+      fprintf(stderr, "error opening '%s': %s\n", file, jlog_ctx_err_string(log));
       return;
     }
   } else {
     if(jlog_ctx_open_reader(log, sub)) {
-      fprintf(stderr, "error opening '%s'\n", file);
+      fprintf(stderr, "error opening '%s': %s\n", file, jlog_ctx_err_string(log));
       return;
     }
   }
