@@ -153,7 +153,7 @@ int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
   /* these values will cause us to fall right into the error clause and
    * start searching for a valid header from offset 0 */
   this = (char*)ctx->mmap_base - sizeof(hdr);
-  hdr.reserved = 0;
+  hdr.reserved = ctx->meta->hdr_magic;
   hdr.mlen = 0;
 
   while (this + sizeof(hdr) <= mmap_end) {
@@ -165,7 +165,7 @@ int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
     }
     if (next + sizeof(hdr) > mmap_end) goto error;
     memcpy(&hdr, next, sizeof(hdr));
-    if (hdr.reserved != 0) goto error;
+    if (hdr.reserved != ctx->meta->hdr_magic) goto error;
     this = next;
     continue;
   error:
@@ -177,7 +177,7 @@ int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
         if (afternext == mmap_end) break;
         if (afternext + sizeof(hdr) > mmap_end) continue;
         memcpy(&hdr, afternext, sizeof(hdr));
-        if (hdr.reserved == 0) break;
+        if (hdr.reserved == ctx->meta->hdr_magic) break;
       }
     }
     /* correct for while loop entry condition */
@@ -254,7 +254,7 @@ int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log, int verbose)
     int initial = 1;
     memcpy(&hdr, this, sizeof(hdr));
     i++;
-    if (hdr.reserved != 0) {
+    if (hdr.reserved != ctx->meta->hdr_magic) {
       fprintf(stderr, "Message %d at [%ld] has invalid reserved value %u\n",
               i, (long int)(this - (char *)ctx->mmap_base), hdr.reserved);
       return 1;
@@ -553,8 +553,22 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
   }
 
   if(ctx->meta_is_mapped == 0) {
-    if(jlog_file_map_rdwr(ctx->metastore, &base, &len) != 1 ||
-       len != sizeof(*ctx->meta)) {
+    int rv;
+    rv = jlog_file_map_rdwr(ctx->metastore, &base, &len);
+    if(rv != 1) {
+      if (!ilocked) jlog_file_unlock(ctx->metastore);
+      return -1;
+    }
+    if(len == 12) {
+      /* old metastore format doesn't have the new magic hdr in it
+       * we need to extend it by four bytes, but we know the hdr was
+       * previously 0, so we write out zero.
+       */
+       uint32_t dummy = 0;
+       jlog_file_pwrite(ctx->metastore, &dummy, sizeof(dummy), 12);
+       rv = jlog_file_map_rdwr(ctx->metastore, &base, &len);
+    }
+    if(rv != 1 || len != sizeof(*ctx->meta)) {
       if (!ilocked) jlog_file_unlock(ctx->metastore);
       return -1;
     }
@@ -564,6 +578,8 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
 
   if (!ilocked) jlog_file_unlock(ctx->metastore);
 
+  if(ctx->meta != &ctx->pre_init)
+    ctx->pre_init.hdr_magic = ctx->meta->hdr_magic;
   return 0;
 }
 
@@ -899,7 +915,7 @@ restart:
 
     if (!jlog_file_pread(ctx->data, &logmhdr, sizeof(logmhdr), data_off))
       SYS_FAIL(JLOG_ERR_FILE_READ);
-    if (logmhdr.reserved != 0) {
+    if (logmhdr.reserved != ctx->meta->hdr_magic) {
 #ifdef DEBUG
       fprintf(stderr, "logmhdr.reserved == %d\n", logmhdr.reserved);
 #endif
@@ -991,6 +1007,7 @@ jlog_ctx *jlog_new(const char *path) {
   ctx->meta = &ctx->pre_init;
   ctx->pre_init.unit_limit = DEFAULT_UNIT_LIMIT;
   ctx->pre_init.safety = DEFAULT_SAFETY;
+  ctx->pre_init.hdr_magic = DEFAULT_HDR_MAGIC;
   ctx->file_mode = DEFAULT_FILE_MODE;
   ctx->context_mode = JLOG_NEW;
   ctx->path = strdup(path);
@@ -1258,7 +1275,7 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
     goto begin;
   }
 
-  hdr.reserved = 0;
+  hdr.reserved = ctx->meta->hdr_magic;
   if (when) {
     hdr.tv_sec = when->tv_sec;
     hdr.tv_usec = when->tv_usec;
