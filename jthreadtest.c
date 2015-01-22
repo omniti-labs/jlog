@@ -109,7 +109,7 @@ void *writer(void *unused) {
 void *reader(void *unused) {
   jlog_ctx *ctx;
   char subname[32];
-  int tcount = 0;
+  int tcount = 0, fcount = 0;
   int prev_err = 0;
   int subno = (int)unused;
   snprintf(subname, sizeof(subname), "sub-%02d", subno);
@@ -151,12 +151,17 @@ reader_retry:
     jlog_snprint_logid(ends, sizeof(ends), &end);
     if(count > 0) {
       int i;
-      fprintf(stderr, "[%02d] reader (%s, %s] count: %d\n", subno, begins, ends, count);
+      //fprintf(stderr, "[%02d] reader (%s, %s] count: %d\n", subno, begins, ends, count);
       for(i=0; i<count; i++, JLOG_ID_ADVANCE(&begin)) {
         end = begin;
         if(jlog_ctx_read_message(ctx, &begin, &message) != 0) {
-          jlog_snprint_logid(begins, sizeof(begins), &begin);
-          fprintf(stderr, "[%02d] read failed @ %s: %d %s\n", subno, begins, jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+          if(jlog_ctx_err(ctx) == JLOG_ERR_CLOSE_LOGID) {
+            /* fine */
+          } else {
+            fcount++;
+            jlog_snprint_logid(begins, sizeof(begins), &begin);
+            fprintf(stderr, "[%02d] read failed @ %s: %d %s\n", subno, begins, jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+          }
         } else {
           tcount++;
           jlog_snprint_logid(begins, sizeof(begins), &begin);
@@ -173,6 +178,7 @@ reader_retry:
       if(writer_done == 1) break;
     }
   }
+  fprintf(stderr, "[%02d] reader read %d, failed %d\n", subno, tcount, fcount);
   jlog_ctx_close(ctx);
   return (void *)tcount;
 }

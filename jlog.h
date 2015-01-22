@@ -118,6 +118,7 @@ typedef enum {
   JLOG_ERR_SUBSCRIBER_EXISTS,
   JLOG_ERR_CHECKPOINT,
   JLOG_ERR_NOT_SUPPORTED,
+  JLOG_ERR_CLOSE_LOGID,
 } jlog_err;
 
 typedef void (*jlog_error_func) (void *ctx, const char *msg, ...);

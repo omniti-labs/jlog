@@ -823,7 +823,6 @@ ___jlog_resync_index(jlog_ctx *ctx, u_int32_t log, jlog_id *last,
 
 #define RESTART do { \
   if (second_try == 0) { \
-    jlog_file_truncate(ctx->index, 0); \
     jlog_file_unlock(ctx->index); \
     second_try = 1; \
     ctx->last_error = JLOG_ERR_SUCCESS; \
@@ -949,9 +948,11 @@ restart:
       index = 0;
       if (!jlog_file_pwrite(ctx->index, &index, sizeof(u_int64_t), index_off))
         RESTART;
+      index_off += sizeof(u_int64_t);
     }
     if(closed) *closed = 1;
   }
+  jlog_file_truncate(ctx->index, index_off);
 #undef RESTART
 
 finish:
@@ -1058,6 +1059,7 @@ const char *jlog_ctx_err_string(jlog_ctx *ctx) {
     MSG_O_MATIC( JLOG_ERR_SUBSCRIBER_EXISTS);
     MSG_O_MATIC( JLOG_ERR_CHECKPOINT);
     MSG_O_MATIC( JLOG_ERR_NOT_SUPPORTED);
+    MSG_O_MATIC( JLOG_ERR_CLOSE_LOGID);
     default: return "Unknown";
   }
 }
@@ -1462,6 +1464,9 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
 int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
   off_t index_len;
   u_int64_t data_off;
+  int with_lock = 0;
+
+ once_more_with_lock:
 
   ctx->last_error = JLOG_ERR_SUCCESS;
   if (ctx->context_mode != JLOG_READ)
@@ -1476,6 +1481,13 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
   __jlog_open_indexer(ctx, id->log);
   if(!ctx->index)
     SYS_FAIL(JLOG_ERR_IDX_OPEN);
+
+  if(with_lock) {
+    if (!jlog_file_lock(ctx->index)) {
+      with_lock = 0;
+      SYS_FAIL(JLOG_ERR_LOCK);
+    }
+  }
 
   if ((index_len = jlog_file_size(ctx->index)) == -1)
     SYS_FAIL(JLOG_ERR_IDX_SEEK);
@@ -1493,7 +1505,10 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
   if (data_off == 0 && id->marker != 1) {
     if (id->marker * sizeof(u_int64_t) == index_len) {
       /* close tag; not a real offset */
-      SYS_FAIL(JLOG_ERR_ILLEGAL_LOGID);
+      ctx->last_error = JLOG_ERR_CLOSE_LOGID;
+      ctx->last_errno = 0;
+      if(with_lock) jlog_file_unlock(ctx->index);
+      return -1;
     } else {
       /* an offset of 0 in the middle of an index means curruption */
       SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
@@ -1525,12 +1540,21 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
   m->mess = (((u_int8_t *)ctx->mmap_base) + data_off + sizeof(jlog_message_header));
 
  finish:
+  if(with_lock) jlog_file_unlock(ctx->index);
   if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
-  if (ctx->last_error == JLOG_ERR_IDX_CORRUPT) {
-    if (jlog_file_lock(ctx->index)) {
-      jlog_file_truncate(ctx->index, 0);
-      jlog_file_unlock(ctx->index);
+  if(!with_lock) {
+    if (ctx->last_error == JLOG_ERR_IDX_CORRUPT) {
+      if (jlog_file_lock(ctx->index)) {
+        jlog_file_truncate(ctx->index, 0);
+        jlog_file_unlock(ctx->index);
+      }
     }
+    ___jlog_resync_index(ctx, id->log, NULL, NULL);
+    with_lock = 1;
+#ifdef DEBUG
+    fprintf(stderr, "read retrying with lock\n");
+#endif
+    goto once_more_with_lock;
   }
   return -1;
 }
