@@ -91,7 +91,7 @@ static int is_datafile(const char *f, u_int32_t *logid) {
 static void analyze_datafile(jlog_ctx *ctx, u_int32_t logid) {
   char idxfile[MAXPATHLEN];
 
-  if (jlog_inspect_datafile(ctx, logid) > 0) {
+  if (jlog_inspect_datafile(ctx, logid, verbose) > 0) {
     fprintf(stderr, "One or more errors were found.\n");
     if(repair_datafiles) {
       jlog_repair_datafile(ctx, logid);

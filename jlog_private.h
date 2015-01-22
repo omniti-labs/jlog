@@ -55,10 +55,17 @@ typedef enum {
   JLOG_INVALID
 } jlog_mode;
 
+struct _jlog_meta_info {
+  u_int32_t storage_log;
+  u_int32_t unit_limit;
+  u_int32_t safety;
+};
+
 struct _jlog_ctx {
-  jlog_safety safety;
+  struct _jlog_meta_info *meta;
+  int       meta_is_mapped;
+  struct _jlog_meta_info pre_init; /* only used before we're opened */
   jlog_mode context_mode;
-  size_t    unit_limit;
   char      *path;
   int       file_mode;
   u_int32_t current_log;
@@ -68,18 +75,11 @@ struct _jlog_ctx {
   jlog_file *metastore;
   void     *mmap_base;
   size_t    mmap_len;
-  jlog_id   storage;
   char     *subscriber_name;
   int       last_error;
   int       last_errno;
   jlog_error_func error_func;
   void *error_ctx;
-};
-
-struct _jlog_meta_info {
-  u_int32_t storage_log;
-  u_int32_t unit_limit;
-  u_int32_t safety;
 };
 
 /* macros */
@@ -126,7 +126,7 @@ JLOG_API(int) jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log);
  * @return 0 OK, 1 segment damaged, -1 other error
  * @internal
  */
-JLOG_API(int) jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log);
+JLOG_API(int) jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log, int verbose);
 /**
  * fetches the last marker in the index and the closedness thereof
  * @return 0 OK, -1 error
