@@ -1,4 +1,4 @@
-#!/opt/msys/3rdParty/bin/perl
+#!/usr/bin/perl
 use strict;
 use warnings;
 use Fcntl;
