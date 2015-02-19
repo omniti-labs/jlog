@@ -2,6 +2,7 @@
 .SUFFIXES: .lo
 
 CC=@CC@
+LN_S=@LN_S@
 CPPFLAGS=@CPPFLAGS@
 CFLAGS=@CFLAGS@
 LDFLAGS=@LDFLAGS@
@@ -15,6 +16,14 @@ SHCFLAGS=@SHCFLAGS@
 DOTSO=@DOTSO@
 JAVAC=@JAVAC@
 JAR=@JAR@
+
+MAJOR_VERSION=1
+MINOR_VERSION=0
+PATCH_VERSION=0
+VERSION=$(MAJOR_VERSION).$(MINOR_VERSION).$(PATCH_VERSION)
+LIBSHORT=@LIBSHORT@
+LIBMAJOR=@LIBMAJOR@
+LIBLONG=@LIBLONG@
 
 prefix=@prefix@
 exec_prefix=@exec_prefix@
@@ -36,7 +45,7 @@ AOBJS= \
 SOOBJS= \
 	jlog.lo jlog_hash.lo jlog_io.lo
 
-all:	libjlog.$(DOTSO) libjlog.a jlogctl jlogtail test jlogperl @JAVA_BITS@
+all:	libjlog.$(DOTSO) libjlog.a jlogctl jlogtail test
 
 .c.o:
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
@@ -65,7 +74,7 @@ jlogtail: libjlog.a jlogtail.o
 	$(CC) $(CFLAGS) -o jlogtail jlogtail.o libjlog.a $(LDFLAGS) $(LIBS)
 
 libjlog.$(DOTSO): $(SOOBJS)
-	$(SHLD) -o libjlog.$(DOTSO) $(SOOBJS) $(LDFLAGS) $(LIBS)
+	$(SHLD) $(LD_LIBJLOG_VERSION) -o libjlog.$(DOTSO) $(SOOBJS) $(LDFLAGS) $(LIBS)
 
 libjlog.a:	$(AOBJS)
 	$(AR) cr libjlog.a $(AOBJS)
@@ -93,12 +102,19 @@ install:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(libdir)
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(includedir)
 	$(INSTALL) -m 0755 jlogctl $(DESTDIR)$(bindir)/jlogctl
+	$(INSTALL) -m 0755 jlogtail $(DESTDIR)$(bindir)/jlogtail
 	$(INSTALL) -m 0755 jlog_change_endian.pl $(DESTDIR)$(bindir)/jlog_change_endian
 	$(INSTALL) -m 0755 jlog_sanity_check.pl $(DESTDIR)$(bindir)/jlog_sanity_check
 	$(INSTALL) -m 0755 libjlog.a $(DESTDIR)$(libdir)/libjlog.a
-	$(INSTALL) -m 0755 libjlog.$(DOTSO) $(DESTDIR)$(libdir)/libjlog.$(DOTSO)
+	$(INSTALL) -m 0755 libjlog.$(DOTSO) $(DESTDIR)$(libdir)/$(LIBLONG)
+	$(LN_S) -f $(LIBLONG) $(DESTDIR)$(libdir)/$(LIBSHORT)
+	$(LN_S) -f $(LIBLONG) $(DESTDIR)$(libdir)/$(LIBMAJOR)
 	$(INSTALL) -m 0644 jlog.h $(DESTDIR)$(includedir)/jlog.h
+	$(INSTALL) -m 0644 jlog_private.h $(DESTDIR)$(includedir)/jlog_private.h
+	$(INSTALL) -m 0644 jlog_io.h $(DESTDIR)$(includedir)/jlog_io.h
 	$(INSTALL) -m 0644 jlog_config.h $(DESTDIR)$(includedir)/jlog_config.h
+
+install-perl:
 	cd perl ; make install DESTDIR=$(DESTDIR) INSTALLDIRS=vendor
 
 clean:

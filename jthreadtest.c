@@ -101,6 +101,7 @@ void *writer(void *unused) {
       fprintf(stderr, "jlog_ctx_write_message failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
       /* abort(); */
     }
+    usleep(100);
   }
   fprintf(stderr, "writer thinks unit_limit is %d\n", ctx->meta->unit_limit);
   jlog_ctx_close(ctx);
@@ -174,7 +175,7 @@ reader_retry:
       if(jlog_ctx_read_checkpoint(ctx, &end) != 0) {
         fprintf(stderr, "[%02d] checkpoint failed: %d %s\n", subno, jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
       } else {
-        /* fprintf(stderr, "[%02d] \tcheckpointed...\n", subno); */
+        fprintf(stderr, "[%02d] \tcheckpointed...\n", subno);
       }
     } else {
       if(writer_done == 1) break;
