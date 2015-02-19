@@ -1,5 +1,10 @@
 Makefile
 autom4te.cache/
+jlogtail
+jtest
+perl/MYMETA.json
+perl/MYMETA.yml
+perl/Makefile.old
 jlog_config.h
 *.a
 *.so
