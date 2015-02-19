@@ -6,6 +6,7 @@ use Cwd qw/abs_path/;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 
+my $extra_lddflags = ("@RLDFLAG@" ne "") ? "@RLDFLAG@@libdir@" : "";
 WriteMakefile(
     NAME              => 'JLog',
     VERSION_FROM      => 'lib/JLog.pm',
@@ -14,7 +15,7 @@ WriteMakefile(
     ($] >= 5.005 ? 
       (ABSTRACT_FROM  => 'lib/JLog.pm',
        AUTHOR         => 'George Schlossnagle <george@omniti.com>') : ()),
-    LDDLFLAGS         => "$Config{lddlflags} @RLDFLAG@@libdir@",
+    LDDLFLAGS         => "$Config{lddlflags} $extra_lddflags",
     LIBS              => ["-L@libdir@ -L.. -ljlog"],
     INC               => '-I.. -I. -I../..',
 	# Un-comment this if you add C files to link with later:
