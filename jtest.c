@@ -33,6 +33,10 @@
 #include <stdio.h>
 #include "jlog.h"
 
+#ifndef MIN
+#define  MIN(x, y)               ((x) < (y) ? (x) : (y))
+#endif
+
 #define SUBSCRIBER "voyeur"
 #define LOGNAME    "/tmp/jtest.foo"
 jlog_ctx *ctx;
