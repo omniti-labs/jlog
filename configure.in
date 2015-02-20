@@ -246,7 +246,7 @@ case $host in
     LIBSHORT='libjlog.$(DOTSO)'
     LIBMAJOR='libjlog.$(MAJOR_VERSION).$(DOTSO)'
     LIBLONG='libjlog.$(VERSION).$(DOTSO)'
-    LD_LIBJLOG_VERSION='-current_version $(VERSION) -install_name $(libdir)/libjlog.$(DOTSO).$(MAJOR_VERSION)'
+    LD_LIBJLOG_VERSION='-current_version $(VERSION) -install_name $(libdir)/libjlog.$(MAJOR_VERSION).$(DOTSO)'
     SHCFLAGS="$CFLAGS"
     SHLD="$CC -dynamiclib -single_module -undefined dynamic_lookup"
     ;;
