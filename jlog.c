@@ -170,8 +170,8 @@ int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
     continue;
   error:
     for (next = this + sizeof(hdr); next + sizeof(hdr) <= mmap_end; next++) {
-      if (!next[0] && !next[1] && !next[2] && !next[3]) {
-        memcpy(&hdr, next, sizeof(hdr));
+      memcpy(&hdr, next, sizeof(hdr));
+      if (hdr.reserved == ctx->meta->hdr_magic) {
         afternext = next + sizeof(hdr) + hdr.mlen;
         if (afternext <= (char *)ctx->mmap_base) continue;
         if (afternext == mmap_end) break;
