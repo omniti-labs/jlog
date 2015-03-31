@@ -1644,7 +1644,6 @@ int jlog_ctx_read_interval(jlog_ctx *ctx, jlog_id *start, jlog_id *finish) {
       /* Should never happen */
       SYS_FAIL(JLOG_ERR_INVALID_SUBSCRIBER);
     }
-    jlog_get_checkpoint(ctx, ctx->subscriber_name, &chkpt);
     fprintf(stderr, "repaired checkpoint for %s: %08x:%08x\n", ctx->path, chkpt.log, chkpt.marker);
     ctx->last_error = JLOG_ERR_SUCCESS;
     count = 0;
