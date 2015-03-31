@@ -1630,6 +1630,26 @@ int jlog_ctx_read_interval(jlog_ctx *ctx, jlog_id *start, jlog_id *finish) {
   count = finish->marker - start->marker;
   if(finish->marker > start->marker) start->marker++;
 
+  /* If the count is less than zero, the checkpoint is off the end
+   * of the file. When this happens, we need to set it to the end of
+   * the file */
+  if (count < 0) {
+    fprintf(stderr, "need to repair checkpoint for %s - start (%08x:%08x) > finish (%08x:%08x)\n", ctx->path, 
+        start->log, start->marker, finish->log, finish->marker);
+    if(__jlog_set_checkpoint(ctx, ctx->subscriber_name, finish) != 0) {
+      fprintf(stderr, "failed repairing checkpoint for %s\n", ctx->path);
+      SYS_FAIL(JLOG_ERR_CHECKPOINT);
+    }
+    if(jlog_get_checkpoint(ctx, ctx->subscriber_name, &chkpt)) {
+      /* Should never happen */
+      SYS_FAIL(JLOG_ERR_INVALID_SUBSCRIBER);
+    }
+    jlog_get_checkpoint(ctx, ctx->subscriber_name, &chkpt);
+    fprintf(stderr, "repaired checkpoint for %s: %08x:%08x\n", ctx->path, chkpt.log, chkpt.marker);
+    ctx->last_error = JLOG_ERR_SUCCESS;
+    count = 0;
+  }
+
   /* We need to munmap it, so that we can remap it with more data if needed */
   __jlog_munmap_reader(ctx);
  finish:
