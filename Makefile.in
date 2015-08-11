@@ -62,6 +62,9 @@ perl/Makefile:	perl/Makefile.PL
 jlogperl:	perl/Makefile
 	@cd perl && make
 
+jlogpython:
+	cd python && make
+
 jlogctl:	libjlog.a jlogctl.o getopt_long.o
 	$(CC) $(CFLAGS) -o jlogctl jlogctl.o getopt_long.o libjlog.a $(LDFLAGS) $(LIBS)
 
@@ -118,10 +121,14 @@ install:
 install-perl:
 	cd perl ; make install DESTDIR=$(DESTDIR) INSTALLDIRS=vendor
 
+install-python:
+	cd python && make install
+
 clean:
 	rm -f *.o *.lo *.$(DOTSO) *.a jthreadtest jtest jlogctl jlogtail
 	rm -f java/*.jar java/*.jnilib java/*.lo
 	-if test -f perl/Makefile ; then cd perl ; make clean ; fi
+	cd python && make clean
 
 distclean: 	clean
 	rm -f Makefile jlog_config.h perl/Makefile.PL
