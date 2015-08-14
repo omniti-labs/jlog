@@ -129,6 +129,7 @@ int jlog_file_close(jlog_file *f)
     assert(jlog_hash_delete(&jlog_files, (void *)&f->id, sizeof(jlog_file_id),
                             NULL, NULL));
     while (close(f->fd) == -1 && errno == EINTR) ;
+    pthread_mutex_destroy(&(f->lock));
     free(f);
   }
   pthread_mutex_unlock(&jlog_files_lock);  
