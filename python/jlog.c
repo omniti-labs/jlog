@@ -419,7 +419,9 @@ static const char *__pyx_f[] = {
 };
 
 /*--- Type declarations ---*/
+struct __pyx_obj_4jlog_BaseJLog;
 struct __pyx_obj_4jlog_JLogReader;
+struct __pyx_obj_4jlog_JLogWriter;
 struct __pyx_t_5cjlog_timeval;
 
 /* "cjlog.pxd":2
@@ -432,24 +434,60 @@ struct __pyx_t_5cjlog_timeval {
   long tv_sec;
   long tv_usec;
 };
+struct __pyx_opt_args_4jlog_jlog_add_subscriber;
 
-/* "jlog.pyx":54
+/* "jlog.pyx":55
  * 
  * 
- * cdef class JLogReader:             # <<<<<<<<<<<<<<
- * 
- *   cdef object ctx_initialized
+ * cpdef jlog_add_subscriber(path, subscriber, position = JLOG_BEGIN):             # <<<<<<<<<<<<<<
+ *   cdef cjlog.jlog_ctx *ctx
+ *   ctx = cjlog.jlog_new(path)
  */
-struct __pyx_obj_4jlog_JLogReader {
+struct __pyx_opt_args_4jlog_jlog_add_subscriber {
+  int __pyx_n;
+  PyObject *position;
+};
+
+/* "jlog.pyx":80
+ * 
+ * # Keep methods and variables that work for both readers and writers here
+ * cdef class BaseJLog:             # <<<<<<<<<<<<<<
+ *   cdef public object ctx_initialized
+ *   cdef public object path
+ */
+struct __pyx_obj_4jlog_BaseJLog {
   PyObject_HEAD
   PyObject *ctx_initialized;
   PyObject *path;
-  PyObject *subscriber;
-  int max_iter;
   jlog_ctx *ctx;
+};
+
+
+/* "jlog.pyx":104
+ * 
+ * 
+ * cdef class JLogReader(BaseJLog):             # <<<<<<<<<<<<<<
+ *   cdef public object subscriber
+ *   cdef cjlog.jlog_id begin
+ */
+struct __pyx_obj_4jlog_JLogReader {
+  struct __pyx_obj_4jlog_BaseJLog __pyx_base;
+  PyObject *subscriber;
   jlog_id begin;
   jlog_id end;
   int count;
+};
+
+
+/* "jlog.pyx":213
+ * 
+ * 
+ * cdef class JLogWriter(BaseJLog):             # <<<<<<<<<<<<<<
+ * 
+ *   # path - the directory path to the jlog directory
+ */
+struct __pyx_obj_4jlog_JLogWriter {
+  struct __pyx_obj_4jlog_BaseJLog __pyx_base;
 };
 
 #ifndef CYTHON_REFNANNY
@@ -665,6 +703,8 @@ static void __pyx_insert_code_object(int code_line, PyCodeObject* code_object);
 static void __Pyx_AddTraceback(const char *funcname, int c_line,
                                int py_line, const char *filename);
 
+static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value);
+
 static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *);
 
 static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value);
@@ -774,22 +814,46 @@ static PyTypeObject *__pyx_ptype_7cpython_7complex_complex = 0;
 /* Module declarations from 'cpython' */
 
 /* Module declarations from 'jlog' */
+static PyTypeObject *__pyx_ptype_4jlog_BaseJLog = 0;
 static PyTypeObject *__pyx_ptype_4jlog_JLogReader = 0;
+static PyTypeObject *__pyx_ptype_4jlog_JLogWriter = 0;
+static PyObject *__pyx_f_4jlog_jlog_add_subscriber(PyObject *, PyObject *, int __pyx_skip_dispatch, struct __pyx_opt_args_4jlog_jlog_add_subscriber *__pyx_optional_args); /*proto*/
+static PyObject *__pyx_f_4jlog_jlog_remove_subscriber(PyObject *, PyObject *, int __pyx_skip_dispatch); /*proto*/
 #define __Pyx_MODULE_NAME "jlog"
 int __pyx_module_is_main_jlog = 0;
 
 /* Implementation of 'jlog' */
 static PyObject *__pyx_builtin_Exception;
 static PyObject *__pyx_builtin_StopIteration;
-static PyObject *__pyx_pf_4jlog_5Error___init__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_message, PyObject *__pyx_v_reason); /* proto */
-static PyObject *__pyx_pf_4jlog_5Error_2__str__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self); /* proto */
-static int __pyx_pf_4jlog_10JLogReader___cinit__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self, PyObject *__pyx_v_path, PyObject *__pyx_v_subscriber, PyObject *__pyx_v_max_iter); /* proto */
+static PyObject *__pyx_pf_4jlog_9JLogError___init__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_message, PyObject *__pyx_v_reason); /* proto */
+static PyObject *__pyx_pf_4jlog_9JLogError_2__str__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_4jlog_jlog_add_subscriber(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_path, PyObject *__pyx_v_subscriber, PyObject *__pyx_v_position); /* proto */
+static PyObject *__pyx_pf_4jlog_2jlog_remove_subscriber(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_path, PyObject *__pyx_v_subscriber); /* proto */
+static PyObject *__pyx_pf_4jlog_8BaseJLog_add_subscriber(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self, PyObject *__pyx_v_subscriber, PyObject *__pyx_v_position); /* proto */
+static PyObject *__pyx_pf_4jlog_8BaseJLog_2remove_subscriber(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self, PyObject *__pyx_v_subscriber); /* proto */
+static PyObject *__pyx_pf_4jlog_8BaseJLog_15ctx_initialized___get__(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self); /* proto */
+static int __pyx_pf_4jlog_8BaseJLog_15ctx_initialized_2__set__(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static int __pyx_pf_4jlog_8BaseJLog_15ctx_initialized_4__del__(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_4jlog_8BaseJLog_4path___get__(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self); /* proto */
+static int __pyx_pf_4jlog_8BaseJLog_4path_2__set__(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static int __pyx_pf_4jlog_8BaseJLog_4path_4__del__(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self); /* proto */
+static int __pyx_pf_4jlog_10JLogReader___cinit__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self, PyObject *__pyx_v_path, PyObject *__pyx_v_subscriber); /* proto */
 static void __pyx_pf_4jlog_10JLogReader_2__dealloc__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_4jlog_10JLogReader_4__next__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self); /* proto */
 static PyObject *__pyx_pf_4jlog_10JLogReader_6__iter__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self); /* proto */
 static Py_ssize_t __pyx_pf_4jlog_10JLogReader_8__len__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self); /* proto */
-static PyObject *__pyx_pf_4jlog_10JLogReader_10error_msg(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_4jlog_10JLogReader_10truncate(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self, PyObject *__pyx_v_size); /* proto */
+static PyObject *__pyx_pf_4jlog_10JLogReader_12error_msg(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_4jlog_10JLogReader_10subscriber___get__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self); /* proto */
+static int __pyx_pf_4jlog_10JLogReader_10subscriber_2__set__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self, PyObject *__pyx_v_value); /* proto */
+static int __pyx_pf_4jlog_10JLogReader_10subscriber_4__del__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self); /* proto */
+static int __pyx_pf_4jlog_10JLogWriter___cinit__(struct __pyx_obj_4jlog_JLogWriter *__pyx_v_self, PyObject *__pyx_v_path); /* proto */
+static PyObject *__pyx_pf_4jlog_10JLogWriter_2write(struct __pyx_obj_4jlog_JLogWriter *__pyx_v_self, PyObject *__pyx_v_msg_py); /* proto */
+static void __pyx_pf_4jlog_10JLogWriter_4__dealloc__(struct __pyx_obj_4jlog_JLogWriter *__pyx_v_self); /* proto */
+static PyObject *__pyx_pf_4jlog_10JLogWriter_6error_msg(struct __pyx_obj_4jlog_JLogWriter *__pyx_v_self); /* proto */
+static PyObject *__pyx_tp_new_4jlog_BaseJLog(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static PyObject *__pyx_tp_new_4jlog_JLogReader(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
+static PyObject *__pyx_tp_new_4jlog_JLogWriter(PyTypeObject *t, PyObject *a, PyObject *k); /*proto*/
 static char __pyx_k_[] = ": ";
 static char __pyx_k_doc[] = "__doc__";
 static char __pyx_k_str[] = "__str__";
@@ -798,30 +862,32 @@ static char __pyx_k_jlog[] = "jlog";
 static char __pyx_k_main[] = "__main__";
 static char __pyx_k_path[] = "path";
 static char __pyx_k_self[] = "self";
+static char __pyx_k_size[] = "size";
 static char __pyx_k_test[] = "__test__";
-static char __pyx_k_Error[] = "Error";
 static char __pyx_k_module[] = "__module__";
 static char __pyx_k_reason[] = "reason";
 static char __pyx_k_message[] = "message";
 static char __pyx_k_prepare[] = "__prepare__";
 static char __pyx_k_JLOG_END[] = "JLOG_END";
-static char __pyx_k_max_iter[] = "max_iter";
+static char __pyx_k_position[] = "position";
 static char __pyx_k_qualname[] = "__qualname__";
 static char __pyx_k_Exception[] = "Exception";
 static char __pyx_k_JLOG_SAFE[] = "JLOG_SAFE";
+static char __pyx_k_JLogError[] = "JLogError";
 static char __pyx_k_error_msg[] = "error_msg";
 static char __pyx_k_metaclass[] = "__metaclass__";
 static char __pyx_k_JLOG_BEGIN[] = "JLOG_BEGIN";
 static char __pyx_k_subscriber[] = "subscriber";
-static char __pyx_k_Error___str[] = "Error.__str__";
 static char __pyx_k_JLOG_UNSAFE[] = "JLOG_UNSAFE";
-static char __pyx_k_Error___init[] = "Error.__init__";
 static char __pyx_k_JLOG_ERR_LOCK[] = "JLOG_ERR_LOCK";
 static char __pyx_k_JLOG_ERR_OPEN[] = "JLOG_ERR_OPEN";
 static char __pyx_k_StopIteration[] = "StopIteration";
 static char __pyx_k_JLOG_ERR_NOTDIR[] = "JLOG_ERR_NOTDIR";
+static char __pyx_k_JLogError___str[] = "JLogError.__str__";
 static char __pyx_k_JLOG_ALMOST_SAFE[] = "JLOG_ALMOST_SAFE";
 static char __pyx_k_JLOG_ERR_SUCCESS[] = "JLOG_ERR_SUCCESS";
+static char __pyx_k_JLogError___init[] = "JLogError.__init__";
+static char __pyx_k_jlog_write_error[] = "jlog write error";
 static char __pyx_k_JLOG_ERR_IDX_OPEN[] = "JLOG_ERR_IDX_OPEN";
 static char __pyx_k_JLOG_ERR_IDX_READ[] = "JLOG_ERR_IDX_READ";
 static char __pyx_k_JLOG_ERR_IDX_SEEK[] = "JLOG_ERR_IDX_SEEK";
@@ -849,12 +915,12 @@ static char __pyx_k_jlog_failed_to_initialize[] = "jlog failed to initialize";
 static char __pyx_k_JLOG_ERR_SUBSCRIBER_EXISTS[] = "JLOG_ERR_SUBSCRIBER_EXISTS";
 static char __pyx_k_JLOG_ERR_ILLEGAL_CHECKPOINT[] = "JLOG_ERR_ILLEGAL_CHECKPOINT";
 static char __pyx_k_JLOG_ERR_INVALID_SUBSCRIBER[] = "JLOG_ERR_INVALID_SUBSCRIBER";
-static char __pyx_k_data_tmp_jlog_python_jlog_pyx[] = "/data/tmp/jlog/python/jlog.pyx";
+static char __pyx_k_jlog_writer_failed_to_open_s[] = "jlog writer failed to open %s";
+static char __pyx_k_data_blockd_logging_python_jlog[] = "/data/blockd/logging/python/jlog/jlog.pyx";
+static char __pyx_k_jlog_writer_failed_reinit_after[] = "jlog writer failed reinit after creation";
 static char __pyx_k_jlog_reader_failed_to_open_subsc[] = "jlog reader failed to open subscriber %s@%s";
+static char __pyx_k_jlog_writer_failed_to_initialize[] = "jlog writer failed to initialize";
 static PyObject *__pyx_kp_s_;
-static PyObject *__pyx_n_s_Error;
-static PyObject *__pyx_n_s_Error___init;
-static PyObject *__pyx_n_s_Error___str;
 static PyObject *__pyx_n_s_Exception;
 static PyObject *__pyx_n_s_JLOG_ALMOST_SAFE;
 static PyObject *__pyx_n_s_JLOG_BEGIN;
@@ -890,8 +956,11 @@ static PyObject *__pyx_n_s_JLOG_ERR_SUBSCRIBER_EXISTS;
 static PyObject *__pyx_n_s_JLOG_ERR_SUCCESS;
 static PyObject *__pyx_n_s_JLOG_SAFE;
 static PyObject *__pyx_n_s_JLOG_UNSAFE;
+static PyObject *__pyx_n_s_JLogError;
+static PyObject *__pyx_n_s_JLogError___init;
+static PyObject *__pyx_n_s_JLogError___str;
 static PyObject *__pyx_n_s_StopIteration;
-static PyObject *__pyx_kp_s_data_tmp_jlog_python_jlog_pyx;
+static PyObject *__pyx_kp_s_data_blockd_logging_python_jlog;
 static PyObject *__pyx_n_s_doc;
 static PyObject *__pyx_n_s_error_msg;
 static PyObject *__pyx_n_s_init;
@@ -899,39 +968,48 @@ static PyObject *__pyx_n_s_jlog;
 static PyObject *__pyx_n_s_jlog_ctx_read_message;
 static PyObject *__pyx_kp_s_jlog_failed_to_initialize;
 static PyObject *__pyx_kp_s_jlog_reader_failed_to_open_subsc;
+static PyObject *__pyx_kp_s_jlog_write_error;
+static PyObject *__pyx_kp_s_jlog_writer_failed_reinit_after;
+static PyObject *__pyx_kp_s_jlog_writer_failed_to_initialize;
+static PyObject *__pyx_kp_s_jlog_writer_failed_to_open_s;
 static PyObject *__pyx_n_s_main;
-static PyObject *__pyx_n_s_max_iter;
 static PyObject *__pyx_n_s_message;
 static PyObject *__pyx_n_s_metaclass;
 static PyObject *__pyx_n_s_module;
 static PyObject *__pyx_n_s_path;
+static PyObject *__pyx_n_s_position;
 static PyObject *__pyx_n_s_prepare;
 static PyObject *__pyx_n_s_qualname;
 static PyObject *__pyx_n_s_reason;
 static PyObject *__pyx_n_s_self;
+static PyObject *__pyx_n_s_size;
 static PyObject *__pyx_n_s_str;
 static PyObject *__pyx_n_s_subscriber;
 static PyObject *__pyx_n_s_test;
-static PyObject *__pyx_int_neg_1;
-static PyObject *__pyx_tuple__2;
-static PyObject *__pyx_tuple__3;
+static PyObject *__pyx_int_0;
+static PyObject *__pyx_k__2;
+static PyObject *__pyx_k__3;
+static PyObject *__pyx_tuple__4;
 static PyObject *__pyx_tuple__5;
 static PyObject *__pyx_tuple__6;
-static PyObject *__pyx_codeobj__4;
-static PyObject *__pyx_codeobj__7;
+static PyObject *__pyx_tuple__7;
+static PyObject *__pyx_tuple__9;
+static PyObject *__pyx_tuple__10;
+static PyObject *__pyx_codeobj__8;
+static PyObject *__pyx_codeobj__11;
 
-/* "jlog.pyx":44
+/* "jlog.pyx":45
  * 
- * class Error(Exception):
+ * class JLogError(Exception):
  *   def __init__(self, message, reason = None):             # <<<<<<<<<<<<<<
  *     if not reason:
  *       self.message = message
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4jlog_5Error_1__init__(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyMethodDef __pyx_mdef_4jlog_5Error_1__init__ = {"__init__", (PyCFunction)__pyx_pw_4jlog_5Error_1__init__, METH_VARARGS|METH_KEYWORDS, 0};
-static PyObject *__pyx_pw_4jlog_5Error_1__init__(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_4jlog_9JLogError_1__init__(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyMethodDef __pyx_mdef_4jlog_9JLogError_1__init__ = {"__init__", (PyCFunction)__pyx_pw_4jlog_9JLogError_1__init__, METH_VARARGS|METH_KEYWORDS, 0};
+static PyObject *__pyx_pw_4jlog_9JLogError_1__init__(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_self = 0;
   PyObject *__pyx_v_message = 0;
   PyObject *__pyx_v_reason = 0;
@@ -963,7 +1041,7 @@ static PyObject *__pyx_pw_4jlog_5Error_1__init__(PyObject *__pyx_self, PyObject 
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_message)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__init__", 0, 2, 3, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("__init__", 0, 2, 3, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
         if (kw_args > 0) {
@@ -972,7 +1050,7 @@ static PyObject *__pyx_pw_4jlog_5Error_1__init__(PyObject *__pyx_self, PyObject 
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__init__") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -989,20 +1067,20 @@ static PyObject *__pyx_pw_4jlog_5Error_1__init__(PyObject *__pyx_self, PyObject 
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__init__", 0, 2, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("__init__", 0, 2, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("jlog.Error.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("jlog.JLogError.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_4jlog_5Error___init__(__pyx_self, __pyx_v_self, __pyx_v_message, __pyx_v_reason);
+  __pyx_r = __pyx_pf_4jlog_9JLogError___init__(__pyx_self, __pyx_v_self, __pyx_v_message, __pyx_v_reason);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4jlog_5Error___init__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_message, PyObject *__pyx_v_reason) {
+static PyObject *__pyx_pf_4jlog_9JLogError___init__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self, PyObject *__pyx_v_message, PyObject *__pyx_v_reason) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
@@ -1014,49 +1092,49 @@ static PyObject *__pyx_pf_4jlog_5Error___init__(CYTHON_UNUSED PyObject *__pyx_se
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__init__", 0);
 
-  /* "jlog.pyx":45
- * class Error(Exception):
+  /* "jlog.pyx":46
+ * class JLogError(Exception):
  *   def __init__(self, message, reason = None):
  *     if not reason:             # <<<<<<<<<<<<<<
  *       self.message = message
  *     else:
  */
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_reason); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_reason); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_2 = ((!__pyx_t_1) != 0);
   if (__pyx_t_2) {
 
-    /* "jlog.pyx":46
+    /* "jlog.pyx":47
  *   def __init__(self, message, reason = None):
  *     if not reason:
  *       self.message = message             # <<<<<<<<<<<<<<
  *     else:
  *       self.message = message + ": " + reason
  */
-    if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_message, __pyx_v_message) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_message, __pyx_v_message) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 47; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     goto __pyx_L3;
   }
   /*else*/ {
 
-    /* "jlog.pyx":48
+    /* "jlog.pyx":49
  *       self.message = message
  *     else:
  *       self.message = message + ": " + reason             # <<<<<<<<<<<<<<
  * 
  *   def __str__(self):
  */
-    __pyx_t_3 = PyNumber_Add(__pyx_v_message, __pyx_kp_s_); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 48; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = PyNumber_Add(__pyx_v_message, __pyx_kp_s_); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 49; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = PyNumber_Add(__pyx_t_3, __pyx_v_reason); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 48; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_4 = PyNumber_Add(__pyx_t_3, __pyx_v_reason); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 49; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_message, __pyx_t_4) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 48; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    if (__Pyx_PyObject_SetAttrStr(__pyx_v_self, __pyx_n_s_message, __pyx_t_4) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 49; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   }
   __pyx_L3:;
 
-  /* "jlog.pyx":44
+  /* "jlog.pyx":45
  * 
- * class Error(Exception):
+ * class JLogError(Exception):
  *   def __init__(self, message, reason = None):             # <<<<<<<<<<<<<<
  *     if not reason:
  *       self.message = message
@@ -1068,7 +1146,7 @@ static PyObject *__pyx_pf_4jlog_5Error___init__(CYTHON_UNUSED PyObject *__pyx_se
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_AddTraceback("jlog.Error.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("jlog.JLogError.__init__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -1076,7 +1154,7 @@ static PyObject *__pyx_pf_4jlog_5Error___init__(CYTHON_UNUSED PyObject *__pyx_se
   return __pyx_r;
 }
 
-/* "jlog.pyx":50
+/* "jlog.pyx":51
  *       self.message = message + ": " + reason
  * 
  *   def __str__(self):             # <<<<<<<<<<<<<<
@@ -1085,20 +1163,20 @@ static PyObject *__pyx_pf_4jlog_5Error___init__(CYTHON_UNUSED PyObject *__pyx_se
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4jlog_5Error_3__str__(PyObject *__pyx_self, PyObject *__pyx_v_self); /*proto*/
-static PyMethodDef __pyx_mdef_4jlog_5Error_3__str__ = {"__str__", (PyCFunction)__pyx_pw_4jlog_5Error_3__str__, METH_O, 0};
-static PyObject *__pyx_pw_4jlog_5Error_3__str__(PyObject *__pyx_self, PyObject *__pyx_v_self) {
+static PyObject *__pyx_pw_4jlog_9JLogError_3__str__(PyObject *__pyx_self, PyObject *__pyx_v_self); /*proto*/
+static PyMethodDef __pyx_mdef_4jlog_9JLogError_3__str__ = {"__str__", (PyCFunction)__pyx_pw_4jlog_9JLogError_3__str__, METH_O, 0};
+static PyObject *__pyx_pw_4jlog_9JLogError_3__str__(PyObject *__pyx_self, PyObject *__pyx_v_self) {
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__str__ (wrapper)", 0);
-  __pyx_r = __pyx_pf_4jlog_5Error_2__str__(__pyx_self, ((PyObject *)__pyx_v_self));
+  __pyx_r = __pyx_pf_4jlog_9JLogError_2__str__(__pyx_self, ((PyObject *)__pyx_v_self));
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4jlog_5Error_2__str__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self) {
+static PyObject *__pyx_pf_4jlog_9JLogError_2__str__(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -1107,7 +1185,7 @@ static PyObject *__pyx_pf_4jlog_5Error_2__str__(CYTHON_UNUSED PyObject *__pyx_se
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__str__", 0);
 
-  /* "jlog.pyx":51
+  /* "jlog.pyx":52
  * 
  *   def __str__(self):
  *     return self.message             # <<<<<<<<<<<<<<
@@ -1115,13 +1193,13 @@ static PyObject *__pyx_pf_4jlog_5Error_2__str__(CYTHON_UNUSED PyObject *__pyx_se
  * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_message); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_self, __pyx_n_s_message); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 52; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "jlog.pyx":50
+  /* "jlog.pyx":51
  *       self.message = message + ": " + reason
  * 
  *   def __str__(self):             # <<<<<<<<<<<<<<
@@ -1132,7 +1210,7 @@ static PyObject *__pyx_pf_4jlog_5Error_2__str__(CYTHON_UNUSED PyObject *__pyx_se
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_AddTraceback("jlog.Error.__str__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("jlog.JLogError.__str__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
   __Pyx_XGIVEREF(__pyx_r);
@@ -1140,30 +1218,149 @@ static PyObject *__pyx_pf_4jlog_5Error_2__str__(CYTHON_UNUSED PyObject *__pyx_se
   return __pyx_r;
 }
 
-/* "jlog.pyx":69
- *   # subscriber - the subscriber for the jlog
- *   # max_iter - limit the number of iterable reads. [default: unlimited]
- *   def __cinit__(self, path, subscriber, max_iter = -1):             # <<<<<<<<<<<<<<
- *     self.path = path
- *     self.subscriber = subscriber
+/* "jlog.pyx":55
+ * 
+ * 
+ * cpdef jlog_add_subscriber(path, subscriber, position = JLOG_BEGIN):             # <<<<<<<<<<<<<<
+ *   cdef cjlog.jlog_ctx *ctx
+ *   ctx = cjlog.jlog_new(path)
  */
 
-/* Python wrapper */
-static int __pyx_pw_4jlog_10JLogReader_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static int __pyx_pw_4jlog_10JLogReader_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
-  PyObject *__pyx_v_path = 0;
-  PyObject *__pyx_v_subscriber = 0;
-  PyObject *__pyx_v_max_iter = 0;
+static PyObject *__pyx_pw_4jlog_1jlog_add_subscriber(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_f_4jlog_jlog_add_subscriber(PyObject *__pyx_v_path, PyObject *__pyx_v_subscriber, CYTHON_UNUSED int __pyx_skip_dispatch, struct __pyx_opt_args_4jlog_jlog_add_subscriber *__pyx_optional_args) {
+  PyObject *__pyx_v_position = __pyx_k__2;
+  jlog_ctx *__pyx_v_ctx;
+  int __pyx_v_error;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  char *__pyx_t_1;
+  int __pyx_t_2;
+  jlog_position __pyx_t_3;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
-  int __pyx_r;
+  __Pyx_RefNannySetupContext("jlog_add_subscriber", 0);
+  if (__pyx_optional_args) {
+    if (__pyx_optional_args->__pyx_n > 0) {
+      __pyx_v_position = __pyx_optional_args->position;
+    }
+  }
+
+  /* "jlog.pyx":57
+ * cpdef jlog_add_subscriber(path, subscriber, position = JLOG_BEGIN):
+ *   cdef cjlog.jlog_ctx *ctx
+ *   ctx = cjlog.jlog_new(path)             # <<<<<<<<<<<<<<
+ *   if ctx is NULL:
+ *     return False
+ */
+  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_path); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 57; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_v_ctx = jlog_new(__pyx_t_1);
+
+  /* "jlog.pyx":58
+ *   cdef cjlog.jlog_ctx *ctx
+ *   ctx = cjlog.jlog_new(path)
+ *   if ctx is NULL:             # <<<<<<<<<<<<<<
+ *     return False
+ *   error = cjlog.jlog_ctx_add_subscriber(ctx, subscriber, position)
+ */
+  __pyx_t_2 = ((__pyx_v_ctx == NULL) != 0);
+  if (__pyx_t_2) {
+
+    /* "jlog.pyx":59
+ *   ctx = cjlog.jlog_new(path)
+ *   if ctx is NULL:
+ *     return False             # <<<<<<<<<<<<<<
+ *   error = cjlog.jlog_ctx_add_subscriber(ctx, subscriber, position)
+ *   if error:
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_False);
+    __pyx_r = Py_False;
+    goto __pyx_L0;
+  }
+
+  /* "jlog.pyx":60
+ *   if ctx is NULL:
+ *     return False
+ *   error = cjlog.jlog_ctx_add_subscriber(ctx, subscriber, position)             # <<<<<<<<<<<<<<
+ *   if error:
+ *     return False
+ */
+  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_subscriber); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 60; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = ((jlog_position)PyInt_AsLong(__pyx_v_position)); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 60; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_v_error = jlog_ctx_add_subscriber(__pyx_v_ctx, __pyx_t_1, __pyx_t_3);
+
+  /* "jlog.pyx":61
+ *     return False
+ *   error = cjlog.jlog_ctx_add_subscriber(ctx, subscriber, position)
+ *   if error:             # <<<<<<<<<<<<<<
+ *     return False
+ *   else:
+ */
+  __pyx_t_2 = (__pyx_v_error != 0);
+  if (__pyx_t_2) {
+
+    /* "jlog.pyx":62
+ *   error = cjlog.jlog_ctx_add_subscriber(ctx, subscriber, position)
+ *   if error:
+ *     return False             # <<<<<<<<<<<<<<
+ *   else:
+ *     return True
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_False);
+    __pyx_r = Py_False;
+    goto __pyx_L0;
+  }
+  /*else*/ {
+
+    /* "jlog.pyx":64
+ *     return False
+ *   else:
+ *     return True             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_True);
+    __pyx_r = Py_True;
+    goto __pyx_L0;
+  }
+
+  /* "jlog.pyx":55
+ * 
+ * 
+ * cpdef jlog_add_subscriber(path, subscriber, position = JLOG_BEGIN):             # <<<<<<<<<<<<<<
+ *   cdef cjlog.jlog_ctx *ctx
+ *   ctx = cjlog.jlog_new(path)
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_AddTraceback("jlog.jlog_add_subscriber", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = 0;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4jlog_1jlog_add_subscriber(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_4jlog_1jlog_add_subscriber(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_path = 0;
+  PyObject *__pyx_v_subscriber = 0;
+  PyObject *__pyx_v_position = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("__cinit__ (wrapper)", 0);
+  __Pyx_RefNannySetupContext("jlog_add_subscriber (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_path,&__pyx_n_s_subscriber,&__pyx_n_s_max_iter,0};
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_path,&__pyx_n_s_subscriber,&__pyx_n_s_position,0};
     PyObject* values[3] = {0,0,0};
-    values[2] = ((PyObject *)__pyx_int_neg_1);
+    values[2] = __pyx_k__2;
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
       const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
@@ -1182,16 +1379,16 @@ static int __pyx_pw_4jlog_10JLogReader_1__cinit__(PyObject *__pyx_v_self, PyObje
         case  1:
         if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_subscriber)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 2, 3, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+          __Pyx_RaiseArgtupleInvalid("jlog_add_subscriber", 0, 2, 3, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
         }
         case  2:
         if (kw_args > 0) {
-          PyObject* value = PyDict_GetItem(__pyx_kwds, __pyx_n_s_max_iter);
+          PyObject* value = PyDict_GetItem(__pyx_kwds, __pyx_n_s_position);
           if (value) { values[2] = value; kw_args--; }
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "jlog_add_subscriber") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
@@ -1204,61 +1401,851 @@ static int __pyx_pw_4jlog_10JLogReader_1__cinit__(PyObject *__pyx_v_self, PyObje
     }
     __pyx_v_path = values[0];
     __pyx_v_subscriber = values[1];
-    __pyx_v_max_iter = values[2];
+    __pyx_v_position = values[2];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("__cinit__", 0, 2, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("jlog_add_subscriber", 0, 2, 3, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
-  __Pyx_AddTraceback("jlog.JLogReader.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_AddTraceback("jlog.jlog_add_subscriber", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
-  return -1;
+  return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_4jlog_10JLogReader___cinit__(((struct __pyx_obj_4jlog_JLogReader *)__pyx_v_self), __pyx_v_path, __pyx_v_subscriber, __pyx_v_max_iter);
+  __pyx_r = __pyx_pf_4jlog_jlog_add_subscriber(__pyx_self, __pyx_v_path, __pyx_v_subscriber, __pyx_v_position);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static int __pyx_pf_4jlog_10JLogReader___cinit__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self, PyObject *__pyx_v_path, PyObject *__pyx_v_subscriber, PyObject *__pyx_v_max_iter) {
+static PyObject *__pyx_pf_4jlog_jlog_add_subscriber(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_path, PyObject *__pyx_v_subscriber, PyObject *__pyx_v_position) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  struct __pyx_opt_args_4jlog_jlog_add_subscriber __pyx_t_2;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("jlog_add_subscriber", 0);
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_2.__pyx_n = 1;
+  __pyx_t_2.position = __pyx_v_position;
+  __pyx_t_1 = __pyx_f_4jlog_jlog_add_subscriber(__pyx_v_path, __pyx_v_subscriber, 0, &__pyx_t_2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("jlog.jlog_add_subscriber", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "jlog.pyx":67
+ * 
+ * 
+ * cpdef jlog_remove_subscriber(path, subscriber):             # <<<<<<<<<<<<<<
+ *   cdef cjlog.jlog_ctx *ctx
+ *   ctx = cjlog.jlog_new(path)
+ */
+
+static PyObject *__pyx_pw_4jlog_3jlog_remove_subscriber(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_f_4jlog_jlog_remove_subscriber(PyObject *__pyx_v_path, PyObject *__pyx_v_subscriber, CYTHON_UNUSED int __pyx_skip_dispatch) {
+  jlog_ctx *__pyx_v_ctx;
+  int __pyx_v_error;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  char *__pyx_t_1;
+  int __pyx_t_2;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("jlog_remove_subscriber", 0);
+
+  /* "jlog.pyx":69
+ * cpdef jlog_remove_subscriber(path, subscriber):
+ *   cdef cjlog.jlog_ctx *ctx
+ *   ctx = cjlog.jlog_new(path)             # <<<<<<<<<<<<<<
+ *   if ctx is NULL:
+ *     return False
+ */
+  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_path); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_v_ctx = jlog_new(__pyx_t_1);
+
+  /* "jlog.pyx":70
+ *   cdef cjlog.jlog_ctx *ctx
+ *   ctx = cjlog.jlog_new(path)
+ *   if ctx is NULL:             # <<<<<<<<<<<<<<
+ *     return False
+ *   error = cjlog.jlog_ctx_remove_subscriber(ctx, subscriber)
+ */
+  __pyx_t_2 = ((__pyx_v_ctx == NULL) != 0);
+  if (__pyx_t_2) {
+
+    /* "jlog.pyx":71
+ *   ctx = cjlog.jlog_new(path)
+ *   if ctx is NULL:
+ *     return False             # <<<<<<<<<<<<<<
+ *   error = cjlog.jlog_ctx_remove_subscriber(ctx, subscriber)
+ *   if error:
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_False);
+    __pyx_r = Py_False;
+    goto __pyx_L0;
+  }
+
+  /* "jlog.pyx":72
+ *   if ctx is NULL:
+ *     return False
+ *   error = cjlog.jlog_ctx_remove_subscriber(ctx, subscriber)             # <<<<<<<<<<<<<<
+ *   if error:
+ *     return False
+ */
+  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_subscriber); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 72; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_v_error = jlog_ctx_remove_subscriber(__pyx_v_ctx, __pyx_t_1);
+
+  /* "jlog.pyx":73
+ *     return False
+ *   error = cjlog.jlog_ctx_remove_subscriber(ctx, subscriber)
+ *   if error:             # <<<<<<<<<<<<<<
+ *     return False
+ *   else:
+ */
+  __pyx_t_2 = (__pyx_v_error != 0);
+  if (__pyx_t_2) {
+
+    /* "jlog.pyx":74
+ *   error = cjlog.jlog_ctx_remove_subscriber(ctx, subscriber)
+ *   if error:
+ *     return False             # <<<<<<<<<<<<<<
+ *   else:
+ *     return True
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_False);
+    __pyx_r = Py_False;
+    goto __pyx_L0;
+  }
+  /*else*/ {
+
+    /* "jlog.pyx":76
+ *     return False
+ *   else:
+ *     return True             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_True);
+    __pyx_r = Py_True;
+    goto __pyx_L0;
+  }
+
+  /* "jlog.pyx":67
+ * 
+ * 
+ * cpdef jlog_remove_subscriber(path, subscriber):             # <<<<<<<<<<<<<<
+ *   cdef cjlog.jlog_ctx *ctx
+ *   ctx = cjlog.jlog_new(path)
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_AddTraceback("jlog.jlog_remove_subscriber", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = 0;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4jlog_3jlog_remove_subscriber(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_4jlog_3jlog_remove_subscriber(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_path = 0;
+  PyObject *__pyx_v_subscriber = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("jlog_remove_subscriber (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_path,&__pyx_n_s_subscriber,0};
+    PyObject* values[2] = {0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_path)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        case  1:
+        if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_subscriber)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("jlog_remove_subscriber", 1, 2, 2, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 67; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "jlog_remove_subscriber") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 67; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+    }
+    __pyx_v_path = values[0];
+    __pyx_v_subscriber = values[1];
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("jlog_remove_subscriber", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 67; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("jlog.jlog_remove_subscriber", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_4jlog_2jlog_remove_subscriber(__pyx_self, __pyx_v_path, __pyx_v_subscriber);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4jlog_2jlog_remove_subscriber(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_path, PyObject *__pyx_v_subscriber) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("jlog_remove_subscriber", 0);
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __pyx_f_4jlog_jlog_remove_subscriber(__pyx_v_path, __pyx_v_subscriber, 0); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 67; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("jlog.jlog_remove_subscriber", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "jlog.pyx":85
+ *   cdef cjlog.jlog_ctx *ctx
+ * 
+ *   def add_subscriber(self, subscriber, position = JLOG_BEGIN):             # <<<<<<<<<<<<<<
+ *     if not self.ctx_initialized:
+ *       return False
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4jlog_8BaseJLog_1add_subscriber(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_4jlog_8BaseJLog_1add_subscriber(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_subscriber = 0;
+  PyObject *__pyx_v_position = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("add_subscriber (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_subscriber,&__pyx_n_s_position,0};
+    PyObject* values[2] = {0,0};
+    values[1] = __pyx_k__3;
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_subscriber)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        case  1:
+        if (kw_args > 0) {
+          PyObject* value = PyDict_GetItem(__pyx_kwds, __pyx_n_s_position);
+          if (value) { values[1] = value; kw_args--; }
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "add_subscriber") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 85; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+      }
+    } else {
+      switch (PyTuple_GET_SIZE(__pyx_args)) {
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+    }
+    __pyx_v_subscriber = values[0];
+    __pyx_v_position = values[1];
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("add_subscriber", 0, 1, 2, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 85; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("jlog.BaseJLog.add_subscriber", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_4jlog_8BaseJLog_add_subscriber(((struct __pyx_obj_4jlog_BaseJLog *)__pyx_v_self), __pyx_v_subscriber, __pyx_v_position);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4jlog_8BaseJLog_add_subscriber(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self, PyObject *__pyx_v_subscriber, PyObject *__pyx_v_position) {
+  int __pyx_v_error;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  int __pyx_t_1;
+  int __pyx_t_2;
+  char *__pyx_t_3;
+  jlog_position __pyx_t_4;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("add_subscriber", 0);
+
+  /* "jlog.pyx":86
+ * 
+ *   def add_subscriber(self, subscriber, position = JLOG_BEGIN):
+ *     if not self.ctx_initialized:             # <<<<<<<<<<<<<<
+ *       return False
+ *     error = cjlog.jlog_ctx_add_subscriber(self.ctx, subscriber, position)
+ */
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->ctx_initialized); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 86; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = ((!__pyx_t_1) != 0);
+  if (__pyx_t_2) {
+
+    /* "jlog.pyx":87
+ *   def add_subscriber(self, subscriber, position = JLOG_BEGIN):
+ *     if not self.ctx_initialized:
+ *       return False             # <<<<<<<<<<<<<<
+ *     error = cjlog.jlog_ctx_add_subscriber(self.ctx, subscriber, position)
+ *     if error:
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_False);
+    __pyx_r = Py_False;
+    goto __pyx_L0;
+  }
+
+  /* "jlog.pyx":88
+ *     if not self.ctx_initialized:
+ *       return False
+ *     error = cjlog.jlog_ctx_add_subscriber(self.ctx, subscriber, position)             # <<<<<<<<<<<<<<
+ *     if error:
+ *       return False
+ */
+  __pyx_t_3 = __Pyx_PyObject_AsString(__pyx_v_subscriber); if (unlikely((!__pyx_t_3) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 88; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = ((jlog_position)PyInt_AsLong(__pyx_v_position)); if (unlikely(PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 88; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_v_error = jlog_ctx_add_subscriber(__pyx_v_self->ctx, __pyx_t_3, __pyx_t_4);
+
+  /* "jlog.pyx":89
+ *       return False
+ *     error = cjlog.jlog_ctx_add_subscriber(self.ctx, subscriber, position)
+ *     if error:             # <<<<<<<<<<<<<<
+ *       return False
+ *     else:
+ */
+  __pyx_t_2 = (__pyx_v_error != 0);
+  if (__pyx_t_2) {
+
+    /* "jlog.pyx":90
+ *     error = cjlog.jlog_ctx_add_subscriber(self.ctx, subscriber, position)
+ *     if error:
+ *       return False             # <<<<<<<<<<<<<<
+ *     else:
+ *       return True
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_False);
+    __pyx_r = Py_False;
+    goto __pyx_L0;
+  }
+  /*else*/ {
+
+    /* "jlog.pyx":92
+ *       return False
+ *     else:
+ *       return True             # <<<<<<<<<<<<<<
+ * 
+ *   def remove_subscriber(self, subscriber):
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_True);
+    __pyx_r = Py_True;
+    goto __pyx_L0;
+  }
+
+  /* "jlog.pyx":85
+ *   cdef cjlog.jlog_ctx *ctx
+ * 
+ *   def add_subscriber(self, subscriber, position = JLOG_BEGIN):             # <<<<<<<<<<<<<<
+ *     if not self.ctx_initialized:
+ *       return False
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_AddTraceback("jlog.BaseJLog.add_subscriber", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "jlog.pyx":94
+ *       return True
+ * 
+ *   def remove_subscriber(self, subscriber):             # <<<<<<<<<<<<<<
+ *     if not self.ctx_initialized:
+ *       return False
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4jlog_8BaseJLog_3remove_subscriber(PyObject *__pyx_v_self, PyObject *__pyx_v_subscriber); /*proto*/
+static PyObject *__pyx_pw_4jlog_8BaseJLog_3remove_subscriber(PyObject *__pyx_v_self, PyObject *__pyx_v_subscriber) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("remove_subscriber (wrapper)", 0);
+  __pyx_r = __pyx_pf_4jlog_8BaseJLog_2remove_subscriber(((struct __pyx_obj_4jlog_BaseJLog *)__pyx_v_self), ((PyObject *)__pyx_v_subscriber));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4jlog_8BaseJLog_2remove_subscriber(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self, PyObject *__pyx_v_subscriber) {
+  int __pyx_v_error;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  int __pyx_t_1;
+  int __pyx_t_2;
+  char *__pyx_t_3;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("remove_subscriber", 0);
+
+  /* "jlog.pyx":95
+ * 
+ *   def remove_subscriber(self, subscriber):
+ *     if not self.ctx_initialized:             # <<<<<<<<<<<<<<
+ *       return False
+ *     error = cjlog.jlog_ctx_remove_subscriber(self.ctx, subscriber)
+ */
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->ctx_initialized); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 95; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = ((!__pyx_t_1) != 0);
+  if (__pyx_t_2) {
+
+    /* "jlog.pyx":96
+ *   def remove_subscriber(self, subscriber):
+ *     if not self.ctx_initialized:
+ *       return False             # <<<<<<<<<<<<<<
+ *     error = cjlog.jlog_ctx_remove_subscriber(self.ctx, subscriber)
+ *     if error:
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_False);
+    __pyx_r = Py_False;
+    goto __pyx_L0;
+  }
+
+  /* "jlog.pyx":97
+ *     if not self.ctx_initialized:
+ *       return False
+ *     error = cjlog.jlog_ctx_remove_subscriber(self.ctx, subscriber)             # <<<<<<<<<<<<<<
+ *     if error:
+ *       return False
+ */
+  __pyx_t_3 = __Pyx_PyObject_AsString(__pyx_v_subscriber); if (unlikely((!__pyx_t_3) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 97; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_v_error = jlog_ctx_remove_subscriber(__pyx_v_self->ctx, __pyx_t_3);
+
+  /* "jlog.pyx":98
+ *       return False
+ *     error = cjlog.jlog_ctx_remove_subscriber(self.ctx, subscriber)
+ *     if error:             # <<<<<<<<<<<<<<
+ *       return False
+ *     else:
+ */
+  __pyx_t_2 = (__pyx_v_error != 0);
+  if (__pyx_t_2) {
+
+    /* "jlog.pyx":99
+ *     error = cjlog.jlog_ctx_remove_subscriber(self.ctx, subscriber)
+ *     if error:
+ *       return False             # <<<<<<<<<<<<<<
+ *     else:
+ *       return True
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_False);
+    __pyx_r = Py_False;
+    goto __pyx_L0;
+  }
+  /*else*/ {
+
+    /* "jlog.pyx":101
+ *       return False
+ *     else:
+ *       return True             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+    __Pyx_XDECREF(__pyx_r);
+    __Pyx_INCREF(Py_True);
+    __pyx_r = Py_True;
+    goto __pyx_L0;
+  }
+
+  /* "jlog.pyx":94
+ *       return True
+ * 
+ *   def remove_subscriber(self, subscriber):             # <<<<<<<<<<<<<<
+ *     if not self.ctx_initialized:
+ *       return False
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_AddTraceback("jlog.BaseJLog.remove_subscriber", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "jlog.pyx":81
+ * # Keep methods and variables that work for both readers and writers here
+ * cdef class BaseJLog:
+ *   cdef public object ctx_initialized             # <<<<<<<<<<<<<<
+ *   cdef public object path
+ *   cdef cjlog.jlog_ctx *ctx
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4jlog_8BaseJLog_15ctx_initialized_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_4jlog_8BaseJLog_15ctx_initialized_1__get__(PyObject *__pyx_v_self) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
+  __pyx_r = __pyx_pf_4jlog_8BaseJLog_15ctx_initialized___get__(((struct __pyx_obj_4jlog_BaseJLog *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4jlog_8BaseJLog_15ctx_initialized___get__(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__get__", 0);
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(__pyx_v_self->ctx_initialized);
+  __pyx_r = __pyx_v_self->ctx_initialized;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static int __pyx_pw_4jlog_8BaseJLog_15ctx_initialized_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_4jlog_8BaseJLog_15ctx_initialized_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
+  __pyx_r = __pyx_pf_4jlog_8BaseJLog_15ctx_initialized_2__set__(((struct __pyx_obj_4jlog_BaseJLog *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static int __pyx_pf_4jlog_8BaseJLog_15ctx_initialized_2__set__(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self, PyObject *__pyx_v_value) {
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__set__", 0);
+  __Pyx_INCREF(__pyx_v_value);
+  __Pyx_GIVEREF(__pyx_v_value);
+  __Pyx_GOTREF(__pyx_v_self->ctx_initialized);
+  __Pyx_DECREF(__pyx_v_self->ctx_initialized);
+  __pyx_v_self->ctx_initialized = __pyx_v_value;
+
+  /* function exit code */
+  __pyx_r = 0;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static int __pyx_pw_4jlog_8BaseJLog_15ctx_initialized_5__del__(PyObject *__pyx_v_self); /*proto*/
+static int __pyx_pw_4jlog_8BaseJLog_15ctx_initialized_5__del__(PyObject *__pyx_v_self) {
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__del__ (wrapper)", 0);
+  __pyx_r = __pyx_pf_4jlog_8BaseJLog_15ctx_initialized_4__del__(((struct __pyx_obj_4jlog_BaseJLog *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static int __pyx_pf_4jlog_8BaseJLog_15ctx_initialized_4__del__(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self) {
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__del__", 0);
+  __Pyx_INCREF(Py_None);
+  __Pyx_GIVEREF(Py_None);
+  __Pyx_GOTREF(__pyx_v_self->ctx_initialized);
+  __Pyx_DECREF(__pyx_v_self->ctx_initialized);
+  __pyx_v_self->ctx_initialized = Py_None;
+
+  /* function exit code */
+  __pyx_r = 0;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "jlog.pyx":82
+ * cdef class BaseJLog:
+ *   cdef public object ctx_initialized
+ *   cdef public object path             # <<<<<<<<<<<<<<
+ *   cdef cjlog.jlog_ctx *ctx
+ * 
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4jlog_8BaseJLog_4path_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_4jlog_8BaseJLog_4path_1__get__(PyObject *__pyx_v_self) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
+  __pyx_r = __pyx_pf_4jlog_8BaseJLog_4path___get__(((struct __pyx_obj_4jlog_BaseJLog *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4jlog_8BaseJLog_4path___get__(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__get__", 0);
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(__pyx_v_self->path);
+  __pyx_r = __pyx_v_self->path;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static int __pyx_pw_4jlog_8BaseJLog_4path_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_4jlog_8BaseJLog_4path_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
+  __pyx_r = __pyx_pf_4jlog_8BaseJLog_4path_2__set__(((struct __pyx_obj_4jlog_BaseJLog *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static int __pyx_pf_4jlog_8BaseJLog_4path_2__set__(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self, PyObject *__pyx_v_value) {
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__set__", 0);
+  __Pyx_INCREF(__pyx_v_value);
+  __Pyx_GIVEREF(__pyx_v_value);
+  __Pyx_GOTREF(__pyx_v_self->path);
+  __Pyx_DECREF(__pyx_v_self->path);
+  __pyx_v_self->path = __pyx_v_value;
+
+  /* function exit code */
+  __pyx_r = 0;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static int __pyx_pw_4jlog_8BaseJLog_4path_5__del__(PyObject *__pyx_v_self); /*proto*/
+static int __pyx_pw_4jlog_8BaseJLog_4path_5__del__(PyObject *__pyx_v_self) {
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__del__ (wrapper)", 0);
+  __pyx_r = __pyx_pf_4jlog_8BaseJLog_4path_4__del__(((struct __pyx_obj_4jlog_BaseJLog *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static int __pyx_pf_4jlog_8BaseJLog_4path_4__del__(struct __pyx_obj_4jlog_BaseJLog *__pyx_v_self) {
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__del__", 0);
+  __Pyx_INCREF(Py_None);
+  __Pyx_GIVEREF(Py_None);
+  __Pyx_GOTREF(__pyx_v_self->path);
+  __Pyx_DECREF(__pyx_v_self->path);
+  __pyx_v_self->path = Py_None;
+
+  /* function exit code */
+  __pyx_r = 0;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "jlog.pyx":113
+ *   # path - the directory path to the jlog directory
+ *   # subscriber - the subscriber for the jlog
+ *   def __cinit__(self, path, subscriber):             # <<<<<<<<<<<<<<
+ *     self.path = path
+ *     self.subscriber = subscriber
+ */
+
+/* Python wrapper */
+static int __pyx_pw_4jlog_10JLogReader_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static int __pyx_pw_4jlog_10JLogReader_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_path = 0;
+  PyObject *__pyx_v_subscriber = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__cinit__ (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_path,&__pyx_n_s_subscriber,0};
+    PyObject* values[2] = {0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_path)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        case  1:
+        if (likely((values[1] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_subscriber)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 2, 2, 1); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 113; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 113; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 2) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+    }
+    __pyx_v_path = values[0];
+    __pyx_v_subscriber = values[1];
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 2, 2, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 113; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("jlog.JLogReader.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return -1;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_4jlog_10JLogReader___cinit__(((struct __pyx_obj_4jlog_JLogReader *)__pyx_v_self), __pyx_v_path, __pyx_v_subscriber);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static int __pyx_pf_4jlog_10JLogReader___cinit__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self, PyObject *__pyx_v_path, PyObject *__pyx_v_subscriber) {
   int __pyx_v_error;
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   char *__pyx_t_1;
   int __pyx_t_2;
-  int __pyx_t_3;
+  PyObject *__pyx_t_3 = NULL;
   PyObject *__pyx_t_4 = NULL;
   PyObject *__pyx_t_5 = NULL;
   PyObject *__pyx_t_6 = NULL;
   PyObject *__pyx_t_7 = NULL;
   PyObject *__pyx_t_8 = NULL;
-  PyObject *__pyx_t_9 = NULL;
-  Py_ssize_t __pyx_t_10;
+  Py_ssize_t __pyx_t_9;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__cinit__", 0);
 
-  /* "jlog.pyx":70
- *   # max_iter - limit the number of iterable reads. [default: unlimited]
- *   def __cinit__(self, path, subscriber, max_iter = -1):
+  /* "jlog.pyx":114
+ *   # subscriber - the subscriber for the jlog
+ *   def __cinit__(self, path, subscriber):
  *     self.path = path             # <<<<<<<<<<<<<<
  *     self.subscriber = subscriber
  *     self.ctx = cjlog.jlog_new(path)
  */
   __Pyx_INCREF(__pyx_v_path);
   __Pyx_GIVEREF(__pyx_v_path);
-  __Pyx_GOTREF(__pyx_v_self->path);
-  __Pyx_DECREF(__pyx_v_self->path);
-  __pyx_v_self->path = __pyx_v_path;
+  __Pyx_GOTREF(__pyx_v_self->__pyx_base.path);
+  __Pyx_DECREF(__pyx_v_self->__pyx_base.path);
+  __pyx_v_self->__pyx_base.path = __pyx_v_path;
 
-  /* "jlog.pyx":71
- *   def __cinit__(self, path, subscriber, max_iter = -1):
+  /* "jlog.pyx":115
+ *   def __cinit__(self, path, subscriber):
  *     self.path = path
  *     self.subscriber = subscriber             # <<<<<<<<<<<<<<
  *     self.ctx = cjlog.jlog_new(path)
- *     self.max_iter = max_iter
+ *     self.count = 0
  */
   __Pyx_INCREF(__pyx_v_subscriber);
   __Pyx_GIVEREF(__pyx_v_subscriber);
@@ -1266,37 +2253,27 @@ static int __pyx_pf_4jlog_10JLogReader___cinit__(struct __pyx_obj_4jlog_JLogRead
   __Pyx_DECREF(__pyx_v_self->subscriber);
   __pyx_v_self->subscriber = __pyx_v_subscriber;
 
-  /* "jlog.pyx":72
+  /* "jlog.pyx":116
  *     self.path = path
  *     self.subscriber = subscriber
  *     self.ctx = cjlog.jlog_new(path)             # <<<<<<<<<<<<<<
- *     self.max_iter = max_iter
- *     self.count = 0
- */
-  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_path); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 72; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_v_self->ctx = jlog_new(__pyx_t_1);
-
-  /* "jlog.pyx":73
- *     self.subscriber = subscriber
- *     self.ctx = cjlog.jlog_new(path)
- *     self.max_iter = max_iter             # <<<<<<<<<<<<<<
  *     self.count = 0
  *     self.ctx_initialized = False
  */
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_v_max_iter); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 73; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_v_self->max_iter = __pyx_t_2;
+  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_path); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 116; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_v_self->__pyx_base.ctx = jlog_new(__pyx_t_1);
 
-  /* "jlog.pyx":74
+  /* "jlog.pyx":117
+ *     self.subscriber = subscriber
  *     self.ctx = cjlog.jlog_new(path)
- *     self.max_iter = max_iter
  *     self.count = 0             # <<<<<<<<<<<<<<
  *     self.ctx_initialized = False
  * 
  */
   __pyx_v_self->count = 0;
 
-  /* "jlog.pyx":75
- *     self.max_iter = max_iter
+  /* "jlog.pyx":118
+ *     self.ctx = cjlog.jlog_new(path)
  *     self.count = 0
  *     self.ctx_initialized = False             # <<<<<<<<<<<<<<
  * 
@@ -1304,172 +2281,172 @@ static int __pyx_pf_4jlog_10JLogReader___cinit__(struct __pyx_obj_4jlog_JLogRead
  */
   __Pyx_INCREF(Py_False);
   __Pyx_GIVEREF(Py_False);
-  __Pyx_GOTREF(__pyx_v_self->ctx_initialized);
-  __Pyx_DECREF(__pyx_v_self->ctx_initialized);
-  __pyx_v_self->ctx_initialized = Py_False;
+  __Pyx_GOTREF(__pyx_v_self->__pyx_base.ctx_initialized);
+  __Pyx_DECREF(__pyx_v_self->__pyx_base.ctx_initialized);
+  __pyx_v_self->__pyx_base.ctx_initialized = Py_False;
 
-  /* "jlog.pyx":77
+  /* "jlog.pyx":120
  *     self.ctx_initialized = False
  * 
  *     if self.ctx is NULL:             # <<<<<<<<<<<<<<
- *       raise Error("jlog failed to initialize")
+ *       raise JLogError("jlog failed to initialize")
  *     else:
  */
-  __pyx_t_3 = ((__pyx_v_self->ctx == NULL) != 0);
-  if (__pyx_t_3) {
+  __pyx_t_2 = ((__pyx_v_self->__pyx_base.ctx == NULL) != 0);
+  if (__pyx_t_2) {
 
-    /* "jlog.pyx":78
+    /* "jlog.pyx":121
  * 
  *     if self.ctx is NULL:
- *       raise Error("jlog failed to initialize")             # <<<<<<<<<<<<<<
+ *       raise JLogError("jlog failed to initialize")             # <<<<<<<<<<<<<<
  *     else:
  *       self.ctx_initialized = True
  */
-    __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_Error); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 78; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_JLogError); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 121; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 121; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 78; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_Raise(__pyx_t_4, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __Pyx_Raise(__pyx_t_5, 0, 0, 0);
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 78; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 121; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
   /*else*/ {
 
-    /* "jlog.pyx":80
- *       raise Error("jlog failed to initialize")
+    /* "jlog.pyx":123
+ *       raise JLogError("jlog failed to initialize")
  *     else:
  *       self.ctx_initialized = True             # <<<<<<<<<<<<<<
  * 
- *     error = cjlog.jlog_ctx_open_reader(self.ctx, PyString_AsString(subscriber))
+ *     error = cjlog.jlog_ctx_open_reader(self.ctx, subscriber)
  */
     __Pyx_INCREF(Py_True);
     __Pyx_GIVEREF(Py_True);
-    __Pyx_GOTREF(__pyx_v_self->ctx_initialized);
-    __Pyx_DECREF(__pyx_v_self->ctx_initialized);
-    __pyx_v_self->ctx_initialized = Py_True;
+    __Pyx_GOTREF(__pyx_v_self->__pyx_base.ctx_initialized);
+    __Pyx_DECREF(__pyx_v_self->__pyx_base.ctx_initialized);
+    __pyx_v_self->__pyx_base.ctx_initialized = Py_True;
   }
 
-  /* "jlog.pyx":82
+  /* "jlog.pyx":125
  *       self.ctx_initialized = True
  * 
- *     error = cjlog.jlog_ctx_open_reader(self.ctx, PyString_AsString(subscriber))             # <<<<<<<<<<<<<<
+ *     error = cjlog.jlog_ctx_open_reader(self.ctx, subscriber)             # <<<<<<<<<<<<<<
  *     if error:
- *       raise Error("jlog reader failed to open subscriber %s@%s" % \
+ *       raise JLogError("jlog reader failed to open subscriber %s@%s" % \
  */
-  __pyx_t_1 = PyString_AsString(__pyx_v_subscriber); if (unlikely(__pyx_t_1 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 82; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_v_error = jlog_ctx_open_reader(__pyx_v_self->ctx, __pyx_t_1);
+  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_subscriber); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 125; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_v_error = jlog_ctx_open_reader(__pyx_v_self->__pyx_base.ctx, __pyx_t_1);
 
-  /* "jlog.pyx":83
+  /* "jlog.pyx":126
  * 
- *     error = cjlog.jlog_ctx_open_reader(self.ctx, PyString_AsString(subscriber))
+ *     error = cjlog.jlog_ctx_open_reader(self.ctx, subscriber)
  *     if error:             # <<<<<<<<<<<<<<
- *       raise Error("jlog reader failed to open subscriber %s@%s" % \
+ *       raise JLogError("jlog reader failed to open subscriber %s@%s" % \
  *           (subscriber, path), JLogReader.error_msg())
  */
-  __pyx_t_3 = (__pyx_v_error != 0);
-  if (__pyx_t_3) {
+  __pyx_t_2 = (__pyx_v_error != 0);
+  if (__pyx_t_2) {
 
-    /* "jlog.pyx":84
- *     error = cjlog.jlog_ctx_open_reader(self.ctx, PyString_AsString(subscriber))
+    /* "jlog.pyx":127
+ *     error = cjlog.jlog_ctx_open_reader(self.ctx, subscriber)
  *     if error:
- *       raise Error("jlog reader failed to open subscriber %s@%s" % \             # <<<<<<<<<<<<<<
+ *       raise JLogError("jlog reader failed to open subscriber %s@%s" % \             # <<<<<<<<<<<<<<
  *           (subscriber, path), JLogReader.error_msg())
  * 
  */
-    __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_Error); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 84; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_JLogError); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 127; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_3);
 
-    /* "jlog.pyx":85
+    /* "jlog.pyx":128
  *     if error:
- *       raise Error("jlog reader failed to open subscriber %s@%s" % \
+ *       raise JLogError("jlog reader failed to open subscriber %s@%s" % \
  *           (subscriber, path), JLogReader.error_msg())             # <<<<<<<<<<<<<<
  * 
  * 
  */
-    __pyx_t_6 = PyTuple_New(2); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 85; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_6);
+    __pyx_t_5 = PyTuple_New(2); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 128; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_5);
     __Pyx_INCREF(__pyx_v_subscriber);
-    PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_v_subscriber);
+    PyTuple_SET_ITEM(__pyx_t_5, 0, __pyx_v_subscriber);
     __Pyx_GIVEREF(__pyx_v_subscriber);
     __Pyx_INCREF(__pyx_v_path);
-    PyTuple_SET_ITEM(__pyx_t_6, 1, __pyx_v_path);
+    PyTuple_SET_ITEM(__pyx_t_5, 1, __pyx_v_path);
     __Pyx_GIVEREF(__pyx_v_path);
 
-    /* "jlog.pyx":84
- *     error = cjlog.jlog_ctx_open_reader(self.ctx, PyString_AsString(subscriber))
+    /* "jlog.pyx":127
+ *     error = cjlog.jlog_ctx_open_reader(self.ctx, subscriber)
  *     if error:
- *       raise Error("jlog reader failed to open subscriber %s@%s" % \             # <<<<<<<<<<<<<<
+ *       raise JLogError("jlog reader failed to open subscriber %s@%s" % \             # <<<<<<<<<<<<<<
  *           (subscriber, path), JLogReader.error_msg())
  * 
  */
-    __pyx_t_7 = __Pyx_PyString_Format(__pyx_kp_s_jlog_reader_failed_to_open_subsc, __pyx_t_6); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 84; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_7);
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __pyx_t_6 = __Pyx_PyString_Format(__pyx_kp_s_jlog_reader_failed_to_open_subsc, __pyx_t_5); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 127; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_6);
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
 
-    /* "jlog.pyx":85
+    /* "jlog.pyx":128
  *     if error:
- *       raise Error("jlog reader failed to open subscriber %s@%s" % \
+ *       raise JLogError("jlog reader failed to open subscriber %s@%s" % \
  *           (subscriber, path), JLogReader.error_msg())             # <<<<<<<<<<<<<<
  * 
  * 
  */
-    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)((PyObject*)__pyx_ptype_4jlog_JLogReader)), __pyx_n_s_error_msg); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 85; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_8);
-    __pyx_t_9 = NULL;
-    if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_8))) {
-      __pyx_t_9 = PyMethod_GET_SELF(__pyx_t_8);
-      if (likely(__pyx_t_9)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_8);
-        __Pyx_INCREF(__pyx_t_9);
-        __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_8, function);
-      }
-    }
-    if (__pyx_t_9) {
-      __pyx_t_6 = __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_t_9); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 85; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    } else {
-      __pyx_t_6 = __Pyx_PyObject_CallNoArg(__pyx_t_8); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 85; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    }
-    __Pyx_GOTREF(__pyx_t_6);
-    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    __pyx_t_7 = __Pyx_PyObject_GetAttrStr(((PyObject *)((PyObject*)__pyx_ptype_4jlog_JLogReader)), __pyx_n_s_error_msg); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 128; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_7);
     __pyx_t_8 = NULL;
-    __pyx_t_10 = 0;
-    if (CYTHON_COMPILING_IN_CPYTHON && unlikely(PyMethod_Check(__pyx_t_4))) {
-      __pyx_t_8 = PyMethod_GET_SELF(__pyx_t_4);
+    if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_7))) {
+      __pyx_t_8 = PyMethod_GET_SELF(__pyx_t_7);
       if (likely(__pyx_t_8)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_7);
         __Pyx_INCREF(__pyx_t_8);
         __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_4, function);
-        __pyx_t_10 = 1;
+        __Pyx_DECREF_SET(__pyx_t_7, function);
       }
     }
-    __pyx_t_9 = PyTuple_New(2+__pyx_t_10); if (unlikely(!__pyx_t_9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 84; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_9);
     if (__pyx_t_8) {
-      PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_8); __Pyx_GIVEREF(__pyx_t_8); __pyx_t_8 = NULL;
+      __pyx_t_5 = __Pyx_PyObject_CallOneArg(__pyx_t_7, __pyx_t_8); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 128; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    } else {
+      __pyx_t_5 = __Pyx_PyObject_CallNoArg(__pyx_t_7); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 128; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
-    PyTuple_SET_ITEM(__pyx_t_9, 0+__pyx_t_10, __pyx_t_7);
-    __Pyx_GIVEREF(__pyx_t_7);
-    PyTuple_SET_ITEM(__pyx_t_9, 1+__pyx_t_10, __pyx_t_6);
-    __Pyx_GIVEREF(__pyx_t_6);
-    __pyx_t_7 = 0;
-    __pyx_t_6 = 0;
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_9, NULL); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 84; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __pyx_t_7 = NULL;
+    __pyx_t_9 = 0;
+    if (CYTHON_COMPILING_IN_CPYTHON && unlikely(PyMethod_Check(__pyx_t_3))) {
+      __pyx_t_7 = PyMethod_GET_SELF(__pyx_t_3);
+      if (likely(__pyx_t_7)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+        __Pyx_INCREF(__pyx_t_7);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_3, function);
+        __pyx_t_9 = 1;
+      }
+    }
+    __pyx_t_8 = PyTuple_New(2+__pyx_t_9); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 127; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_8);
+    if (__pyx_t_7) {
+      PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_7); __Pyx_GIVEREF(__pyx_t_7); __pyx_t_7 = NULL;
+    }
+    PyTuple_SET_ITEM(__pyx_t_8, 0+__pyx_t_9, __pyx_t_6);
+    __Pyx_GIVEREF(__pyx_t_6);
+    PyTuple_SET_ITEM(__pyx_t_8, 1+__pyx_t_9, __pyx_t_5);
+    __Pyx_GIVEREF(__pyx_t_5);
+    __pyx_t_6 = 0;
+    __pyx_t_5 = 0;
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_8, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 127; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_4);
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_Raise(__pyx_t_4, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __Pyx_Raise(__pyx_t_5, 0, 0, 0);
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 84; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 127; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
 
-  /* "jlog.pyx":69
+  /* "jlog.pyx":113
+ *   # path - the directory path to the jlog directory
  *   # subscriber - the subscriber for the jlog
- *   # max_iter - limit the number of iterable reads. [default: unlimited]
- *   def __cinit__(self, path, subscriber, max_iter = -1):             # <<<<<<<<<<<<<<
+ *   def __cinit__(self, path, subscriber):             # <<<<<<<<<<<<<<
  *     self.path = path
  *     self.subscriber = subscriber
  */
@@ -1478,12 +2455,12 @@ static int __pyx_pf_4jlog_10JLogReader___cinit__(struct __pyx_obj_4jlog_JLogRead
   __pyx_r = 0;
   goto __pyx_L0;
   __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_3);
   __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_7);
   __Pyx_XDECREF(__pyx_t_8);
-  __Pyx_XDECREF(__pyx_t_9);
   __Pyx_AddTraceback("jlog.JLogReader.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
@@ -1491,7 +2468,7 @@ static int __pyx_pf_4jlog_10JLogReader___cinit__(struct __pyx_obj_4jlog_JLogRead
   return __pyx_r;
 }
 
-/* "jlog.pyx":88
+/* "jlog.pyx":131
  * 
  * 
  *   def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -1518,26 +2495,26 @@ static void __pyx_pf_4jlog_10JLogReader_2__dealloc__(struct __pyx_obj_4jlog_JLog
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__dealloc__", 0);
 
-  /* "jlog.pyx":89
+  /* "jlog.pyx":132
  * 
  *   def __dealloc__(self):
  *     if self.ctx_initialized:             # <<<<<<<<<<<<<<
  *       cjlog.jlog_ctx_close(self.ctx)
  *       self.ctx_initialized = False
  */
-  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->ctx_initialized); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 89; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->__pyx_base.ctx_initialized); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 132; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__pyx_t_1) {
 
-    /* "jlog.pyx":90
+    /* "jlog.pyx":133
  *   def __dealloc__(self):
  *     if self.ctx_initialized:
  *       cjlog.jlog_ctx_close(self.ctx)             # <<<<<<<<<<<<<<
  *       self.ctx_initialized = False
  * 
  */
-    jlog_ctx_close(__pyx_v_self->ctx);
+    jlog_ctx_close(__pyx_v_self->__pyx_base.ctx);
 
-    /* "jlog.pyx":91
+    /* "jlog.pyx":134
  *     if self.ctx_initialized:
  *       cjlog.jlog_ctx_close(self.ctx)
  *       self.ctx_initialized = False             # <<<<<<<<<<<<<<
@@ -1546,14 +2523,14 @@ static void __pyx_pf_4jlog_10JLogReader_2__dealloc__(struct __pyx_obj_4jlog_JLog
  */
     __Pyx_INCREF(Py_False);
     __Pyx_GIVEREF(Py_False);
-    __Pyx_GOTREF(__pyx_v_self->ctx_initialized);
-    __Pyx_DECREF(__pyx_v_self->ctx_initialized);
-    __pyx_v_self->ctx_initialized = Py_False;
+    __Pyx_GOTREF(__pyx_v_self->__pyx_base.ctx_initialized);
+    __Pyx_DECREF(__pyx_v_self->__pyx_base.ctx_initialized);
+    __pyx_v_self->__pyx_base.ctx_initialized = Py_False;
     goto __pyx_L3;
   }
   __pyx_L3:;
 
-  /* "jlog.pyx":88
+  /* "jlog.pyx":131
  * 
  * 
  *   def __dealloc__(self):             # <<<<<<<<<<<<<<
@@ -1569,7 +2546,7 @@ static void __pyx_pf_4jlog_10JLogReader_2__dealloc__(struct __pyx_obj_4jlog_JLog
   __Pyx_RefNannyFinishContext();
 }
 
-/* "jlog.pyx":95
+/* "jlog.pyx":138
  * 
  *   # python iterable interface.
  *   def __next__(self):             # <<<<<<<<<<<<<<
@@ -1592,91 +2569,80 @@ static PyObject *__pyx_pw_4jlog_10JLogReader_5__next__(PyObject *__pyx_v_self) {
 
 static PyObject *__pyx_pf_4jlog_10JLogReader_4__next__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self) {
   jlog_message __pyx_v_msg;
-  int __pyx_v_count;
   int __pyx_v_error;
   PyObject *__pyx_v_pystr = NULL;
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
-  int __pyx_t_2;
-  int __pyx_t_3;
-  int __pyx_t_4;
+  PyObject *__pyx_t_2 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
   PyObject *__pyx_t_5 = NULL;
   PyObject *__pyx_t_6 = NULL;
-  PyObject *__pyx_t_7 = NULL;
-  PyObject *__pyx_t_8 = NULL;
-  PyObject *__pyx_t_9 = NULL;
-  Py_ssize_t __pyx_t_10;
+  Py_ssize_t __pyx_t_7;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("__next__", 0);
 
-  /* "jlog.pyx":98
- *     cdef cjlog.jlog_message msg
+  /* "jlog.pyx":143
+ *     # Stop iteration if we reached -1 (end of data) on the last
+ *     # iteration. Set count to 0 so iteration can try again
+ *     if self.count is -1:             # <<<<<<<<<<<<<<
+ *       self.count = 0
+ *       raise StopIteration()
+ */
+  __pyx_t_1 = ((__pyx_v_self->count == -1) != 0);
+  if (__pyx_t_1) {
+
+    /* "jlog.pyx":144
+ *     # iteration. Set count to 0 so iteration can try again
+ *     if self.count is -1:
+ *       self.count = 0             # <<<<<<<<<<<<<<
+ *       raise StopIteration()
+ * 
+ */
+    __pyx_v_self->count = 0;
+
+    /* "jlog.pyx":145
+ *     if self.count is -1:
+ *       self.count = 0
+ *       raise StopIteration()             # <<<<<<<<<<<<<<
+ * 
+ *     if not self.count:
+ */
+    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_builtin_StopIteration); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 145; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_Raise(__pyx_t_2, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 145; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  }
+
+  /* "jlog.pyx":147
+ *       raise StopIteration()
  * 
  *     if not self.count:             # <<<<<<<<<<<<<<
  *       # check and see if there's anything to read since the last batch
- *       count = cjlog.jlog_ctx_read_interval(self.ctx, &self.begin, \
+ *       self.count = cjlog.jlog_ctx_read_interval(self.ctx, &self.begin, \
  */
   __pyx_t_1 = ((!(__pyx_v_self->count != 0)) != 0);
   if (__pyx_t_1) {
 
-    /* "jlog.pyx":100
+    /* "jlog.pyx":149
  *     if not self.count:
  *       # check and see if there's anything to read since the last batch
- *       count = cjlog.jlog_ctx_read_interval(self.ctx, &self.begin, \             # <<<<<<<<<<<<<<
+ *       self.count = cjlog.jlog_ctx_read_interval(self.ctx, &self.begin, \             # <<<<<<<<<<<<<<
  *           &self.end)
- *       if self.max_iter > 0:
- */
-    __pyx_v_count = jlog_ctx_read_interval(__pyx_v_self->ctx, (&__pyx_v_self->begin), (&__pyx_v_self->end));
-
-    /* "jlog.pyx":102
- *       count = cjlog.jlog_ctx_read_interval(self.ctx, &self.begin, \
- *           &self.end)
- *       if self.max_iter > 0:             # <<<<<<<<<<<<<<
- *         # limit reads if max_iter smaller
- *         self.count = min(self.max_iter, count)
- */
-    __pyx_t_1 = ((__pyx_v_self->max_iter > 0) != 0);
-    if (__pyx_t_1) {
-
-      /* "jlog.pyx":104
- *       if self.max_iter > 0:
- *         # limit reads if max_iter smaller
- *         self.count = min(self.max_iter, count)             # <<<<<<<<<<<<<<
- *       else:
- *         self.count = count
- */
-      __pyx_t_2 = __pyx_v_count;
-      __pyx_t_3 = __pyx_v_self->max_iter;
-      if (((__pyx_t_2 < __pyx_t_3) != 0)) {
-        __pyx_t_4 = __pyx_t_2;
-      } else {
-        __pyx_t_4 = __pyx_t_3;
-      }
-      __pyx_v_self->count = __pyx_t_4;
-      goto __pyx_L4;
-    }
-    /*else*/ {
-
-      /* "jlog.pyx":106
- *         self.count = min(self.max_iter, count)
- *       else:
- *         self.count = count             # <<<<<<<<<<<<<<
  * 
- *     if self.count < 1:
  */
-      __pyx_v_self->count = __pyx_v_count;
-    }
-    __pyx_L4:;
-    goto __pyx_L3;
+    __pyx_v_self->count = jlog_ctx_read_interval(__pyx_v_self->__pyx_base.ctx, (&__pyx_v_self->begin), (&__pyx_v_self->end));
+    goto __pyx_L4;
   }
-  __pyx_L3:;
+  __pyx_L4:;
 
-  /* "jlog.pyx":108
- *         self.count = count
+  /* "jlog.pyx":153
  * 
+ *     # nothing to read
  *     if self.count < 1:             # <<<<<<<<<<<<<<
  *       raise StopIteration()
  * 
@@ -1684,145 +2650,154 @@ static PyObject *__pyx_pf_4jlog_10JLogReader_4__next__(struct __pyx_obj_4jlog_JL
   __pyx_t_1 = ((__pyx_v_self->count < 1) != 0);
   if (__pyx_t_1) {
 
-    /* "jlog.pyx":109
- * 
+    /* "jlog.pyx":154
+ *     # nothing to read
  *     if self.count < 1:
  *       raise StopIteration()             # <<<<<<<<<<<<<<
  * 
  *     error = cjlog.jlog_ctx_read_message(self.ctx, &self.begin, &msg)
  */
-    __pyx_t_5 = __Pyx_PyObject_CallNoArg(__pyx_builtin_StopIteration); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 109; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_Raise(__pyx_t_5, 0, 0, 0);
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 109; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_2 = __Pyx_PyObject_CallNoArg(__pyx_builtin_StopIteration); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 154; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_Raise(__pyx_t_2, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 154; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
 
-  /* "jlog.pyx":111
+  /* "jlog.pyx":156
  *       raise StopIteration()
  * 
  *     error = cjlog.jlog_ctx_read_message(self.ctx, &self.begin, &msg)             # <<<<<<<<<<<<<<
  *     if error:
- *       raise Error("jlog_ctx_read_message", JLogReader.error_msg())
+ *       raise JLogError("jlog_ctx_read_message", JLogReader.error_msg())
  */
-  __pyx_v_error = jlog_ctx_read_message(__pyx_v_self->ctx, (&__pyx_v_self->begin), (&__pyx_v_msg));
+  __pyx_v_error = jlog_ctx_read_message(__pyx_v_self->__pyx_base.ctx, (&__pyx_v_self->begin), (&__pyx_v_msg));
 
-  /* "jlog.pyx":112
+  /* "jlog.pyx":157
  * 
  *     error = cjlog.jlog_ctx_read_message(self.ctx, &self.begin, &msg)
  *     if error:             # <<<<<<<<<<<<<<
- *       raise Error("jlog_ctx_read_message", JLogReader.error_msg())
+ *       raise JLogError("jlog_ctx_read_message", JLogReader.error_msg())
  * 
  */
   __pyx_t_1 = (__pyx_v_error != 0);
   if (__pyx_t_1) {
 
-    /* "jlog.pyx":113
+    /* "jlog.pyx":158
  *     error = cjlog.jlog_ctx_read_message(self.ctx, &self.begin, &msg)
  *     if error:
- *       raise Error("jlog_ctx_read_message", JLogReader.error_msg())             # <<<<<<<<<<<<<<
+ *       raise JLogError("jlog_ctx_read_message", JLogReader.error_msg())             # <<<<<<<<<<<<<<
+ * 
+ *     # checkpoint the read since we don't know when the caller will stop or
+ */
+    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_JLogError); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 158; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_5 = __Pyx_PyObject_GetAttrStr(((PyObject *)((PyObject*)__pyx_ptype_4jlog_JLogReader)), __pyx_n_s_error_msg); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 158; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_5);
+    __pyx_t_6 = NULL;
+    if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_5))) {
+      __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_5);
+      if (likely(__pyx_t_6)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_5);
+        __Pyx_INCREF(__pyx_t_6);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_5, function);
+      }
+    }
+    if (__pyx_t_6) {
+      __pyx_t_4 = __Pyx_PyObject_CallOneArg(__pyx_t_5, __pyx_t_6); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 158; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    } else {
+      __pyx_t_4 = __Pyx_PyObject_CallNoArg(__pyx_t_5); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 158; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    }
+    __Pyx_GOTREF(__pyx_t_4);
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_t_5 = NULL;
+    __pyx_t_7 = 0;
+    if (CYTHON_COMPILING_IN_CPYTHON && unlikely(PyMethod_Check(__pyx_t_3))) {
+      __pyx_t_5 = PyMethod_GET_SELF(__pyx_t_3);
+      if (likely(__pyx_t_5)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+        __Pyx_INCREF(__pyx_t_5);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_3, function);
+        __pyx_t_7 = 1;
+      }
+    }
+    __pyx_t_6 = PyTuple_New(2+__pyx_t_7); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 158; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_6);
+    if (__pyx_t_5) {
+      PyTuple_SET_ITEM(__pyx_t_6, 0, __pyx_t_5); __Pyx_GIVEREF(__pyx_t_5); __pyx_t_5 = NULL;
+    }
+    __Pyx_INCREF(__pyx_n_s_jlog_ctx_read_message);
+    PyTuple_SET_ITEM(__pyx_t_6, 0+__pyx_t_7, __pyx_n_s_jlog_ctx_read_message);
+    __Pyx_GIVEREF(__pyx_n_s_jlog_ctx_read_message);
+    PyTuple_SET_ITEM(__pyx_t_6, 1+__pyx_t_7, __pyx_t_4);
+    __Pyx_GIVEREF(__pyx_t_4);
+    __pyx_t_4 = 0;
+    __pyx_t_2 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_6, NULL); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 158; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_Raise(__pyx_t_2, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 158; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  }
+
+  /* "jlog.pyx":164
+ *     # XXX - make checkpoint happen on exceptions, dealloc. Calling it every
+ *     #       read is slow
+ *     cjlog.jlog_ctx_read_checkpoint(self.ctx, &self.begin)             # <<<<<<<<<<<<<<
  * 
  *     pystr = PyString_FromStringAndSize(<char *>msg.mess, msg.mess_len)
  */
-    __pyx_t_6 = __Pyx_GetModuleGlobalName(__pyx_n_s_Error); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 113; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_6);
-    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)((PyObject*)__pyx_ptype_4jlog_JLogReader)), __pyx_n_s_error_msg); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 113; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_8);
-    __pyx_t_9 = NULL;
-    if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_8))) {
-      __pyx_t_9 = PyMethod_GET_SELF(__pyx_t_8);
-      if (likely(__pyx_t_9)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_8);
-        __Pyx_INCREF(__pyx_t_9);
-        __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_8, function);
-      }
-    }
-    if (__pyx_t_9) {
-      __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_t_9); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 113; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    } else {
-      __pyx_t_7 = __Pyx_PyObject_CallNoArg(__pyx_t_8); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 113; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    }
-    __Pyx_GOTREF(__pyx_t_7);
-    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
-    __pyx_t_8 = NULL;
-    __pyx_t_10 = 0;
-    if (CYTHON_COMPILING_IN_CPYTHON && unlikely(PyMethod_Check(__pyx_t_6))) {
-      __pyx_t_8 = PyMethod_GET_SELF(__pyx_t_6);
-      if (likely(__pyx_t_8)) {
-        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_6);
-        __Pyx_INCREF(__pyx_t_8);
-        __Pyx_INCREF(function);
-        __Pyx_DECREF_SET(__pyx_t_6, function);
-        __pyx_t_10 = 1;
-      }
-    }
-    __pyx_t_9 = PyTuple_New(2+__pyx_t_10); if (unlikely(!__pyx_t_9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 113; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_9);
-    if (__pyx_t_8) {
-      PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_8); __Pyx_GIVEREF(__pyx_t_8); __pyx_t_8 = NULL;
-    }
-    __Pyx_INCREF(__pyx_n_s_jlog_ctx_read_message);
-    PyTuple_SET_ITEM(__pyx_t_9, 0+__pyx_t_10, __pyx_n_s_jlog_ctx_read_message);
-    __Pyx_GIVEREF(__pyx_n_s_jlog_ctx_read_message);
-    PyTuple_SET_ITEM(__pyx_t_9, 1+__pyx_t_10, __pyx_t_7);
-    __Pyx_GIVEREF(__pyx_t_7);
-    __pyx_t_7 = 0;
-    __pyx_t_5 = __Pyx_PyObject_Call(__pyx_t_6, __pyx_t_9, NULL); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 113; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_5);
-    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    __Pyx_Raise(__pyx_t_5, 0, 0, 0);
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 113; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  }
+  jlog_ctx_read_checkpoint(__pyx_v_self->__pyx_base.ctx, (&__pyx_v_self->begin));
 
-  /* "jlog.pyx":115
- *       raise Error("jlog_ctx_read_message", JLogReader.error_msg())
+  /* "jlog.pyx":166
+ *     cjlog.jlog_ctx_read_checkpoint(self.ctx, &self.begin)
  * 
  *     pystr = PyString_FromStringAndSize(<char *>msg.mess, msg.mess_len)             # <<<<<<<<<<<<<<
  * 
  *     self.count -= 1
  */
-  __pyx_t_5 = PyString_FromStringAndSize(((char *)__pyx_v_msg.mess), __pyx_v_msg.mess_len); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 115; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_5);
-  __pyx_v_pystr = __pyx_t_5;
-  __pyx_t_5 = 0;
+  __pyx_t_2 = PyString_FromStringAndSize(((char *)__pyx_v_msg.mess), __pyx_v_msg.mess_len); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 166; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_v_pystr = __pyx_t_2;
+  __pyx_t_2 = 0;
 
-  /* "jlog.pyx":117
+  /* "jlog.pyx":168
  *     pystr = PyString_FromStringAndSize(<char *>msg.mess, msg.mess_len)
  * 
  *     self.count -= 1             # <<<<<<<<<<<<<<
  *     if not self.count:
- *       # since we may not be at the true end due to max_iter limit, save where
+ *       self.count = -1
  */
   __pyx_v_self->count = (__pyx_v_self->count - 1);
 
-  /* "jlog.pyx":118
+  /* "jlog.pyx":169
  * 
  *     self.count -= 1
  *     if not self.count:             # <<<<<<<<<<<<<<
- *       # since we may not be at the true end due to max_iter limit, save where
- *       # our last read was.
+ *       self.count = -1
+ *     else:
  */
   __pyx_t_1 = ((!(__pyx_v_self->count != 0)) != 0);
   if (__pyx_t_1) {
 
-    /* "jlog.pyx":121
- *       # since we may not be at the true end due to max_iter limit, save where
- *       # our last read was.
- *       cjlog.jlog_ctx_read_checkpoint(self.ctx, &self.begin)             # <<<<<<<<<<<<<<
+    /* "jlog.pyx":170
+ *     self.count -= 1
+ *     if not self.count:
+ *       self.count = -1             # <<<<<<<<<<<<<<
  *     else:
  *       cjlog.JLOG_ID_ADVANCE(&self.begin)
  */
-    jlog_ctx_read_checkpoint(__pyx_v_self->ctx, (&__pyx_v_self->begin));
+    __pyx_v_self->count = -1;
     goto __pyx_L7;
   }
   /*else*/ {
 
-    /* "jlog.pyx":123
- *       cjlog.jlog_ctx_read_checkpoint(self.ctx, &self.begin)
+    /* "jlog.pyx":172
+ *       self.count = -1
  *     else:
  *       cjlog.JLOG_ID_ADVANCE(&self.begin)             # <<<<<<<<<<<<<<
  * 
@@ -1832,7 +2807,7 @@ static PyObject *__pyx_pf_4jlog_10JLogReader_4__next__(struct __pyx_obj_4jlog_JL
   }
   __pyx_L7:;
 
-  /* "jlog.pyx":125
+  /* "jlog.pyx":174
  *       cjlog.JLOG_ID_ADVANCE(&self.begin)
  * 
  *     return pystr             # <<<<<<<<<<<<<<
@@ -1844,7 +2819,7 @@ static PyObject *__pyx_pf_4jlog_10JLogReader_4__next__(struct __pyx_obj_4jlog_JL
   __pyx_r = __pyx_v_pystr;
   goto __pyx_L0;
 
-  /* "jlog.pyx":95
+  /* "jlog.pyx":138
  * 
  *   # python iterable interface.
  *   def __next__(self):             # <<<<<<<<<<<<<<
@@ -1854,11 +2829,11 @@ static PyObject *__pyx_pf_4jlog_10JLogReader_4__next__(struct __pyx_obj_4jlog_JL
 
   /* function exit code */
   __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
   __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_XDECREF(__pyx_t_7);
-  __Pyx_XDECREF(__pyx_t_8);
-  __Pyx_XDECREF(__pyx_t_9);
   __Pyx_AddTraceback("jlog.JLogReader.__next__", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -1868,7 +2843,7 @@ static PyObject *__pyx_pf_4jlog_10JLogReader_4__next__(struct __pyx_obj_4jlog_JL
   return __pyx_r;
 }
 
-/* "jlog.pyx":128
+/* "jlog.pyx":177
  * 
  * 
  *   def __iter__(self):             # <<<<<<<<<<<<<<
@@ -1894,7 +2869,7 @@ static PyObject *__pyx_pf_4jlog_10JLogReader_6__iter__(struct __pyx_obj_4jlog_JL
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__iter__", 0);
 
-  /* "jlog.pyx":129
+  /* "jlog.pyx":178
  * 
  *   def __iter__(self):
  *     return self             # <<<<<<<<<<<<<<
@@ -1906,7 +2881,7 @@ static PyObject *__pyx_pf_4jlog_10JLogReader_6__iter__(struct __pyx_obj_4jlog_JL
   __pyx_r = ((PyObject *)__pyx_v_self);
   goto __pyx_L0;
 
-  /* "jlog.pyx":128
+  /* "jlog.pyx":177
  * 
  * 
  *   def __iter__(self):             # <<<<<<<<<<<<<<
@@ -1921,7 +2896,7 @@ static PyObject *__pyx_pf_4jlog_10JLogReader_6__iter__(struct __pyx_obj_4jlog_JL
   return __pyx_r;
 }
 
-/* "jlog.pyx":132
+/* "jlog.pyx":181
  * 
  * 
  *   def __len__(self):             # <<<<<<<<<<<<<<
@@ -1948,62 +2923,28 @@ static Py_ssize_t __pyx_pf_4jlog_10JLogReader_8__len__(struct __pyx_obj_4jlog_JL
   int __pyx_v_count;
   Py_ssize_t __pyx_r;
   __Pyx_RefNannyDeclarations
-  int __pyx_t_1;
-  int __pyx_t_2;
-  int __pyx_t_3;
-  int __pyx_t_4;
   __Pyx_RefNannySetupContext("__len__", 0);
 
-  /* "jlog.pyx":136
+  /* "jlog.pyx":185
  *     cdef cjlog.jlog_id begin
  *     cdef cjlog.jlog_id end
  *     count = cjlog.jlog_ctx_read_interval(self.ctx, &begin, &end)             # <<<<<<<<<<<<<<
- *     if self.max_iter > 0:
- *       # limit reported length to max_iter if smaller
+ *     return count
+ * 
  */
-  __pyx_v_count = jlog_ctx_read_interval(__pyx_v_self->ctx, (&__pyx_v_begin), (&__pyx_v_end));
+  __pyx_v_count = jlog_ctx_read_interval(__pyx_v_self->__pyx_base.ctx, (&__pyx_v_begin), (&__pyx_v_end));
 
-  /* "jlog.pyx":137
+  /* "jlog.pyx":186
  *     cdef cjlog.jlog_id end
  *     count = cjlog.jlog_ctx_read_interval(self.ctx, &begin, &end)
- *     if self.max_iter > 0:             # <<<<<<<<<<<<<<
- *       # limit reported length to max_iter if smaller
- *       return min(self.max_iter, count)
- */
-  __pyx_t_1 = ((__pyx_v_self->max_iter > 0) != 0);
-  if (__pyx_t_1) {
-
-    /* "jlog.pyx":139
- *     if self.max_iter > 0:
- *       # limit reported length to max_iter if smaller
- *       return min(self.max_iter, count)             # <<<<<<<<<<<<<<
- *     else:
- *       return count
- */
-    __pyx_t_2 = __pyx_v_count;
-    __pyx_t_3 = __pyx_v_self->max_iter;
-    if (((__pyx_t_2 < __pyx_t_3) != 0)) {
-      __pyx_t_4 = __pyx_t_2;
-    } else {
-      __pyx_t_4 = __pyx_t_3;
-    }
-    __pyx_r = __pyx_t_4;
-    goto __pyx_L0;
-  }
-  /*else*/ {
-
-    /* "jlog.pyx":141
- *       return min(self.max_iter, count)
- *     else:
- *       return count             # <<<<<<<<<<<<<<
+ *     return count             # <<<<<<<<<<<<<<
  * 
- *   def error_msg(self):
+ * 
  */
-    __pyx_r = __pyx_v_count;
-    goto __pyx_L0;
-  }
+  __pyx_r = __pyx_v_count;
+  goto __pyx_L0;
 
-  /* "jlog.pyx":132
+  /* "jlog.pyx":181
  * 
  * 
  *   def __len__(self):             # <<<<<<<<<<<<<<
@@ -2017,27 +2958,264 @@ static Py_ssize_t __pyx_pf_4jlog_10JLogReader_8__len__(struct __pyx_obj_4jlog_JL
   return __pyx_r;
 }
 
-/* "jlog.pyx":143
- *       return count
- * 
- *   def error_msg(self):             # <<<<<<<<<<<<<<
- *     return PyString_FromString(cjlog.jlog_ctx_err_string(self.ctx))
+/* "jlog.pyx":191
+ *   # truncate the subscriber to size entries or 0 if size is not specified. If
+ *   # there are no other pending readers the files will be cleaned up.
+ *   def truncate(self, size = None):             # <<<<<<<<<<<<<<
+ *     if size is not None and size > 0:
+ *       count = cjlog.jlog_ctx_read_interval(self.ctx, &self.begin, &self.end)
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_4jlog_10JLogReader_11error_msg(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
-static PyObject *__pyx_pw_4jlog_10JLogReader_11error_msg(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+static PyObject *__pyx_pw_4jlog_10JLogReader_11truncate(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_4jlog_10JLogReader_11truncate(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_size = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
-  __Pyx_RefNannySetupContext("error_msg (wrapper)", 0);
-  __pyx_r = __pyx_pf_4jlog_10JLogReader_10error_msg(((struct __pyx_obj_4jlog_JLogReader *)__pyx_v_self));
+  __Pyx_RefNannySetupContext("truncate (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_size,0};
+    PyObject* values[1] = {0};
+    values[0] = ((PyObject *)Py_None);
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (kw_args > 0) {
+          PyObject* value = PyDict_GetItem(__pyx_kwds, __pyx_n_s_size);
+          if (value) { values[0] = value; kw_args--; }
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "truncate") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 191; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+      }
+    } else {
+      switch (PyTuple_GET_SIZE(__pyx_args)) {
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+    }
+    __pyx_v_size = values[0];
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("truncate", 0, 0, 1, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 191; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("jlog.JLogReader.truncate", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_4jlog_10JLogReader_10truncate(((struct __pyx_obj_4jlog_JLogReader *)__pyx_v_self), __pyx_v_size);
 
   /* function exit code */
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_4jlog_10JLogReader_10error_msg(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self) {
+static PyObject *__pyx_pf_4jlog_10JLogReader_10truncate(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self, PyObject *__pyx_v_size) {
+  int __pyx_v_count;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  int __pyx_t_1;
+  int __pyx_t_2;
+  int __pyx_t_3;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  int __pyx_t_6;
+  jlog_id __pyx_t_7;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("truncate", 0);
+
+  /* "jlog.pyx":192
+ *   # there are no other pending readers the files will be cleaned up.
+ *   def truncate(self, size = None):
+ *     if size is not None and size > 0:             # <<<<<<<<<<<<<<
+ *       count = cjlog.jlog_ctx_read_interval(self.ctx, &self.begin, &self.end)
+ *       if count > size:
+ */
+  __pyx_t_2 = (__pyx_v_size != Py_None);
+  __pyx_t_3 = (__pyx_t_2 != 0);
+  if (__pyx_t_3) {
+    goto __pyx_L5_next_and;
+  } else {
+    __pyx_t_1 = __pyx_t_3;
+    goto __pyx_L4_bool_binop_done;
+  }
+  __pyx_L5_next_and:;
+  __pyx_t_4 = PyObject_RichCompare(__pyx_v_size, __pyx_int_0, Py_GT); __Pyx_XGOTREF(__pyx_t_4); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_PyObject_IsTrue(__pyx_t_4); if (unlikely(__pyx_t_3 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 192; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+  __pyx_t_1 = __pyx_t_3;
+  __pyx_L4_bool_binop_done:;
+  if (__pyx_t_1) {
+
+    /* "jlog.pyx":193
+ *   def truncate(self, size = None):
+ *     if size is not None and size > 0:
+ *       count = cjlog.jlog_ctx_read_interval(self.ctx, &self.begin, &self.end)             # <<<<<<<<<<<<<<
+ *       if count > size:
+ *         self.begin.log = self.end.log
+ */
+    __pyx_v_count = jlog_ctx_read_interval(__pyx_v_self->__pyx_base.ctx, (&__pyx_v_self->begin), (&__pyx_v_self->end));
+
+    /* "jlog.pyx":194
+ *     if size is not None and size > 0:
+ *       count = cjlog.jlog_ctx_read_interval(self.ctx, &self.begin, &self.end)
+ *       if count > size:             # <<<<<<<<<<<<<<
+ *         self.begin.log = self.end.log
+ *         self.begin.marker = self.end.marker - size
+ */
+    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_count); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 194; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_5 = PyObject_RichCompare(__pyx_t_4, __pyx_v_size, Py_GT); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 194; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 194; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    if (__pyx_t_1) {
+
+      /* "jlog.pyx":195
+ *       count = cjlog.jlog_ctx_read_interval(self.ctx, &self.begin, &self.end)
+ *       if count > size:
+ *         self.begin.log = self.end.log             # <<<<<<<<<<<<<<
+ *         self.begin.marker = self.end.marker - size
+ *       else:
+ */
+      __pyx_t_6 = __pyx_v_self->end.log;
+      __pyx_v_self->begin.log = __pyx_t_6;
+
+      /* "jlog.pyx":196
+ *       if count > size:
+ *         self.begin.log = self.end.log
+ *         self.begin.marker = self.end.marker - size             # <<<<<<<<<<<<<<
+ *       else:
+ *         return False
+ */
+      __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_self->end.marker); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 196; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_GOTREF(__pyx_t_5);
+      __pyx_t_4 = PyNumber_Subtract(__pyx_t_5, __pyx_v_size); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 196; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_GOTREF(__pyx_t_4);
+      __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+      __pyx_t_6 = __Pyx_PyInt_As_int(__pyx_t_4); if (unlikely((__pyx_t_6 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 196; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+      __pyx_v_self->begin.marker = __pyx_t_6;
+      goto __pyx_L6;
+    }
+    /*else*/ {
+
+      /* "jlog.pyx":198
+ *         self.begin.marker = self.end.marker - size
+ *       else:
+ *         return False             # <<<<<<<<<<<<<<
+ *     else:
+ *       self.begin = self.end
+ */
+      __Pyx_XDECREF(__pyx_r);
+      __Pyx_INCREF(Py_False);
+      __pyx_r = Py_False;
+      goto __pyx_L0;
+    }
+    __pyx_L6:;
+    goto __pyx_L3;
+  }
+  /*else*/ {
+
+    /* "jlog.pyx":200
+ *         return False
+ *     else:
+ *       self.begin = self.end             # <<<<<<<<<<<<<<
+ *       cjlog.JLOG_ID_ADVANCE(&self.begin)
+ * 
+ */
+    __pyx_t_7 = __pyx_v_self->end;
+    __pyx_v_self->begin = __pyx_t_7;
+
+    /* "jlog.pyx":201
+ *     else:
+ *       self.begin = self.end
+ *       cjlog.JLOG_ID_ADVANCE(&self.begin)             # <<<<<<<<<<<<<<
+ * 
+ *     # checkpointing the file will cause all log segments without readers
+ */
+    JLOG_ID_ADVANCE((&__pyx_v_self->begin));
+  }
+  __pyx_L3:;
+
+  /* "jlog.pyx":205
+ *     # checkpointing the file will cause all log segments without readers
+ *     # to be cleaned up
+ *     cjlog.jlog_ctx_read_checkpoint(self.ctx, &self.begin)             # <<<<<<<<<<<<<<
+ *     return True
+ * 
+ */
+  jlog_ctx_read_checkpoint(__pyx_v_self->__pyx_base.ctx, (&__pyx_v_self->begin));
+
+  /* "jlog.pyx":206
+ *     # to be cleaned up
+ *     cjlog.jlog_ctx_read_checkpoint(self.ctx, &self.begin)
+ *     return True             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(Py_True);
+  __pyx_r = Py_True;
+  goto __pyx_L0;
+
+  /* "jlog.pyx":191
+ *   # truncate the subscriber to size entries or 0 if size is not specified. If
+ *   # there are no other pending readers the files will be cleaned up.
+ *   def truncate(self, size = None):             # <<<<<<<<<<<<<<
+ *     if size is not None and size > 0:
+ *       count = cjlog.jlog_ctx_read_interval(self.ctx, &self.begin, &self.end)
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_AddTraceback("jlog.JLogReader.truncate", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "jlog.pyx":209
+ * 
+ * 
+ *   def error_msg(self):             # <<<<<<<<<<<<<<
+ *     return PyString_FromString(cjlog.jlog_ctx_err_string(self.ctx))
+ * 
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4jlog_10JLogReader_13error_msg(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_4jlog_10JLogReader_13error_msg(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("error_msg (wrapper)", 0);
+  __pyx_r = __pyx_pf_4jlog_10JLogReader_12error_msg(((struct __pyx_obj_4jlog_JLogReader *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4jlog_10JLogReader_12error_msg(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2046,23 +3224,26 @@ static PyObject *__pyx_pf_4jlog_10JLogReader_10error_msg(struct __pyx_obj_4jlog_
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("error_msg", 0);
 
-  /* "jlog.pyx":144
+  /* "jlog.pyx":210
  * 
  *   def error_msg(self):
  *     return PyString_FromString(cjlog.jlog_ctx_err_string(self.ctx))             # <<<<<<<<<<<<<<
+ * 
+ * 
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_1 = PyString_FromString(jlog_ctx_err_string(__pyx_v_self->ctx)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 144; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyString_FromString(jlog_ctx_err_string(__pyx_v_self->__pyx_base.ctx)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 210; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
 
-  /* "jlog.pyx":143
- *       return count
+  /* "jlog.pyx":209
+ * 
  * 
  *   def error_msg(self):             # <<<<<<<<<<<<<<
  *     return PyString_FromString(cjlog.jlog_ctx_err_string(self.ctx))
+ * 
  */
 
   /* function exit code */
@@ -2076,8 +3257,802 @@ static PyObject *__pyx_pf_4jlog_10JLogReader_10error_msg(struct __pyx_obj_4jlog_
   return __pyx_r;
 }
 
-static PyObject *__pyx_tp_new_4jlog_JLogReader(PyTypeObject *t, PyObject *a, PyObject *k) {
-  struct __pyx_obj_4jlog_JLogReader *p;
+/* "jlog.pyx":105
+ * 
+ * cdef class JLogReader(BaseJLog):
+ *   cdef public object subscriber             # <<<<<<<<<<<<<<
+ *   cdef cjlog.jlog_id begin
+ *   cdef cjlog.jlog_id end
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4jlog_10JLogReader_10subscriber_1__get__(PyObject *__pyx_v_self); /*proto*/
+static PyObject *__pyx_pw_4jlog_10JLogReader_10subscriber_1__get__(PyObject *__pyx_v_self) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__get__ (wrapper)", 0);
+  __pyx_r = __pyx_pf_4jlog_10JLogReader_10subscriber___get__(((struct __pyx_obj_4jlog_JLogReader *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4jlog_10JLogReader_10subscriber___get__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__get__", 0);
+  __Pyx_XDECREF(__pyx_r);
+  __Pyx_INCREF(__pyx_v_self->subscriber);
+  __pyx_r = __pyx_v_self->subscriber;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static int __pyx_pw_4jlog_10JLogReader_10subscriber_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value); /*proto*/
+static int __pyx_pw_4jlog_10JLogReader_10subscriber_3__set__(PyObject *__pyx_v_self, PyObject *__pyx_v_value) {
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__set__ (wrapper)", 0);
+  __pyx_r = __pyx_pf_4jlog_10JLogReader_10subscriber_2__set__(((struct __pyx_obj_4jlog_JLogReader *)__pyx_v_self), ((PyObject *)__pyx_v_value));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static int __pyx_pf_4jlog_10JLogReader_10subscriber_2__set__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self, PyObject *__pyx_v_value) {
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__set__", 0);
+  __Pyx_INCREF(__pyx_v_value);
+  __Pyx_GIVEREF(__pyx_v_value);
+  __Pyx_GOTREF(__pyx_v_self->subscriber);
+  __Pyx_DECREF(__pyx_v_self->subscriber);
+  __pyx_v_self->subscriber = __pyx_v_value;
+
+  /* function exit code */
+  __pyx_r = 0;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static int __pyx_pw_4jlog_10JLogReader_10subscriber_5__del__(PyObject *__pyx_v_self); /*proto*/
+static int __pyx_pw_4jlog_10JLogReader_10subscriber_5__del__(PyObject *__pyx_v_self) {
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__del__ (wrapper)", 0);
+  __pyx_r = __pyx_pf_4jlog_10JLogReader_10subscriber_4__del__(((struct __pyx_obj_4jlog_JLogReader *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static int __pyx_pf_4jlog_10JLogReader_10subscriber_4__del__(struct __pyx_obj_4jlog_JLogReader *__pyx_v_self) {
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__del__", 0);
+  __Pyx_INCREF(Py_None);
+  __Pyx_GIVEREF(Py_None);
+  __Pyx_GOTREF(__pyx_v_self->subscriber);
+  __Pyx_DECREF(__pyx_v_self->subscriber);
+  __pyx_v_self->subscriber = Py_None;
+
+  /* function exit code */
+  __pyx_r = 0;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "jlog.pyx":217
+ *   # path - the directory path to the jlog directory
+ *   # subscriber - the subscriber for the jlog
+ *   def __cinit__(self, path):             # <<<<<<<<<<<<<<
+ *     self.path = path
+ *     self.ctx = cjlog.jlog_new(path)
+ */
+
+/* Python wrapper */
+static int __pyx_pw_4jlog_10JLogWriter_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static int __pyx_pw_4jlog_10JLogWriter_1__cinit__(PyObject *__pyx_v_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_path = 0;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__cinit__ (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_path,0};
+    PyObject* values[1] = {0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = PyDict_GetItem(__pyx_kwds, __pyx_n_s_path)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "__cinit__") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 217; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 1) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+    }
+    __pyx_v_path = values[0];
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("__cinit__", 1, 1, 1, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 217; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("jlog.JLogWriter.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return -1;
+  __pyx_L4_argument_unpacking_done:;
+  __pyx_r = __pyx_pf_4jlog_10JLogWriter___cinit__(((struct __pyx_obj_4jlog_JLogWriter *)__pyx_v_self), __pyx_v_path);
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static int __pyx_pf_4jlog_10JLogWriter___cinit__(struct __pyx_obj_4jlog_JLogWriter *__pyx_v_self, PyObject *__pyx_v_path) {
+  int __pyx_v_error;
+  int __pyx_r;
+  __Pyx_RefNannyDeclarations
+  char *__pyx_t_1;
+  int __pyx_t_2;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  int __pyx_t_5;
+  PyObject *__pyx_t_6 = NULL;
+  PyObject *__pyx_t_7 = NULL;
+  PyObject *__pyx_t_8 = NULL;
+  PyObject *__pyx_t_9 = NULL;
+  Py_ssize_t __pyx_t_10;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("__cinit__", 0);
+
+  /* "jlog.pyx":218
+ *   # subscriber - the subscriber for the jlog
+ *   def __cinit__(self, path):
+ *     self.path = path             # <<<<<<<<<<<<<<
+ *     self.ctx = cjlog.jlog_new(path)
+ *     self.ctx_initialized = False
+ */
+  __Pyx_INCREF(__pyx_v_path);
+  __Pyx_GIVEREF(__pyx_v_path);
+  __Pyx_GOTREF(__pyx_v_self->__pyx_base.path);
+  __Pyx_DECREF(__pyx_v_self->__pyx_base.path);
+  __pyx_v_self->__pyx_base.path = __pyx_v_path;
+
+  /* "jlog.pyx":219
+ *   def __cinit__(self, path):
+ *     self.path = path
+ *     self.ctx = cjlog.jlog_new(path)             # <<<<<<<<<<<<<<
+ *     self.ctx_initialized = False
+ * 
+ */
+  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_path); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 219; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_v_self->__pyx_base.ctx = jlog_new(__pyx_t_1);
+
+  /* "jlog.pyx":220
+ *     self.path = path
+ *     self.ctx = cjlog.jlog_new(path)
+ *     self.ctx_initialized = False             # <<<<<<<<<<<<<<
+ * 
+ *     if self.ctx is NULL:
+ */
+  __Pyx_INCREF(Py_False);
+  __Pyx_GIVEREF(Py_False);
+  __Pyx_GOTREF(__pyx_v_self->__pyx_base.ctx_initialized);
+  __Pyx_DECREF(__pyx_v_self->__pyx_base.ctx_initialized);
+  __pyx_v_self->__pyx_base.ctx_initialized = Py_False;
+
+  /* "jlog.pyx":222
+ *     self.ctx_initialized = False
+ * 
+ *     if self.ctx is NULL:             # <<<<<<<<<<<<<<
+ *       JLogError("jlog writer failed to initialize")
+ * 
+ */
+  __pyx_t_2 = ((__pyx_v_self->__pyx_base.ctx == NULL) != 0);
+  if (__pyx_t_2) {
+
+    /* "jlog.pyx":223
+ * 
+ *     if self.ctx is NULL:
+ *       JLogError("jlog writer failed to initialize")             # <<<<<<<<<<<<<<
+ * 
+ *     error = cjlog.jlog_ctx_init(self.ctx)
+ */
+    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_JLogError); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 223; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 223; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_4);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    goto __pyx_L3;
+  }
+  __pyx_L3:;
+
+  /* "jlog.pyx":225
+ *       JLogError("jlog writer failed to initialize")
+ * 
+ *     error = cjlog.jlog_ctx_init(self.ctx)             # <<<<<<<<<<<<<<
+ *     if error and cjlog.jlog_ctx_err(self.ctx) is cjlog.JLOG_ERR_CREATE_EXISTS:
+ *       raise JLogError("jlog writer failed to open %s" % path,
+ */
+  __pyx_v_error = jlog_ctx_init(__pyx_v_self->__pyx_base.ctx);
+
+  /* "jlog.pyx":226
+ * 
+ *     error = cjlog.jlog_ctx_init(self.ctx)
+ *     if error and cjlog.jlog_ctx_err(self.ctx) is cjlog.JLOG_ERR_CREATE_EXISTS:             # <<<<<<<<<<<<<<
+ *       raise JLogError("jlog writer failed to open %s" % path,
+ *         self.error_msg())
+ */
+  __pyx_t_5 = (__pyx_v_error != 0);
+  if (__pyx_t_5) {
+    goto __pyx_L6_next_and;
+  } else {
+    __pyx_t_2 = __pyx_t_5;
+    goto __pyx_L5_bool_binop_done;
+  }
+  __pyx_L6_next_and:;
+  __pyx_t_5 = ((jlog_ctx_err(__pyx_v_self->__pyx_base.ctx) == JLOG_ERR_CREATE_EXISTS) != 0);
+  __pyx_t_2 = __pyx_t_5;
+  __pyx_L5_bool_binop_done:;
+  if (__pyx_t_2) {
+
+    /* "jlog.pyx":227
+ *     error = cjlog.jlog_ctx_init(self.ctx)
+ *     if error and cjlog.jlog_ctx_err(self.ctx) is cjlog.JLOG_ERR_CREATE_EXISTS:
+ *       raise JLogError("jlog writer failed to open %s" % path,             # <<<<<<<<<<<<<<
+ *         self.error_msg())
+ * 
+ */
+    __pyx_t_3 = __Pyx_GetModuleGlobalName(__pyx_n_s_JLogError); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 227; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_6 = __Pyx_PyString_Format(__pyx_kp_s_jlog_writer_failed_to_open_s, __pyx_v_path); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 227; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_6);
+
+    /* "jlog.pyx":228
+ *     if error and cjlog.jlog_ctx_err(self.ctx) is cjlog.JLOG_ERR_CREATE_EXISTS:
+ *       raise JLogError("jlog writer failed to open %s" % path,
+ *         self.error_msg())             # <<<<<<<<<<<<<<
+ * 
+ *     # jlog requires a clean handle to open even after an init
+ */
+    __pyx_t_8 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_error_msg); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 228; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_8);
+    __pyx_t_9 = NULL;
+    if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_8))) {
+      __pyx_t_9 = PyMethod_GET_SELF(__pyx_t_8);
+      if (likely(__pyx_t_9)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_8);
+        __Pyx_INCREF(__pyx_t_9);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_8, function);
+      }
+    }
+    if (__pyx_t_9) {
+      __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_t_8, __pyx_t_9); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 228; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+    } else {
+      __pyx_t_7 = __Pyx_PyObject_CallNoArg(__pyx_t_8); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 228; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    }
+    __Pyx_GOTREF(__pyx_t_7);
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    __pyx_t_8 = NULL;
+    __pyx_t_10 = 0;
+    if (CYTHON_COMPILING_IN_CPYTHON && unlikely(PyMethod_Check(__pyx_t_3))) {
+      __pyx_t_8 = PyMethod_GET_SELF(__pyx_t_3);
+      if (likely(__pyx_t_8)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_3);
+        __Pyx_INCREF(__pyx_t_8);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_3, function);
+        __pyx_t_10 = 1;
+      }
+    }
+    __pyx_t_9 = PyTuple_New(2+__pyx_t_10); if (unlikely(!__pyx_t_9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 227; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_9);
+    if (__pyx_t_8) {
+      PyTuple_SET_ITEM(__pyx_t_9, 0, __pyx_t_8); __Pyx_GIVEREF(__pyx_t_8); __pyx_t_8 = NULL;
+    }
+    PyTuple_SET_ITEM(__pyx_t_9, 0+__pyx_t_10, __pyx_t_6);
+    __Pyx_GIVEREF(__pyx_t_6);
+    PyTuple_SET_ITEM(__pyx_t_9, 1+__pyx_t_10, __pyx_t_7);
+    __Pyx_GIVEREF(__pyx_t_7);
+    __pyx_t_6 = 0;
+    __pyx_t_7 = 0;
+    __pyx_t_4 = __Pyx_PyObject_Call(__pyx_t_3, __pyx_t_9, NULL); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 227; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_4);
+    __Pyx_DECREF(__pyx_t_9); __pyx_t_9 = 0;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_Raise(__pyx_t_4, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 227; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  }
+
+  /* "jlog.pyx":231
+ * 
+ *     # jlog requires a clean handle to open even after an init
+ *     error = cjlog.jlog_ctx_close(self.ctx)             # <<<<<<<<<<<<<<
+ *     if error:
+ *       JLogError("jlog writer failed reinit after creation")
+ */
+  __pyx_v_error = jlog_ctx_close(__pyx_v_self->__pyx_base.ctx);
+
+  /* "jlog.pyx":232
+ *     # jlog requires a clean handle to open even after an init
+ *     error = cjlog.jlog_ctx_close(self.ctx)
+ *     if error:             # <<<<<<<<<<<<<<
+ *       JLogError("jlog writer failed reinit after creation")
+ *     self.ctx = cjlog.jlog_new(path)
+ */
+  __pyx_t_2 = (__pyx_v_error != 0);
+  if (__pyx_t_2) {
+
+    /* "jlog.pyx":233
+ *     error = cjlog.jlog_ctx_close(self.ctx)
+ *     if error:
+ *       JLogError("jlog writer failed reinit after creation")             # <<<<<<<<<<<<<<
+ *     self.ctx = cjlog.jlog_new(path)
+ *     self.ctx_initialized = True
+ */
+    __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_JLogError); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 233; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 233; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    goto __pyx_L7;
+  }
+  __pyx_L7:;
+
+  /* "jlog.pyx":234
+ *     if error:
+ *       JLogError("jlog writer failed reinit after creation")
+ *     self.ctx = cjlog.jlog_new(path)             # <<<<<<<<<<<<<<
+ *     self.ctx_initialized = True
+ * 
+ */
+  __pyx_t_1 = __Pyx_PyObject_AsString(__pyx_v_path); if (unlikely((!__pyx_t_1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 234; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_v_self->__pyx_base.ctx = jlog_new(__pyx_t_1);
+
+  /* "jlog.pyx":235
+ *       JLogError("jlog writer failed reinit after creation")
+ *     self.ctx = cjlog.jlog_new(path)
+ *     self.ctx_initialized = True             # <<<<<<<<<<<<<<
+ * 
+ *     error = cjlog.jlog_ctx_open_writer(self.ctx)
+ */
+  __Pyx_INCREF(Py_True);
+  __Pyx_GIVEREF(Py_True);
+  __Pyx_GOTREF(__pyx_v_self->__pyx_base.ctx_initialized);
+  __Pyx_DECREF(__pyx_v_self->__pyx_base.ctx_initialized);
+  __pyx_v_self->__pyx_base.ctx_initialized = Py_True;
+
+  /* "jlog.pyx":237
+ *     self.ctx_initialized = True
+ * 
+ *     error = cjlog.jlog_ctx_open_writer(self.ctx)             # <<<<<<<<<<<<<<
+ *     if error:
+ *       raise JLogError("jlog writer failed to open %s" % path, self.error_msg())
+ */
+  __pyx_v_error = jlog_ctx_open_writer(__pyx_v_self->__pyx_base.ctx);
+
+  /* "jlog.pyx":238
+ * 
+ *     error = cjlog.jlog_ctx_open_writer(self.ctx)
+ *     if error:             # <<<<<<<<<<<<<<
+ *       raise JLogError("jlog writer failed to open %s" % path, self.error_msg())
+ * 
+ */
+  __pyx_t_2 = (__pyx_v_error != 0);
+  if (__pyx_t_2) {
+
+    /* "jlog.pyx":239
+ *     error = cjlog.jlog_ctx_open_writer(self.ctx)
+ *     if error:
+ *       raise JLogError("jlog writer failed to open %s" % path, self.error_msg())             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+    __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_JLogError); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 239; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_9 = __Pyx_PyString_Format(__pyx_kp_s_jlog_writer_failed_to_open_s, __pyx_v_path); if (unlikely(!__pyx_t_9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 239; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_9);
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_error_msg); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 239; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_6);
+    __pyx_t_8 = NULL;
+    if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_6))) {
+      __pyx_t_8 = PyMethod_GET_SELF(__pyx_t_6);
+      if (likely(__pyx_t_8)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_6);
+        __Pyx_INCREF(__pyx_t_8);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_6, function);
+      }
+    }
+    if (__pyx_t_8) {
+      __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_8); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 239; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    } else {
+      __pyx_t_7 = __Pyx_PyObject_CallNoArg(__pyx_t_6); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 239; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    }
+    __Pyx_GOTREF(__pyx_t_7);
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __pyx_t_6 = NULL;
+    __pyx_t_10 = 0;
+    if (CYTHON_COMPILING_IN_CPYTHON && unlikely(PyMethod_Check(__pyx_t_4))) {
+      __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_4);
+      if (likely(__pyx_t_6)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
+        __Pyx_INCREF(__pyx_t_6);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_4, function);
+        __pyx_t_10 = 1;
+      }
+    }
+    __pyx_t_8 = PyTuple_New(2+__pyx_t_10); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 239; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_8);
+    if (__pyx_t_6) {
+      PyTuple_SET_ITEM(__pyx_t_8, 0, __pyx_t_6); __Pyx_GIVEREF(__pyx_t_6); __pyx_t_6 = NULL;
+    }
+    PyTuple_SET_ITEM(__pyx_t_8, 0+__pyx_t_10, __pyx_t_9);
+    __Pyx_GIVEREF(__pyx_t_9);
+    PyTuple_SET_ITEM(__pyx_t_8, 1+__pyx_t_10, __pyx_t_7);
+    __Pyx_GIVEREF(__pyx_t_7);
+    __pyx_t_9 = 0;
+    __pyx_t_7 = 0;
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_8, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 239; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_Raise(__pyx_t_3, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 239; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  }
+
+  /* "jlog.pyx":217
+ *   # path - the directory path to the jlog directory
+ *   # subscriber - the subscriber for the jlog
+ *   def __cinit__(self, path):             # <<<<<<<<<<<<<<
+ *     self.path = path
+ *     self.ctx = cjlog.jlog_new(path)
+ */
+
+  /* function exit code */
+  __pyx_r = 0;
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_6);
+  __Pyx_XDECREF(__pyx_t_7);
+  __Pyx_XDECREF(__pyx_t_8);
+  __Pyx_XDECREF(__pyx_t_9);
+  __Pyx_AddTraceback("jlog.JLogWriter.__cinit__", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = -1;
+  __pyx_L0:;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "jlog.pyx":242
+ * 
+ * 
+ *   def write(self, msg_py):             # <<<<<<<<<<<<<<
+ *     cdef char *msg
+ *     cdef Py_ssize_t mlen
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4jlog_10JLogWriter_3write(PyObject *__pyx_v_self, PyObject *__pyx_v_msg_py); /*proto*/
+static PyObject *__pyx_pw_4jlog_10JLogWriter_3write(PyObject *__pyx_v_self, PyObject *__pyx_v_msg_py) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("write (wrapper)", 0);
+  __pyx_r = __pyx_pf_4jlog_10JLogWriter_2write(((struct __pyx_obj_4jlog_JLogWriter *)__pyx_v_self), ((PyObject *)__pyx_v_msg_py));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4jlog_10JLogWriter_2write(struct __pyx_obj_4jlog_JLogWriter *__pyx_v_self, PyObject *__pyx_v_msg_py) {
+  char *__pyx_v_msg;
+  Py_ssize_t __pyx_v_mlen;
+  int __pyx_v_error;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  int __pyx_t_1;
+  int __pyx_t_2;
+  PyObject *__pyx_t_3 = NULL;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  PyObject *__pyx_t_6 = NULL;
+  PyObject *__pyx_t_7 = NULL;
+  Py_ssize_t __pyx_t_8;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("write", 0);
+
+  /* "jlog.pyx":245
+ *     cdef char *msg
+ *     cdef Py_ssize_t mlen
+ *     PyString_AsStringAndSize(msg_py, &msg, &mlen)             # <<<<<<<<<<<<<<
+ *     error = cjlog.jlog_ctx_write(self.ctx, msg, mlen)
+ *     if error:
+ */
+  __pyx_t_1 = PyString_AsStringAndSize(__pyx_v_msg_py, (&__pyx_v_msg), (&__pyx_v_mlen)); if (unlikely(__pyx_t_1 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 245; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+
+  /* "jlog.pyx":246
+ *     cdef Py_ssize_t mlen
+ *     PyString_AsStringAndSize(msg_py, &msg, &mlen)
+ *     error = cjlog.jlog_ctx_write(self.ctx, msg, mlen)             # <<<<<<<<<<<<<<
+ *     if error:
+ *       raise JLogError("jlog write error", self.error_msg())
+ */
+  __pyx_v_error = jlog_ctx_write(__pyx_v_self->__pyx_base.ctx, __pyx_v_msg, __pyx_v_mlen);
+
+  /* "jlog.pyx":247
+ *     PyString_AsStringAndSize(msg_py, &msg, &mlen)
+ *     error = cjlog.jlog_ctx_write(self.ctx, msg, mlen)
+ *     if error:             # <<<<<<<<<<<<<<
+ *       raise JLogError("jlog write error", self.error_msg())
+ * 
+ */
+  __pyx_t_2 = (__pyx_v_error != 0);
+  if (__pyx_t_2) {
+
+    /* "jlog.pyx":248
+ *     error = cjlog.jlog_ctx_write(self.ctx, msg, mlen)
+ *     if error:
+ *       raise JLogError("jlog write error", self.error_msg())             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+    __pyx_t_4 = __Pyx_GetModuleGlobalName(__pyx_n_s_JLogError); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 248; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_6 = __Pyx_PyObject_GetAttrStr(((PyObject *)__pyx_v_self), __pyx_n_s_error_msg); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 248; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_6);
+    __pyx_t_7 = NULL;
+    if (CYTHON_COMPILING_IN_CPYTHON && likely(PyMethod_Check(__pyx_t_6))) {
+      __pyx_t_7 = PyMethod_GET_SELF(__pyx_t_6);
+      if (likely(__pyx_t_7)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_6);
+        __Pyx_INCREF(__pyx_t_7);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_6, function);
+      }
+    }
+    if (__pyx_t_7) {
+      __pyx_t_5 = __Pyx_PyObject_CallOneArg(__pyx_t_6, __pyx_t_7); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 248; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    } else {
+      __pyx_t_5 = __Pyx_PyObject_CallNoArg(__pyx_t_6); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 248; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    }
+    __Pyx_GOTREF(__pyx_t_5);
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    __pyx_t_6 = NULL;
+    __pyx_t_8 = 0;
+    if (CYTHON_COMPILING_IN_CPYTHON && unlikely(PyMethod_Check(__pyx_t_4))) {
+      __pyx_t_6 = PyMethod_GET_SELF(__pyx_t_4);
+      if (likely(__pyx_t_6)) {
+        PyObject* function = PyMethod_GET_FUNCTION(__pyx_t_4);
+        __Pyx_INCREF(__pyx_t_6);
+        __Pyx_INCREF(function);
+        __Pyx_DECREF_SET(__pyx_t_4, function);
+        __pyx_t_8 = 1;
+      }
+    }
+    __pyx_t_7 = PyTuple_New(2+__pyx_t_8); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 248; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_7);
+    if (__pyx_t_6) {
+      PyTuple_SET_ITEM(__pyx_t_7, 0, __pyx_t_6); __Pyx_GIVEREF(__pyx_t_6); __pyx_t_6 = NULL;
+    }
+    __Pyx_INCREF(__pyx_kp_s_jlog_write_error);
+    PyTuple_SET_ITEM(__pyx_t_7, 0+__pyx_t_8, __pyx_kp_s_jlog_write_error);
+    __Pyx_GIVEREF(__pyx_kp_s_jlog_write_error);
+    PyTuple_SET_ITEM(__pyx_t_7, 1+__pyx_t_8, __pyx_t_5);
+    __Pyx_GIVEREF(__pyx_t_5);
+    __pyx_t_5 = 0;
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_t_4, __pyx_t_7, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 248; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_Raise(__pyx_t_3, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 248; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  }
+
+  /* "jlog.pyx":242
+ * 
+ * 
+ *   def write(self, msg_py):             # <<<<<<<<<<<<<<
+ *     cdef char *msg
+ *     cdef Py_ssize_t mlen
+ */
+
+  /* function exit code */
+  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_6);
+  __Pyx_XDECREF(__pyx_t_7);
+  __Pyx_AddTraceback("jlog.JLogWriter.write", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "jlog.pyx":251
+ * 
+ * 
+ *   def __dealloc__(self):             # <<<<<<<<<<<<<<
+ *     if self.ctx_initialized:
+ *       cjlog.jlog_ctx_close(self.ctx)
+ */
+
+/* Python wrapper */
+static void __pyx_pw_4jlog_10JLogWriter_5__dealloc__(PyObject *__pyx_v_self); /*proto*/
+static void __pyx_pw_4jlog_10JLogWriter_5__dealloc__(PyObject *__pyx_v_self) {
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("__dealloc__ (wrapper)", 0);
+  __pyx_pf_4jlog_10JLogWriter_4__dealloc__(((struct __pyx_obj_4jlog_JLogWriter *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+}
+
+static void __pyx_pf_4jlog_10JLogWriter_4__dealloc__(struct __pyx_obj_4jlog_JLogWriter *__pyx_v_self) {
+  __Pyx_RefNannyDeclarations
+  int __pyx_t_1;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("__dealloc__", 0);
+
+  /* "jlog.pyx":252
+ * 
+ *   def __dealloc__(self):
+ *     if self.ctx_initialized:             # <<<<<<<<<<<<<<
+ *       cjlog.jlog_ctx_close(self.ctx)
+ *       self.ctx_initialized = False
+ */
+  __pyx_t_1 = __Pyx_PyObject_IsTrue(__pyx_v_self->__pyx_base.ctx_initialized); if (unlikely(__pyx_t_1 < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 252; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__pyx_t_1) {
+
+    /* "jlog.pyx":253
+ *   def __dealloc__(self):
+ *     if self.ctx_initialized:
+ *       cjlog.jlog_ctx_close(self.ctx)             # <<<<<<<<<<<<<<
+ *       self.ctx_initialized = False
+ * 
+ */
+    jlog_ctx_close(__pyx_v_self->__pyx_base.ctx);
+
+    /* "jlog.pyx":254
+ *     if self.ctx_initialized:
+ *       cjlog.jlog_ctx_close(self.ctx)
+ *       self.ctx_initialized = False             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+    __Pyx_INCREF(Py_False);
+    __Pyx_GIVEREF(Py_False);
+    __Pyx_GOTREF(__pyx_v_self->__pyx_base.ctx_initialized);
+    __Pyx_DECREF(__pyx_v_self->__pyx_base.ctx_initialized);
+    __pyx_v_self->__pyx_base.ctx_initialized = Py_False;
+    goto __pyx_L3;
+  }
+  __pyx_L3:;
+
+  /* "jlog.pyx":251
+ * 
+ * 
+ *   def __dealloc__(self):             # <<<<<<<<<<<<<<
+ *     if self.ctx_initialized:
+ *       cjlog.jlog_ctx_close(self.ctx)
+ */
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_WriteUnraisable("jlog.JLogWriter.__dealloc__", __pyx_clineno, __pyx_lineno, __pyx_filename, 0);
+  __pyx_L0:;
+  __Pyx_RefNannyFinishContext();
+}
+
+/* "jlog.pyx":257
+ * 
+ * 
+ *   def error_msg(self):             # <<<<<<<<<<<<<<
+ *     return PyString_FromString(cjlog.jlog_ctx_err_string(self.ctx))
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_4jlog_10JLogWriter_7error_msg(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused); /*proto*/
+static PyObject *__pyx_pw_4jlog_10JLogWriter_7error_msg(PyObject *__pyx_v_self, CYTHON_UNUSED PyObject *unused) {
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("error_msg (wrapper)", 0);
+  __pyx_r = __pyx_pf_4jlog_10JLogWriter_6error_msg(((struct __pyx_obj_4jlog_JLogWriter *)__pyx_v_self));
+
+  /* function exit code */
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_4jlog_10JLogWriter_6error_msg(struct __pyx_obj_4jlog_JLogWriter *__pyx_v_self) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("error_msg", 0);
+
+  /* "jlog.pyx":258
+ * 
+ *   def error_msg(self):
+ *     return PyString_FromString(cjlog.jlog_ctx_err_string(self.ctx))             # <<<<<<<<<<<<<<
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = PyString_FromString(jlog_ctx_err_string(__pyx_v_self->__pyx_base.ctx)); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 258; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* "jlog.pyx":257
+ * 
+ * 
+ *   def error_msg(self):             # <<<<<<<<<<<<<<
+ *     return PyString_FromString(cjlog.jlog_ctx_err_string(self.ctx))
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  __Pyx_AddTraceback("jlog.JLogWriter.error_msg", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_tp_new_4jlog_BaseJLog(PyTypeObject *t, CYTHON_UNUSED PyObject *a, CYTHON_UNUSED PyObject *k) {
+  struct __pyx_obj_4jlog_BaseJLog *p;
   PyObject *o;
   if (likely((t->tp_flags & Py_TPFLAGS_IS_ABSTRACT) == 0)) {
     o = (*t->tp_alloc)(t, 0);
@@ -2085,9 +4060,149 @@ static PyObject *__pyx_tp_new_4jlog_JLogReader(PyTypeObject *t, PyObject *a, PyO
     o = (PyObject *) PyBaseObject_Type.tp_new(t, __pyx_empty_tuple, 0);
   }
   if (unlikely(!o)) return 0;
-  p = ((struct __pyx_obj_4jlog_JLogReader *)o);
+  p = ((struct __pyx_obj_4jlog_BaseJLog *)o);
   p->ctx_initialized = Py_None; Py_INCREF(Py_None);
   p->path = Py_None; Py_INCREF(Py_None);
+  return o;
+}
+
+static void __pyx_tp_dealloc_4jlog_BaseJLog(PyObject *o) {
+  struct __pyx_obj_4jlog_BaseJLog *p = (struct __pyx_obj_4jlog_BaseJLog *)o;
+  #if PY_VERSION_HEX >= 0x030400a1
+  if (unlikely(Py_TYPE(o)->tp_finalize) && !_PyGC_FINALIZED(o)) {
+    if (PyObject_CallFinalizerFromDealloc(o)) return;
+  }
+  #endif
+  PyObject_GC_UnTrack(o);
+  Py_CLEAR(p->ctx_initialized);
+  Py_CLEAR(p->path);
+  (*Py_TYPE(o)->tp_free)(o);
+}
+
+static int __pyx_tp_traverse_4jlog_BaseJLog(PyObject *o, visitproc v, void *a) {
+  int e;
+  struct __pyx_obj_4jlog_BaseJLog *p = (struct __pyx_obj_4jlog_BaseJLog *)o;
+  if (p->ctx_initialized) {
+    e = (*v)(p->ctx_initialized, a); if (e) return e;
+  }
+  if (p->path) {
+    e = (*v)(p->path, a); if (e) return e;
+  }
+  return 0;
+}
+
+static int __pyx_tp_clear_4jlog_BaseJLog(PyObject *o) {
+  PyObject* tmp;
+  struct __pyx_obj_4jlog_BaseJLog *p = (struct __pyx_obj_4jlog_BaseJLog *)o;
+  tmp = ((PyObject*)p->ctx_initialized);
+  p->ctx_initialized = Py_None; Py_INCREF(Py_None);
+  Py_XDECREF(tmp);
+  tmp = ((PyObject*)p->path);
+  p->path = Py_None; Py_INCREF(Py_None);
+  Py_XDECREF(tmp);
+  return 0;
+}
+
+static PyObject *__pyx_getprop_4jlog_8BaseJLog_ctx_initialized(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_4jlog_8BaseJLog_15ctx_initialized_1__get__(o);
+}
+
+static int __pyx_setprop_4jlog_8BaseJLog_ctx_initialized(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+  if (v) {
+    return __pyx_pw_4jlog_8BaseJLog_15ctx_initialized_3__set__(o, v);
+  }
+  else {
+    return __pyx_pw_4jlog_8BaseJLog_15ctx_initialized_5__del__(o);
+  }
+}
+
+static PyObject *__pyx_getprop_4jlog_8BaseJLog_path(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_4jlog_8BaseJLog_4path_1__get__(o);
+}
+
+static int __pyx_setprop_4jlog_8BaseJLog_path(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+  if (v) {
+    return __pyx_pw_4jlog_8BaseJLog_4path_3__set__(o, v);
+  }
+  else {
+    return __pyx_pw_4jlog_8BaseJLog_4path_5__del__(o);
+  }
+}
+
+static PyMethodDef __pyx_methods_4jlog_BaseJLog[] = {
+  {"add_subscriber", (PyCFunction)__pyx_pw_4jlog_8BaseJLog_1add_subscriber, METH_VARARGS|METH_KEYWORDS, 0},
+  {"remove_subscriber", (PyCFunction)__pyx_pw_4jlog_8BaseJLog_3remove_subscriber, METH_O, 0},
+  {0, 0, 0, 0}
+};
+
+static struct PyGetSetDef __pyx_getsets_4jlog_BaseJLog[] = {
+  {(char *)"ctx_initialized", __pyx_getprop_4jlog_8BaseJLog_ctx_initialized, __pyx_setprop_4jlog_8BaseJLog_ctx_initialized, 0, 0},
+  {(char *)"path", __pyx_getprop_4jlog_8BaseJLog_path, __pyx_setprop_4jlog_8BaseJLog_path, 0, 0},
+  {0, 0, 0, 0, 0}
+};
+
+static PyTypeObject __pyx_type_4jlog_BaseJLog = {
+  PyVarObject_HEAD_INIT(0, 0)
+  "jlog.BaseJLog", /*tp_name*/
+  sizeof(struct __pyx_obj_4jlog_BaseJLog), /*tp_basicsize*/
+  0, /*tp_itemsize*/
+  __pyx_tp_dealloc_4jlog_BaseJLog, /*tp_dealloc*/
+  0, /*tp_print*/
+  0, /*tp_getattr*/
+  0, /*tp_setattr*/
+  #if PY_MAJOR_VERSION < 3
+  0, /*tp_compare*/
+  #else
+  0, /*reserved*/
+  #endif
+  0, /*tp_repr*/
+  0, /*tp_as_number*/
+  0, /*tp_as_sequence*/
+  0, /*tp_as_mapping*/
+  0, /*tp_hash*/
+  0, /*tp_call*/
+  0, /*tp_str*/
+  0, /*tp_getattro*/
+  0, /*tp_setattro*/
+  0, /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
+  0, /*tp_doc*/
+  __pyx_tp_traverse_4jlog_BaseJLog, /*tp_traverse*/
+  __pyx_tp_clear_4jlog_BaseJLog, /*tp_clear*/
+  0, /*tp_richcompare*/
+  0, /*tp_weaklistoffset*/
+  0, /*tp_iter*/
+  0, /*tp_iternext*/
+  __pyx_methods_4jlog_BaseJLog, /*tp_methods*/
+  0, /*tp_members*/
+  __pyx_getsets_4jlog_BaseJLog, /*tp_getset*/
+  0, /*tp_base*/
+  0, /*tp_dict*/
+  0, /*tp_descr_get*/
+  0, /*tp_descr_set*/
+  0, /*tp_dictoffset*/
+  0, /*tp_init*/
+  0, /*tp_alloc*/
+  __pyx_tp_new_4jlog_BaseJLog, /*tp_new*/
+  0, /*tp_free*/
+  0, /*tp_is_gc*/
+  0, /*tp_bases*/
+  0, /*tp_mro*/
+  0, /*tp_cache*/
+  0, /*tp_subclasses*/
+  0, /*tp_weaklist*/
+  0, /*tp_del*/
+  0, /*tp_version_tag*/
+  #if PY_VERSION_HEX >= 0x030400a1
+  0, /*tp_finalize*/
+  #endif
+};
+
+static PyObject *__pyx_tp_new_4jlog_JLogReader(PyTypeObject *t, PyObject *a, PyObject *k) {
+  struct __pyx_obj_4jlog_JLogReader *p;
+  PyObject *o = __pyx_tp_new_4jlog_BaseJLog(t, a, k);
+  if (unlikely(!o)) return 0;
+  p = ((struct __pyx_obj_4jlog_JLogReader *)o);
   p->subscriber = Py_None; Py_INCREF(Py_None);
   if (unlikely(__pyx_pw_4jlog_10JLogReader_1__cinit__(o, a, k) < 0)) {
     Py_DECREF(o); o = 0;
@@ -2111,21 +4226,15 @@ static void __pyx_tp_dealloc_4jlog_JLogReader(PyObject *o) {
     --Py_REFCNT(o);
     PyErr_Restore(etype, eval, etb);
   }
-  Py_CLEAR(p->ctx_initialized);
-  Py_CLEAR(p->path);
   Py_CLEAR(p->subscriber);
-  (*Py_TYPE(o)->tp_free)(o);
+  PyObject_GC_Track(o);
+  __pyx_tp_dealloc_4jlog_BaseJLog(o);
 }
 
 static int __pyx_tp_traverse_4jlog_JLogReader(PyObject *o, visitproc v, void *a) {
   int e;
   struct __pyx_obj_4jlog_JLogReader *p = (struct __pyx_obj_4jlog_JLogReader *)o;
-  if (p->ctx_initialized) {
-    e = (*v)(p->ctx_initialized, a); if (e) return e;
-  }
-  if (p->path) {
-    e = (*v)(p->path, a); if (e) return e;
-  }
+  e = __pyx_tp_traverse_4jlog_BaseJLog(o, v, a); if (e) return e;
   if (p->subscriber) {
     e = (*v)(p->subscriber, a); if (e) return e;
   }
@@ -2135,22 +4244,36 @@ static int __pyx_tp_traverse_4jlog_JLogReader(PyObject *o, visitproc v, void *a)
 static int __pyx_tp_clear_4jlog_JLogReader(PyObject *o) {
   PyObject* tmp;
   struct __pyx_obj_4jlog_JLogReader *p = (struct __pyx_obj_4jlog_JLogReader *)o;
-  tmp = ((PyObject*)p->ctx_initialized);
-  p->ctx_initialized = Py_None; Py_INCREF(Py_None);
-  Py_XDECREF(tmp);
-  tmp = ((PyObject*)p->path);
-  p->path = Py_None; Py_INCREF(Py_None);
-  Py_XDECREF(tmp);
+  __pyx_tp_clear_4jlog_BaseJLog(o);
   tmp = ((PyObject*)p->subscriber);
   p->subscriber = Py_None; Py_INCREF(Py_None);
   Py_XDECREF(tmp);
   return 0;
 }
 
+static PyObject *__pyx_getprop_4jlog_10JLogReader_subscriber(PyObject *o, CYTHON_UNUSED void *x) {
+  return __pyx_pw_4jlog_10JLogReader_10subscriber_1__get__(o);
+}
+
+static int __pyx_setprop_4jlog_10JLogReader_subscriber(PyObject *o, PyObject *v, CYTHON_UNUSED void *x) {
+  if (v) {
+    return __pyx_pw_4jlog_10JLogReader_10subscriber_3__set__(o, v);
+  }
+  else {
+    return __pyx_pw_4jlog_10JLogReader_10subscriber_5__del__(o);
+  }
+}
+
 static PyMethodDef __pyx_methods_4jlog_JLogReader[] = {
   {"__next__", (PyCFunction)__pyx_pw_4jlog_10JLogReader_5__next__, METH_NOARGS|METH_COEXIST, 0},
-  {"error_msg", (PyCFunction)__pyx_pw_4jlog_10JLogReader_11error_msg, METH_NOARGS, 0},
+  {"truncate", (PyCFunction)__pyx_pw_4jlog_10JLogReader_11truncate, METH_VARARGS|METH_KEYWORDS, 0},
+  {"error_msg", (PyCFunction)__pyx_pw_4jlog_10JLogReader_13error_msg, METH_NOARGS, 0},
   {0, 0, 0, 0}
+};
+
+static struct PyGetSetDef __pyx_getsets_4jlog_JLogReader[] = {
+  {(char *)"subscriber", __pyx_getprop_4jlog_10JLogReader_subscriber, __pyx_setprop_4jlog_10JLogReader_subscriber, 0, 0},
+  {0, 0, 0, 0, 0}
 };
 
 static PySequenceMethods __pyx_tp_as_sequence_JLogReader = {
@@ -2206,7 +4329,7 @@ static PyTypeObject __pyx_type_4jlog_JLogReader = {
   __pyx_pw_4jlog_10JLogReader_5__next__, /*tp_iternext*/
   __pyx_methods_4jlog_JLogReader, /*tp_methods*/
   0, /*tp_members*/
-  0, /*tp_getset*/
+  __pyx_getsets_4jlog_JLogReader, /*tp_getset*/
   0, /*tp_base*/
   0, /*tp_dict*/
   0, /*tp_descr_get*/
@@ -2229,7 +4352,100 @@ static PyTypeObject __pyx_type_4jlog_JLogReader = {
   #endif
 };
 
+static PyObject *__pyx_tp_new_4jlog_JLogWriter(PyTypeObject *t, PyObject *a, PyObject *k) {
+  PyObject *o = __pyx_tp_new_4jlog_BaseJLog(t, a, k);
+  if (unlikely(!o)) return 0;
+  if (unlikely(__pyx_pw_4jlog_10JLogWriter_1__cinit__(o, a, k) < 0)) {
+    Py_DECREF(o); o = 0;
+  }
+  return o;
+}
+
+static void __pyx_tp_dealloc_4jlog_JLogWriter(PyObject *o) {
+  #if PY_VERSION_HEX >= 0x030400a1
+  if (unlikely(Py_TYPE(o)->tp_finalize) && !_PyGC_FINALIZED(o)) {
+    if (PyObject_CallFinalizerFromDealloc(o)) return;
+  }
+  #endif
+  PyObject_GC_UnTrack(o);
+  {
+    PyObject *etype, *eval, *etb;
+    PyErr_Fetch(&etype, &eval, &etb);
+    ++Py_REFCNT(o);
+    __pyx_pw_4jlog_10JLogWriter_5__dealloc__(o);
+    --Py_REFCNT(o);
+    PyErr_Restore(etype, eval, etb);
+  }
+  PyObject_GC_Track(o);
+  __pyx_tp_dealloc_4jlog_BaseJLog(o);
+}
+
+static PyMethodDef __pyx_methods_4jlog_JLogWriter[] = {
+  {"write", (PyCFunction)__pyx_pw_4jlog_10JLogWriter_3write, METH_O, 0},
+  {"error_msg", (PyCFunction)__pyx_pw_4jlog_10JLogWriter_7error_msg, METH_NOARGS, 0},
+  {0, 0, 0, 0}
+};
+
+static PyTypeObject __pyx_type_4jlog_JLogWriter = {
+  PyVarObject_HEAD_INIT(0, 0)
+  "jlog.JLogWriter", /*tp_name*/
+  sizeof(struct __pyx_obj_4jlog_JLogWriter), /*tp_basicsize*/
+  0, /*tp_itemsize*/
+  __pyx_tp_dealloc_4jlog_JLogWriter, /*tp_dealloc*/
+  0, /*tp_print*/
+  0, /*tp_getattr*/
+  0, /*tp_setattr*/
+  #if PY_MAJOR_VERSION < 3
+  0, /*tp_compare*/
+  #else
+  0, /*reserved*/
+  #endif
+  0, /*tp_repr*/
+  0, /*tp_as_number*/
+  0, /*tp_as_sequence*/
+  0, /*tp_as_mapping*/
+  0, /*tp_hash*/
+  0, /*tp_call*/
+  0, /*tp_str*/
+  0, /*tp_getattro*/
+  0, /*tp_setattro*/
+  0, /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_VERSION_TAG|Py_TPFLAGS_CHECKTYPES|Py_TPFLAGS_HAVE_NEWBUFFER|Py_TPFLAGS_BASETYPE|Py_TPFLAGS_HAVE_GC, /*tp_flags*/
+  0, /*tp_doc*/
+  __pyx_tp_traverse_4jlog_BaseJLog, /*tp_traverse*/
+  __pyx_tp_clear_4jlog_BaseJLog, /*tp_clear*/
+  0, /*tp_richcompare*/
+  0, /*tp_weaklistoffset*/
+  0, /*tp_iter*/
+  0, /*tp_iternext*/
+  __pyx_methods_4jlog_JLogWriter, /*tp_methods*/
+  0, /*tp_members*/
+  0, /*tp_getset*/
+  0, /*tp_base*/
+  0, /*tp_dict*/
+  0, /*tp_descr_get*/
+  0, /*tp_descr_set*/
+  0, /*tp_dictoffset*/
+  0, /*tp_init*/
+  0, /*tp_alloc*/
+  __pyx_tp_new_4jlog_JLogWriter, /*tp_new*/
+  0, /*tp_free*/
+  0, /*tp_is_gc*/
+  0, /*tp_bases*/
+  0, /*tp_mro*/
+  0, /*tp_cache*/
+  0, /*tp_subclasses*/
+  0, /*tp_weaklist*/
+  0, /*tp_del*/
+  0, /*tp_version_tag*/
+  #if PY_VERSION_HEX >= 0x030400a1
+  0, /*tp_finalize*/
+  #endif
+};
+
 static PyMethodDef __pyx_methods[] = {
+  {"jlog_add_subscriber", (PyCFunction)__pyx_pw_4jlog_1jlog_add_subscriber, METH_VARARGS|METH_KEYWORDS, 0},
+  {"jlog_remove_subscriber", (PyCFunction)__pyx_pw_4jlog_3jlog_remove_subscriber, METH_VARARGS|METH_KEYWORDS, 0},
   {0, 0, 0, 0}
 };
 
@@ -2253,9 +4469,6 @@ static struct PyModuleDef __pyx_moduledef = {
 
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_s_, __pyx_k_, sizeof(__pyx_k_), 0, 0, 1, 0},
-  {&__pyx_n_s_Error, __pyx_k_Error, sizeof(__pyx_k_Error), 0, 0, 1, 1},
-  {&__pyx_n_s_Error___init, __pyx_k_Error___init, sizeof(__pyx_k_Error___init), 0, 0, 1, 1},
-  {&__pyx_n_s_Error___str, __pyx_k_Error___str, sizeof(__pyx_k_Error___str), 0, 0, 1, 1},
   {&__pyx_n_s_Exception, __pyx_k_Exception, sizeof(__pyx_k_Exception), 0, 0, 1, 1},
   {&__pyx_n_s_JLOG_ALMOST_SAFE, __pyx_k_JLOG_ALMOST_SAFE, sizeof(__pyx_k_JLOG_ALMOST_SAFE), 0, 0, 1, 1},
   {&__pyx_n_s_JLOG_BEGIN, __pyx_k_JLOG_BEGIN, sizeof(__pyx_k_JLOG_BEGIN), 0, 0, 1, 1},
@@ -2291,8 +4504,11 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_JLOG_ERR_SUCCESS, __pyx_k_JLOG_ERR_SUCCESS, sizeof(__pyx_k_JLOG_ERR_SUCCESS), 0, 0, 1, 1},
   {&__pyx_n_s_JLOG_SAFE, __pyx_k_JLOG_SAFE, sizeof(__pyx_k_JLOG_SAFE), 0, 0, 1, 1},
   {&__pyx_n_s_JLOG_UNSAFE, __pyx_k_JLOG_UNSAFE, sizeof(__pyx_k_JLOG_UNSAFE), 0, 0, 1, 1},
+  {&__pyx_n_s_JLogError, __pyx_k_JLogError, sizeof(__pyx_k_JLogError), 0, 0, 1, 1},
+  {&__pyx_n_s_JLogError___init, __pyx_k_JLogError___init, sizeof(__pyx_k_JLogError___init), 0, 0, 1, 1},
+  {&__pyx_n_s_JLogError___str, __pyx_k_JLogError___str, sizeof(__pyx_k_JLogError___str), 0, 0, 1, 1},
   {&__pyx_n_s_StopIteration, __pyx_k_StopIteration, sizeof(__pyx_k_StopIteration), 0, 0, 1, 1},
-  {&__pyx_kp_s_data_tmp_jlog_python_jlog_pyx, __pyx_k_data_tmp_jlog_python_jlog_pyx, sizeof(__pyx_k_data_tmp_jlog_python_jlog_pyx), 0, 0, 1, 0},
+  {&__pyx_kp_s_data_blockd_logging_python_jlog, __pyx_k_data_blockd_logging_python_jlog, sizeof(__pyx_k_data_blockd_logging_python_jlog), 0, 0, 1, 0},
   {&__pyx_n_s_doc, __pyx_k_doc, sizeof(__pyx_k_doc), 0, 0, 1, 1},
   {&__pyx_n_s_error_msg, __pyx_k_error_msg, sizeof(__pyx_k_error_msg), 0, 0, 1, 1},
   {&__pyx_n_s_init, __pyx_k_init, sizeof(__pyx_k_init), 0, 0, 1, 1},
@@ -2300,24 +4516,29 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_jlog_ctx_read_message, __pyx_k_jlog_ctx_read_message, sizeof(__pyx_k_jlog_ctx_read_message), 0, 0, 1, 1},
   {&__pyx_kp_s_jlog_failed_to_initialize, __pyx_k_jlog_failed_to_initialize, sizeof(__pyx_k_jlog_failed_to_initialize), 0, 0, 1, 0},
   {&__pyx_kp_s_jlog_reader_failed_to_open_subsc, __pyx_k_jlog_reader_failed_to_open_subsc, sizeof(__pyx_k_jlog_reader_failed_to_open_subsc), 0, 0, 1, 0},
+  {&__pyx_kp_s_jlog_write_error, __pyx_k_jlog_write_error, sizeof(__pyx_k_jlog_write_error), 0, 0, 1, 0},
+  {&__pyx_kp_s_jlog_writer_failed_reinit_after, __pyx_k_jlog_writer_failed_reinit_after, sizeof(__pyx_k_jlog_writer_failed_reinit_after), 0, 0, 1, 0},
+  {&__pyx_kp_s_jlog_writer_failed_to_initialize, __pyx_k_jlog_writer_failed_to_initialize, sizeof(__pyx_k_jlog_writer_failed_to_initialize), 0, 0, 1, 0},
+  {&__pyx_kp_s_jlog_writer_failed_to_open_s, __pyx_k_jlog_writer_failed_to_open_s, sizeof(__pyx_k_jlog_writer_failed_to_open_s), 0, 0, 1, 0},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
-  {&__pyx_n_s_max_iter, __pyx_k_max_iter, sizeof(__pyx_k_max_iter), 0, 0, 1, 1},
   {&__pyx_n_s_message, __pyx_k_message, sizeof(__pyx_k_message), 0, 0, 1, 1},
   {&__pyx_n_s_metaclass, __pyx_k_metaclass, sizeof(__pyx_k_metaclass), 0, 0, 1, 1},
   {&__pyx_n_s_module, __pyx_k_module, sizeof(__pyx_k_module), 0, 0, 1, 1},
   {&__pyx_n_s_path, __pyx_k_path, sizeof(__pyx_k_path), 0, 0, 1, 1},
+  {&__pyx_n_s_position, __pyx_k_position, sizeof(__pyx_k_position), 0, 0, 1, 1},
   {&__pyx_n_s_prepare, __pyx_k_prepare, sizeof(__pyx_k_prepare), 0, 0, 1, 1},
   {&__pyx_n_s_qualname, __pyx_k_qualname, sizeof(__pyx_k_qualname), 0, 0, 1, 1},
   {&__pyx_n_s_reason, __pyx_k_reason, sizeof(__pyx_k_reason), 0, 0, 1, 1},
   {&__pyx_n_s_self, __pyx_k_self, sizeof(__pyx_k_self), 0, 0, 1, 1},
+  {&__pyx_n_s_size, __pyx_k_size, sizeof(__pyx_k_size), 0, 0, 1, 1},
   {&__pyx_n_s_str, __pyx_k_str, sizeof(__pyx_k_str), 0, 0, 1, 1},
   {&__pyx_n_s_subscriber, __pyx_k_subscriber, sizeof(__pyx_k_subscriber), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_Exception = __Pyx_GetBuiltinName(__pyx_n_s_Exception); if (!__pyx_builtin_Exception) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 43; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_builtin_StopIteration = __Pyx_GetBuiltinName(__pyx_n_s_StopIteration); if (!__pyx_builtin_StopIteration) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 109; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_Exception = __Pyx_GetBuiltinName(__pyx_n_s_Exception); if (!__pyx_builtin_Exception) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_StopIteration = __Pyx_GetBuiltinName(__pyx_n_s_StopIteration); if (!__pyx_builtin_StopIteration) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 145; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -2327,43 +4548,65 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
-  /* "jlog.pyx":78
+  /* "jlog.pyx":121
  * 
  *     if self.ctx is NULL:
- *       raise Error("jlog failed to initialize")             # <<<<<<<<<<<<<<
+ *       raise JLogError("jlog failed to initialize")             # <<<<<<<<<<<<<<
  *     else:
  *       self.ctx_initialized = True
  */
-  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_s_jlog_failed_to_initialize); if (unlikely(!__pyx_tuple__2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 78; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_tuple__2);
-  __Pyx_GIVEREF(__pyx_tuple__2);
+  __pyx_tuple__4 = PyTuple_Pack(1, __pyx_kp_s_jlog_failed_to_initialize); if (unlikely(!__pyx_tuple__4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 121; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple__4);
+  __Pyx_GIVEREF(__pyx_tuple__4);
 
-  /* "jlog.pyx":44
+  /* "jlog.pyx":223
  * 
- * class Error(Exception):
+ *     if self.ctx is NULL:
+ *       JLogError("jlog writer failed to initialize")             # <<<<<<<<<<<<<<
+ * 
+ *     error = cjlog.jlog_ctx_init(self.ctx)
+ */
+  __pyx_tuple__5 = PyTuple_Pack(1, __pyx_kp_s_jlog_writer_failed_to_initialize); if (unlikely(!__pyx_tuple__5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 223; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple__5);
+  __Pyx_GIVEREF(__pyx_tuple__5);
+
+  /* "jlog.pyx":233
+ *     error = cjlog.jlog_ctx_close(self.ctx)
+ *     if error:
+ *       JLogError("jlog writer failed reinit after creation")             # <<<<<<<<<<<<<<
+ *     self.ctx = cjlog.jlog_new(path)
+ *     self.ctx_initialized = True
+ */
+  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_kp_s_jlog_writer_failed_reinit_after); if (unlikely(!__pyx_tuple__6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 233; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple__6);
+  __Pyx_GIVEREF(__pyx_tuple__6);
+
+  /* "jlog.pyx":45
+ * 
+ * class JLogError(Exception):
  *   def __init__(self, message, reason = None):             # <<<<<<<<<<<<<<
  *     if not reason:
  *       self.message = message
  */
-  __pyx_tuple__3 = PyTuple_Pack(3, __pyx_n_s_self, __pyx_n_s_message, __pyx_n_s_reason); if (unlikely(!__pyx_tuple__3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_tuple__3);
-  __Pyx_GIVEREF(__pyx_tuple__3);
-  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(3, 0, 3, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__3, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_data_tmp_jlog_python_jlog_pyx, __pyx_n_s_init, 44, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_tuple__5 = PyTuple_Pack(1, ((PyObject *)Py_None)); if (unlikely(!__pyx_tuple__5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_tuple__5);
-  __Pyx_GIVEREF(__pyx_tuple__5);
+  __pyx_tuple__7 = PyTuple_Pack(3, __pyx_n_s_self, __pyx_n_s_message, __pyx_n_s_reason); if (unlikely(!__pyx_tuple__7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple__7);
+  __Pyx_GIVEREF(__pyx_tuple__7);
+  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(3, 0, 3, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_data_blockd_logging_python_jlog, __pyx_n_s_init, 45, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__9 = PyTuple_Pack(1, ((PyObject *)Py_None)); if (unlikely(!__pyx_tuple__9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple__9);
+  __Pyx_GIVEREF(__pyx_tuple__9);
 
-  /* "jlog.pyx":50
+  /* "jlog.pyx":51
  *       self.message = message + ": " + reason
  * 
  *   def __str__(self):             # <<<<<<<<<<<<<<
  *     return self.message
  * 
  */
-  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_n_s_self); if (unlikely(!__pyx_tuple__6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_tuple__6);
-  __Pyx_GIVEREF(__pyx_tuple__6);
-  __pyx_codeobj__7 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__6, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_data_tmp_jlog_python_jlog_pyx, __pyx_n_s_str, 50, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__10 = PyTuple_Pack(1, __pyx_n_s_self); if (unlikely(!__pyx_tuple__10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple__10);
+  __Pyx_GIVEREF(__pyx_tuple__10);
+  __pyx_codeobj__11 = (PyObject*)__Pyx_PyCode_New(1, 0, 1, 0, 0, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__10, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_data_blockd_logging_python_jlog, __pyx_n_s_str, 51, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -2373,7 +4616,7 @@ static int __Pyx_InitCachedConstants(void) {
 
 static int __Pyx_InitGlobals(void) {
   if (__Pyx_InitStrings(__pyx_string_tab) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
-  __pyx_int_neg_1 = PyInt_FromLong(-1); if (unlikely(!__pyx_int_neg_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_int_0 = PyInt_FromLong(0); if (unlikely(!__pyx_int_0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -2462,10 +4705,20 @@ PyMODINIT_FUNC PyInit_jlog(void)
   /*--- Variable export code ---*/
   /*--- Function export code ---*/
   /*--- Type init code ---*/
-  if (PyType_Ready(&__pyx_type_4jlog_JLogReader) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 54; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyType_Ready(&__pyx_type_4jlog_BaseJLog) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 80; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_type_4jlog_BaseJLog.tp_print = 0;
+  if (PyObject_SetAttrString(__pyx_m, "BaseJLog", (PyObject *)&__pyx_type_4jlog_BaseJLog) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 80; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_ptype_4jlog_BaseJLog = &__pyx_type_4jlog_BaseJLog;
+  __pyx_type_4jlog_JLogReader.tp_base = __pyx_ptype_4jlog_BaseJLog;
+  if (PyType_Ready(&__pyx_type_4jlog_JLogReader) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 104; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_type_4jlog_JLogReader.tp_print = 0;
-  if (PyObject_SetAttrString(__pyx_m, "JLogReader", (PyObject *)&__pyx_type_4jlog_JLogReader) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 54; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyObject_SetAttrString(__pyx_m, "JLogReader", (PyObject *)&__pyx_type_4jlog_JLogReader) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 104; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_ptype_4jlog_JLogReader = &__pyx_type_4jlog_JLogReader;
+  __pyx_type_4jlog_JLogWriter.tp_base = __pyx_ptype_4jlog_BaseJLog;
+  if (PyType_Ready(&__pyx_type_4jlog_JLogWriter) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 213; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_type_4jlog_JLogWriter.tp_print = 0;
+  if (PyObject_SetAttrString(__pyx_m, "JLogWriter", (PyObject *)&__pyx_type_4jlog_JLogWriter) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 213; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_ptype_4jlog_JLogWriter = &__pyx_type_4jlog_JLogWriter;
   /*--- Type import code ---*/
   __pyx_ptype_7cpython_4type_type = __Pyx_ImportType(__Pyx_BUILTIN_MODULE_NAME, "type", 
   #if CYTHON_COMPILING_IN_PYPY
@@ -2480,470 +4733,501 @@ PyMODINIT_FUNC PyInit_jlog(void)
   /*--- Function import code ---*/
   /*--- Execution code ---*/
 
-  /* "jlog.pyx":6
- * from cpython cimport PyString_AsString
+  /* "jlog.pyx":7
+ * from cpython cimport PyString_AsStringAndSize
  * 
  * JLOG_BEGIN = cjlog.JLOG_BEGIN             # <<<<<<<<<<<<<<
  * JLOG_END = cjlog.JLOG_END
  * 
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_BEGIN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 6; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_BEGIN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 7; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_BEGIN, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 6; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_BEGIN, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 7; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":7
+  /* "jlog.pyx":8
  * 
  * JLOG_BEGIN = cjlog.JLOG_BEGIN
  * JLOG_END = cjlog.JLOG_END             # <<<<<<<<<<<<<<
  * 
  * JLOG_UNSAFE = cjlog.JLOG_UNSAFE
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_END); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 7; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_END); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 8; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_END, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 7; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_END, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 8; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":9
+  /* "jlog.pyx":10
  * JLOG_END = cjlog.JLOG_END
  * 
  * JLOG_UNSAFE = cjlog.JLOG_UNSAFE             # <<<<<<<<<<<<<<
  * JLOG_ALMOST_SAFE = cjlog.JLOG_ALMOST_SAFE
  * JLOG_SAFE = cjlog.JLOG_SAFE
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_UNSAFE); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 9; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_UNSAFE); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 10; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_UNSAFE, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 9; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_UNSAFE, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 10; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":10
+  /* "jlog.pyx":11
  * 
  * JLOG_UNSAFE = cjlog.JLOG_UNSAFE
  * JLOG_ALMOST_SAFE = cjlog.JLOG_ALMOST_SAFE             # <<<<<<<<<<<<<<
  * JLOG_SAFE = cjlog.JLOG_SAFE
  * 
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ALMOST_SAFE); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 10; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ALMOST_SAFE); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 11; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ALMOST_SAFE, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 10; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ALMOST_SAFE, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 11; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":11
+  /* "jlog.pyx":12
  * JLOG_UNSAFE = cjlog.JLOG_UNSAFE
  * JLOG_ALMOST_SAFE = cjlog.JLOG_ALMOST_SAFE
  * JLOG_SAFE = cjlog.JLOG_SAFE             # <<<<<<<<<<<<<<
  * 
  * JLOG_ERR_SUCCESS = cjlog.JLOG_ERR_SUCCESS
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_SAFE); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 11; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_SAFE); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 12; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_SAFE, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 11; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_SAFE, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 12; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":13
+  /* "jlog.pyx":14
  * JLOG_SAFE = cjlog.JLOG_SAFE
  * 
  * JLOG_ERR_SUCCESS = cjlog.JLOG_ERR_SUCCESS             # <<<<<<<<<<<<<<
  * JLOG_ERR_ILLEGAL_INIT = cjlog.JLOG_ERR_ILLEGAL_INIT
  * JLOG_ERR_ILLEGAL_OPEN = cjlog.JLOG_ERR_ILLEGAL_OPEN
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_SUCCESS); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 13; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_SUCCESS); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 14; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_SUCCESS, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 13; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_SUCCESS, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 14; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":14
+  /* "jlog.pyx":15
  * 
  * JLOG_ERR_SUCCESS = cjlog.JLOG_ERR_SUCCESS
  * JLOG_ERR_ILLEGAL_INIT = cjlog.JLOG_ERR_ILLEGAL_INIT             # <<<<<<<<<<<<<<
  * JLOG_ERR_ILLEGAL_OPEN = cjlog.JLOG_ERR_ILLEGAL_OPEN
  * JLOG_ERR_OPEN = cjlog.JLOG_ERR_OPEN
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_ILLEGAL_INIT); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 14; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_ILLEGAL_INIT); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_ILLEGAL_INIT, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 14; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_ILLEGAL_INIT, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":15
+  /* "jlog.pyx":16
  * JLOG_ERR_SUCCESS = cjlog.JLOG_ERR_SUCCESS
  * JLOG_ERR_ILLEGAL_INIT = cjlog.JLOG_ERR_ILLEGAL_INIT
  * JLOG_ERR_ILLEGAL_OPEN = cjlog.JLOG_ERR_ILLEGAL_OPEN             # <<<<<<<<<<<<<<
  * JLOG_ERR_OPEN = cjlog.JLOG_ERR_OPEN
  * JLOG_ERR_NOTDIR = cjlog.JLOG_ERR_NOTDIR
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_ILLEGAL_OPEN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_ILLEGAL_OPEN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_ILLEGAL_OPEN, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 15; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_ILLEGAL_OPEN, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":16
+  /* "jlog.pyx":17
  * JLOG_ERR_ILLEGAL_INIT = cjlog.JLOG_ERR_ILLEGAL_INIT
  * JLOG_ERR_ILLEGAL_OPEN = cjlog.JLOG_ERR_ILLEGAL_OPEN
  * JLOG_ERR_OPEN = cjlog.JLOG_ERR_OPEN             # <<<<<<<<<<<<<<
  * JLOG_ERR_NOTDIR = cjlog.JLOG_ERR_NOTDIR
  * JLOG_ERR_CREATE_PATHLEN = cjlog.JLOG_ERR_CREATE_PATHLEN
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_OPEN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_OPEN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 17; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_OPEN, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_OPEN, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 17; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":17
+  /* "jlog.pyx":18
  * JLOG_ERR_ILLEGAL_OPEN = cjlog.JLOG_ERR_ILLEGAL_OPEN
  * JLOG_ERR_OPEN = cjlog.JLOG_ERR_OPEN
  * JLOG_ERR_NOTDIR = cjlog.JLOG_ERR_NOTDIR             # <<<<<<<<<<<<<<
  * JLOG_ERR_CREATE_PATHLEN = cjlog.JLOG_ERR_CREATE_PATHLEN
  * JLOG_ERR_CREATE_EXISTS = cjlog.JLOG_ERR_CREATE_EXISTS
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_NOTDIR); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 17; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_NOTDIR); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_NOTDIR, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 17; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_NOTDIR, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":18
+  /* "jlog.pyx":19
  * JLOG_ERR_OPEN = cjlog.JLOG_ERR_OPEN
  * JLOG_ERR_NOTDIR = cjlog.JLOG_ERR_NOTDIR
  * JLOG_ERR_CREATE_PATHLEN = cjlog.JLOG_ERR_CREATE_PATHLEN             # <<<<<<<<<<<<<<
  * JLOG_ERR_CREATE_EXISTS = cjlog.JLOG_ERR_CREATE_EXISTS
  * JLOG_ERR_CREATE_MKDIR = cjlog.JLOG_ERR_CREATE_MKDIR
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_CREATE_PATHLEN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_CREATE_PATHLEN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 19; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_CREATE_PATHLEN, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 18; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_CREATE_PATHLEN, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 19; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":19
+  /* "jlog.pyx":20
  * JLOG_ERR_NOTDIR = cjlog.JLOG_ERR_NOTDIR
  * JLOG_ERR_CREATE_PATHLEN = cjlog.JLOG_ERR_CREATE_PATHLEN
  * JLOG_ERR_CREATE_EXISTS = cjlog.JLOG_ERR_CREATE_EXISTS             # <<<<<<<<<<<<<<
  * JLOG_ERR_CREATE_MKDIR = cjlog.JLOG_ERR_CREATE_MKDIR
  * JLOG_ERR_CREATE_META = cjlog.JLOG_ERR_CREATE_META
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_CREATE_EXISTS); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 19; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_CREATE_EXISTS); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 20; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_CREATE_EXISTS, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 19; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_CREATE_EXISTS, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 20; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":20
+  /* "jlog.pyx":21
  * JLOG_ERR_CREATE_PATHLEN = cjlog.JLOG_ERR_CREATE_PATHLEN
  * JLOG_ERR_CREATE_EXISTS = cjlog.JLOG_ERR_CREATE_EXISTS
  * JLOG_ERR_CREATE_MKDIR = cjlog.JLOG_ERR_CREATE_MKDIR             # <<<<<<<<<<<<<<
  * JLOG_ERR_CREATE_META = cjlog.JLOG_ERR_CREATE_META
  * JLOG_ERR_LOCK = cjlog.JLOG_ERR_LOCK
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_CREATE_MKDIR); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 20; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_CREATE_MKDIR); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_CREATE_MKDIR, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 20; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_CREATE_MKDIR, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":21
+  /* "jlog.pyx":22
  * JLOG_ERR_CREATE_EXISTS = cjlog.JLOG_ERR_CREATE_EXISTS
  * JLOG_ERR_CREATE_MKDIR = cjlog.JLOG_ERR_CREATE_MKDIR
  * JLOG_ERR_CREATE_META = cjlog.JLOG_ERR_CREATE_META             # <<<<<<<<<<<<<<
  * JLOG_ERR_LOCK = cjlog.JLOG_ERR_LOCK
  * JLOG_ERR_IDX_OPEN = cjlog.JLOG_ERR_IDX_OPEN
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_CREATE_META); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_CREATE_META); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 22; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_CREATE_META, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 21; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_CREATE_META, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 22; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":22
+  /* "jlog.pyx":23
  * JLOG_ERR_CREATE_MKDIR = cjlog.JLOG_ERR_CREATE_MKDIR
  * JLOG_ERR_CREATE_META = cjlog.JLOG_ERR_CREATE_META
  * JLOG_ERR_LOCK = cjlog.JLOG_ERR_LOCK             # <<<<<<<<<<<<<<
  * JLOG_ERR_IDX_OPEN = cjlog.JLOG_ERR_IDX_OPEN
  * JLOG_ERR_IDX_SEEK = cjlog.JLOG_ERR_IDX_SEEK
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_LOCK); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 22; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_LOCK); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 23; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_LOCK, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 22; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_LOCK, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 23; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":23
+  /* "jlog.pyx":24
  * JLOG_ERR_CREATE_META = cjlog.JLOG_ERR_CREATE_META
  * JLOG_ERR_LOCK = cjlog.JLOG_ERR_LOCK
  * JLOG_ERR_IDX_OPEN = cjlog.JLOG_ERR_IDX_OPEN             # <<<<<<<<<<<<<<
  * JLOG_ERR_IDX_SEEK = cjlog.JLOG_ERR_IDX_SEEK
  * JLOG_ERR_IDX_CORRUPT = cjlog.JLOG_ERR_IDX_CORRUPT
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_IDX_OPEN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 23; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_IDX_OPEN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_IDX_OPEN, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 23; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_IDX_OPEN, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":24
+  /* "jlog.pyx":25
  * JLOG_ERR_LOCK = cjlog.JLOG_ERR_LOCK
  * JLOG_ERR_IDX_OPEN = cjlog.JLOG_ERR_IDX_OPEN
  * JLOG_ERR_IDX_SEEK = cjlog.JLOG_ERR_IDX_SEEK             # <<<<<<<<<<<<<<
  * JLOG_ERR_IDX_CORRUPT = cjlog.JLOG_ERR_IDX_CORRUPT
  * JLOG_ERR_IDX_WRITE = cjlog.JLOG_ERR_IDX_WRITE
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_IDX_SEEK); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_IDX_SEEK); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 25; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_IDX_SEEK, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_IDX_SEEK, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 25; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":25
+  /* "jlog.pyx":26
  * JLOG_ERR_IDX_OPEN = cjlog.JLOG_ERR_IDX_OPEN
  * JLOG_ERR_IDX_SEEK = cjlog.JLOG_ERR_IDX_SEEK
  * JLOG_ERR_IDX_CORRUPT = cjlog.JLOG_ERR_IDX_CORRUPT             # <<<<<<<<<<<<<<
  * JLOG_ERR_IDX_WRITE = cjlog.JLOG_ERR_IDX_WRITE
  * JLOG_ERR_IDX_READ = cjlog.JLOG_ERR_IDX_READ
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_IDX_CORRUPT); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 25; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_IDX_CORRUPT); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 26; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_IDX_CORRUPT, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 25; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_IDX_CORRUPT, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 26; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":26
+  /* "jlog.pyx":27
  * JLOG_ERR_IDX_SEEK = cjlog.JLOG_ERR_IDX_SEEK
  * JLOG_ERR_IDX_CORRUPT = cjlog.JLOG_ERR_IDX_CORRUPT
  * JLOG_ERR_IDX_WRITE = cjlog.JLOG_ERR_IDX_WRITE             # <<<<<<<<<<<<<<
  * JLOG_ERR_IDX_READ = cjlog.JLOG_ERR_IDX_READ
  * JLOG_ERR_FILE_OPEN = cjlog.JLOG_ERR_FILE_OPEN
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_IDX_WRITE); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 26; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_IDX_WRITE); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 27; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_IDX_WRITE, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 26; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_IDX_WRITE, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 27; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":27
+  /* "jlog.pyx":28
  * JLOG_ERR_IDX_CORRUPT = cjlog.JLOG_ERR_IDX_CORRUPT
  * JLOG_ERR_IDX_WRITE = cjlog.JLOG_ERR_IDX_WRITE
  * JLOG_ERR_IDX_READ = cjlog.JLOG_ERR_IDX_READ             # <<<<<<<<<<<<<<
  * JLOG_ERR_FILE_OPEN = cjlog.JLOG_ERR_FILE_OPEN
  * JLOG_ERR_FILE_SEEK = cjlog.JLOG_ERR_FILE_SEEK
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_IDX_READ); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 27; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_IDX_READ); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 28; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_IDX_READ, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 27; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_IDX_READ, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 28; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":28
+  /* "jlog.pyx":29
  * JLOG_ERR_IDX_WRITE = cjlog.JLOG_ERR_IDX_WRITE
  * JLOG_ERR_IDX_READ = cjlog.JLOG_ERR_IDX_READ
  * JLOG_ERR_FILE_OPEN = cjlog.JLOG_ERR_FILE_OPEN             # <<<<<<<<<<<<<<
  * JLOG_ERR_FILE_SEEK = cjlog.JLOG_ERR_FILE_SEEK
  * JLOG_ERR_FILE_CORRUPT = cjlog.JLOG_ERR_FILE_CORRUPT
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_FILE_OPEN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 28; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_FILE_OPEN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 29; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_FILE_OPEN, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 28; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_FILE_OPEN, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 29; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":29
+  /* "jlog.pyx":30
  * JLOG_ERR_IDX_READ = cjlog.JLOG_ERR_IDX_READ
  * JLOG_ERR_FILE_OPEN = cjlog.JLOG_ERR_FILE_OPEN
  * JLOG_ERR_FILE_SEEK = cjlog.JLOG_ERR_FILE_SEEK             # <<<<<<<<<<<<<<
  * JLOG_ERR_FILE_CORRUPT = cjlog.JLOG_ERR_FILE_CORRUPT
  * JLOG_ERR_FILE_READ = cjlog.JLOG_ERR_FILE_READ
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_FILE_SEEK); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 29; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_FILE_SEEK); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_FILE_SEEK, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 29; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_FILE_SEEK, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":30
+  /* "jlog.pyx":31
  * JLOG_ERR_FILE_OPEN = cjlog.JLOG_ERR_FILE_OPEN
  * JLOG_ERR_FILE_SEEK = cjlog.JLOG_ERR_FILE_SEEK
  * JLOG_ERR_FILE_CORRUPT = cjlog.JLOG_ERR_FILE_CORRUPT             # <<<<<<<<<<<<<<
  * JLOG_ERR_FILE_READ = cjlog.JLOG_ERR_FILE_READ
  * JLOG_ERR_FILE_WRITE = cjlog.JLOG_ERR_FILE_WRITE
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_FILE_CORRUPT); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_FILE_CORRUPT); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_FILE_CORRUPT, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 30; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_FILE_CORRUPT, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":31
+  /* "jlog.pyx":32
  * JLOG_ERR_FILE_SEEK = cjlog.JLOG_ERR_FILE_SEEK
  * JLOG_ERR_FILE_CORRUPT = cjlog.JLOG_ERR_FILE_CORRUPT
  * JLOG_ERR_FILE_READ = cjlog.JLOG_ERR_FILE_READ             # <<<<<<<<<<<<<<
  * JLOG_ERR_FILE_WRITE = cjlog.JLOG_ERR_FILE_WRITE
  * JLOG_ERR_META_OPEN = cjlog.JLOG_ERR_META_OPEN
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_FILE_READ); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_FILE_READ); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 32; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_FILE_READ, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 31; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_FILE_READ, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 32; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":32
+  /* "jlog.pyx":33
  * JLOG_ERR_FILE_CORRUPT = cjlog.JLOG_ERR_FILE_CORRUPT
  * JLOG_ERR_FILE_READ = cjlog.JLOG_ERR_FILE_READ
  * JLOG_ERR_FILE_WRITE = cjlog.JLOG_ERR_FILE_WRITE             # <<<<<<<<<<<<<<
  * JLOG_ERR_META_OPEN = cjlog.JLOG_ERR_META_OPEN
  * JLOG_ERR_ILLEGAL_WRITE = cjlog.JLOG_ERR_ILLEGAL_WRITE
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_FILE_WRITE); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 32; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_FILE_WRITE); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_FILE_WRITE, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 32; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_FILE_WRITE, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":33
+  /* "jlog.pyx":34
  * JLOG_ERR_FILE_READ = cjlog.JLOG_ERR_FILE_READ
  * JLOG_ERR_FILE_WRITE = cjlog.JLOG_ERR_FILE_WRITE
  * JLOG_ERR_META_OPEN = cjlog.JLOG_ERR_META_OPEN             # <<<<<<<<<<<<<<
  * JLOG_ERR_ILLEGAL_WRITE = cjlog.JLOG_ERR_ILLEGAL_WRITE
  * JLOG_ERR_ILLEGAL_CHECKPOINT = cjlog.JLOG_ERR_ILLEGAL_CHECKPOINT
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_META_OPEN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_META_OPEN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 34; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_META_OPEN, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_META_OPEN, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 34; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":34
+  /* "jlog.pyx":35
  * JLOG_ERR_FILE_WRITE = cjlog.JLOG_ERR_FILE_WRITE
  * JLOG_ERR_META_OPEN = cjlog.JLOG_ERR_META_OPEN
  * JLOG_ERR_ILLEGAL_WRITE = cjlog.JLOG_ERR_ILLEGAL_WRITE             # <<<<<<<<<<<<<<
  * JLOG_ERR_ILLEGAL_CHECKPOINT = cjlog.JLOG_ERR_ILLEGAL_CHECKPOINT
  * JLOG_ERR_INVALID_SUBSCRIBER = cjlog.JLOG_ERR_INVALID_SUBSCRIBER
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_ILLEGAL_WRITE); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 34; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_ILLEGAL_WRITE); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 35; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_ILLEGAL_WRITE, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 34; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_ILLEGAL_WRITE, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 35; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":35
+  /* "jlog.pyx":36
  * JLOG_ERR_META_OPEN = cjlog.JLOG_ERR_META_OPEN
  * JLOG_ERR_ILLEGAL_WRITE = cjlog.JLOG_ERR_ILLEGAL_WRITE
  * JLOG_ERR_ILLEGAL_CHECKPOINT = cjlog.JLOG_ERR_ILLEGAL_CHECKPOINT             # <<<<<<<<<<<<<<
  * JLOG_ERR_INVALID_SUBSCRIBER = cjlog.JLOG_ERR_INVALID_SUBSCRIBER
  * JLOG_ERR_ILLEGAL_LOGID = cjlog.JLOG_ERR_ILLEGAL_LOGID
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_ILLEGAL_CHECKPOINT); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 35; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_ILLEGAL_CHECKPOINT); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_ILLEGAL_CHECKPOINT, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 35; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_ILLEGAL_CHECKPOINT, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":36
+  /* "jlog.pyx":37
  * JLOG_ERR_ILLEGAL_WRITE = cjlog.JLOG_ERR_ILLEGAL_WRITE
  * JLOG_ERR_ILLEGAL_CHECKPOINT = cjlog.JLOG_ERR_ILLEGAL_CHECKPOINT
  * JLOG_ERR_INVALID_SUBSCRIBER = cjlog.JLOG_ERR_INVALID_SUBSCRIBER             # <<<<<<<<<<<<<<
  * JLOG_ERR_ILLEGAL_LOGID = cjlog.JLOG_ERR_ILLEGAL_LOGID
  * JLOG_ERR_SUBSCRIBER_EXISTS = cjlog.JLOG_ERR_SUBSCRIBER_EXISTS
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_INVALID_SUBSCRIBER); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_INVALID_SUBSCRIBER); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_INVALID_SUBSCRIBER, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 36; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_INVALID_SUBSCRIBER, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":37
+  /* "jlog.pyx":38
  * JLOG_ERR_ILLEGAL_CHECKPOINT = cjlog.JLOG_ERR_ILLEGAL_CHECKPOINT
  * JLOG_ERR_INVALID_SUBSCRIBER = cjlog.JLOG_ERR_INVALID_SUBSCRIBER
  * JLOG_ERR_ILLEGAL_LOGID = cjlog.JLOG_ERR_ILLEGAL_LOGID             # <<<<<<<<<<<<<<
  * JLOG_ERR_SUBSCRIBER_EXISTS = cjlog.JLOG_ERR_SUBSCRIBER_EXISTS
  * JLOG_ERR_CHECKPOINT = cjlog.JLOG_ERR_CHECKPOINT
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_ILLEGAL_LOGID); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_ILLEGAL_LOGID); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 38; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_ILLEGAL_LOGID, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_ILLEGAL_LOGID, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 38; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":38
+  /* "jlog.pyx":39
  * JLOG_ERR_INVALID_SUBSCRIBER = cjlog.JLOG_ERR_INVALID_SUBSCRIBER
  * JLOG_ERR_ILLEGAL_LOGID = cjlog.JLOG_ERR_ILLEGAL_LOGID
  * JLOG_ERR_SUBSCRIBER_EXISTS = cjlog.JLOG_ERR_SUBSCRIBER_EXISTS             # <<<<<<<<<<<<<<
  * JLOG_ERR_CHECKPOINT = cjlog.JLOG_ERR_CHECKPOINT
  * JLOG_ERR_NOT_SUPPORTED = cjlog.JLOG_ERR_NOT_SUPPORTED
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_SUBSCRIBER_EXISTS); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 38; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_SUBSCRIBER_EXISTS); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 39; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_SUBSCRIBER_EXISTS, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 38; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_SUBSCRIBER_EXISTS, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 39; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":39
+  /* "jlog.pyx":40
  * JLOG_ERR_ILLEGAL_LOGID = cjlog.JLOG_ERR_ILLEGAL_LOGID
  * JLOG_ERR_SUBSCRIBER_EXISTS = cjlog.JLOG_ERR_SUBSCRIBER_EXISTS
  * JLOG_ERR_CHECKPOINT = cjlog.JLOG_ERR_CHECKPOINT             # <<<<<<<<<<<<<<
  * JLOG_ERR_NOT_SUPPORTED = cjlog.JLOG_ERR_NOT_SUPPORTED
  * JLOG_ERR_CLOSE_LOGID = cjlog.JLOG_ERR_CLOSE_LOGID
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_CHECKPOINT); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 39; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_CHECKPOINT); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_CHECKPOINT, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 39; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_CHECKPOINT, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":40
+  /* "jlog.pyx":41
  * JLOG_ERR_SUBSCRIBER_EXISTS = cjlog.JLOG_ERR_SUBSCRIBER_EXISTS
  * JLOG_ERR_CHECKPOINT = cjlog.JLOG_ERR_CHECKPOINT
  * JLOG_ERR_NOT_SUPPORTED = cjlog.JLOG_ERR_NOT_SUPPORTED             # <<<<<<<<<<<<<<
  * JLOG_ERR_CLOSE_LOGID = cjlog.JLOG_ERR_CLOSE_LOGID
  * 
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_NOT_SUPPORTED); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_NOT_SUPPORTED); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 41; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_NOT_SUPPORTED, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_NOT_SUPPORTED, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 41; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":41
+  /* "jlog.pyx":42
  * JLOG_ERR_CHECKPOINT = cjlog.JLOG_ERR_CHECKPOINT
  * JLOG_ERR_NOT_SUPPORTED = cjlog.JLOG_ERR_NOT_SUPPORTED
  * JLOG_ERR_CLOSE_LOGID = cjlog.JLOG_ERR_CLOSE_LOGID             # <<<<<<<<<<<<<<
  * 
- * class Error(Exception):
+ * class JLogError(Exception):
  */
-  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_CLOSE_LOGID); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 41; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyInt_FromLong(JLOG_ERR_CLOSE_LOGID); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_CLOSE_LOGID, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 41; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLOG_ERR_CLOSE_LOGID, __pyx_t_1) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
 
-  /* "jlog.pyx":43
+  /* "jlog.pyx":44
  * JLOG_ERR_CLOSE_LOGID = cjlog.JLOG_ERR_CLOSE_LOGID
  * 
- * class Error(Exception):             # <<<<<<<<<<<<<<
+ * class JLogError(Exception):             # <<<<<<<<<<<<<<
  *   def __init__(self, message, reason = None):
  *     if not reason:
  */
-  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 43; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyTuple_New(1); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
   __Pyx_INCREF(__pyx_builtin_Exception);
   PyTuple_SET_ITEM(__pyx_t_1, 0, __pyx_builtin_Exception);
   __Pyx_GIVEREF(__pyx_builtin_Exception);
-  __pyx_t_2 = __Pyx_CalculateMetaclass(NULL, __pyx_t_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 43; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = __Pyx_CalculateMetaclass(NULL, __pyx_t_1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_Py3MetaclassPrepare(__pyx_t_2, __pyx_t_1, __pyx_n_s_Error, __pyx_n_s_Error, (PyObject *) NULL, __pyx_n_s_jlog, (PyObject *) NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 43; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_3 = __Pyx_Py3MetaclassPrepare(__pyx_t_2, __pyx_t_1, __pyx_n_s_JLogError, __pyx_n_s_JLogError, (PyObject *) NULL, __pyx_n_s_jlog, (PyObject *) NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_3);
 
-  /* "jlog.pyx":44
+  /* "jlog.pyx":45
  * 
- * class Error(Exception):
+ * class JLogError(Exception):
  *   def __init__(self, message, reason = None):             # <<<<<<<<<<<<<<
  *     if not reason:
  *       self.message = message
  */
-  __pyx_t_4 = __Pyx_CyFunction_NewEx(&__pyx_mdef_4jlog_5Error_1__init__, 0, __pyx_n_s_Error___init, NULL, __pyx_n_s_jlog, __pyx_d, ((PyObject *)__pyx_codeobj__4)); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_CyFunction_NewEx(&__pyx_mdef_4jlog_9JLogError_1__init__, 0, __pyx_n_s_JLogError___init, NULL, __pyx_n_s_jlog, __pyx_d, ((PyObject *)__pyx_codeobj__8)); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
-  __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_4, __pyx_tuple__5);
-  if (PyObject_SetItem(__pyx_t_3, __pyx_n_s_init, __pyx_t_4) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_CyFunction_SetDefaultsTuple(__pyx_t_4, __pyx_tuple__9);
+  if (PyObject_SetItem(__pyx_t_3, __pyx_n_s_init, __pyx_t_4) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 45; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "jlog.pyx":50
+  /* "jlog.pyx":51
  *       self.message = message + ": " + reason
  * 
  *   def __str__(self):             # <<<<<<<<<<<<<<
  *     return self.message
  * 
  */
-  __pyx_t_4 = __Pyx_CyFunction_NewEx(&__pyx_mdef_4jlog_5Error_3__str__, 0, __pyx_n_s_Error___str, NULL, __pyx_n_s_jlog, __pyx_d, ((PyObject *)__pyx_codeobj__7)); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_CyFunction_NewEx(&__pyx_mdef_4jlog_9JLogError_3__str__, 0, __pyx_n_s_JLogError___str, NULL, __pyx_n_s_jlog, __pyx_d, ((PyObject *)__pyx_codeobj__11)); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
-  if (PyObject_SetItem(__pyx_t_3, __pyx_n_s_str, __pyx_t_4) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyObject_SetItem(__pyx_t_3, __pyx_n_s_str, __pyx_t_4) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
 
-  /* "jlog.pyx":43
+  /* "jlog.pyx":44
  * JLOG_ERR_CLOSE_LOGID = cjlog.JLOG_ERR_CLOSE_LOGID
  * 
- * class Error(Exception):             # <<<<<<<<<<<<<<
+ * class JLogError(Exception):             # <<<<<<<<<<<<<<
  *   def __init__(self, message, reason = None):
  *     if not reason:
  */
-  __pyx_t_4 = __Pyx_Py3ClassCreate(__pyx_t_2, __pyx_n_s_Error, __pyx_t_1, __pyx_t_3, NULL, 0, 1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 43; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_Py3ClassCreate(__pyx_t_2, __pyx_n_s_JLogError, __pyx_t_1, __pyx_t_3, NULL, 0, 1); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_Error, __pyx_t_4) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 43; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_JLogError, __pyx_t_4) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 44; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
+
+  /* "jlog.pyx":55
+ * 
+ * 
+ * cpdef jlog_add_subscriber(path, subscriber, position = JLOG_BEGIN):             # <<<<<<<<<<<<<<
+ *   cdef cjlog.jlog_ctx *ctx
+ *   ctx = cjlog.jlog_new(path)
+ */
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_JLOG_BEGIN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_k__2 = __pyx_t_1;
+  __Pyx_GIVEREF(__pyx_t_1);
+  __pyx_t_1 = 0;
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_JLOG_BEGIN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_k__2 = __pyx_t_1;
+  __Pyx_GIVEREF(__pyx_t_1);
+  __pyx_t_1 = 0;
+
+  /* "jlog.pyx":85
+ *   cdef cjlog.jlog_ctx *ctx
+ * 
+ *   def add_subscriber(self, subscriber, position = JLOG_BEGIN):             # <<<<<<<<<<<<<<
+ *     if not self.ctx_initialized:
+ *       return False
+ */
+  __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_JLOG_BEGIN); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 85; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_k__3 = __pyx_t_1;
+  __Pyx_GIVEREF(__pyx_t_1);
+  __pyx_t_1 = 0;
 
   /* "jlog.pyx":1
  * cimport cjlog             # <<<<<<<<<<<<<<
@@ -4311,6 +6595,32 @@ static void __Pyx_AddTraceback(const char *funcname, int c_line,
 bad:
     Py_XDECREF(py_code);
     Py_XDECREF(py_frame);
+}
+
+static CYTHON_INLINE PyObject* __Pyx_PyInt_From_int(int value) {
+    const int neg_one = (int) -1, const_zero = 0;
+    const int is_unsigned = neg_one > const_zero;
+    if (is_unsigned) {
+        if (sizeof(int) < sizeof(long)) {
+            return PyInt_FromLong((long) value);
+        } else if (sizeof(int) <= sizeof(unsigned long)) {
+            return PyLong_FromUnsignedLong((unsigned long) value);
+        } else if (sizeof(int) <= sizeof(unsigned long long)) {
+            return PyLong_FromUnsignedLongLong((unsigned long long) value);
+        }
+    } else {
+        if (sizeof(int) <= sizeof(long)) {
+            return PyInt_FromLong((long) value);
+        } else if (sizeof(int) <= sizeof(long long)) {
+            return PyLong_FromLongLong((long long) value);
+        }
+    }
+    {
+        int one = 1; int little = (int)*(unsigned char *)&one;
+        unsigned char *bytes = (unsigned char *)&value;
+        return _PyLong_FromByteArray(bytes, sizeof(int),
+                                     little, !is_unsigned);
+    }
 }
 
 #define __PYX_VERIFY_RETURN_INT(target_type, func_type, func_value)       \
