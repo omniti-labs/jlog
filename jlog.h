@@ -143,6 +143,9 @@ JLOG_API(int)       jlog_ctx_alter_journal_size(jlog_ctx *ctx, size_t size);
 JLOG_API(int)       jlog_ctx_alter_safety(jlog_ctx *ctx, jlog_safety safety);
 JLOG_API(int)       jlog_ctx_add_subscriber(jlog_ctx *ctx, const char *subscriber,
                                             jlog_position whence);
+JLOG_API(int)       jlog_ctx_add_subscriber_copy_checkpoint(jlog_ctx *ctx, 
+                                                            const char *new_subscriber,
+                                                            const char *old_subscriber);
 JLOG_API(int)       jlog_ctx_remove_subscriber(jlog_ctx *ctx, const char *subscriber);
 
 JLOG_API(int)       jlog_ctx_write(jlog_ctx *ctx, const void *message, size_t mess_len);

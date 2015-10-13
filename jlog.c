@@ -1406,6 +1406,45 @@ int jlog_ctx_add_subscriber(jlog_ctx *ctx, const char *s, jlog_position whence) 
   return -1;
 }
 
+int jlog_ctx_add_subscriber_copy_checkpoint(jlog_ctx *old_ctx, const char *new,
+                                const char *old) {
+  jlog_id chkpt;
+  jlog_ctx *new_ctx = NULL;;
+
+  /* If there's no old checkpoint available, just return */
+  if (jlog_get_checkpoint(old_ctx, old, &chkpt)) {
+    return -1;
+  }
+
+  /* If we can't open the jlog_ctx, just return */
+  new_ctx = jlog_new(old_ctx->path);
+  if (!new_ctx) {
+    return -1;
+  }
+  if (jlog_ctx_add_subscriber(new_ctx, new, JLOG_BEGIN)) {
+    /* If it already exists, we want to overwrite it */
+    if (errno != EEXIST) {
+      jlog_ctx_close(new_ctx);
+      return -1;
+    }
+  }
+
+  /* Open a reader for the new subscriber */
+  if(jlog_ctx_open_reader(new_ctx, new) < 0) {
+    jlog_ctx_close(new_ctx);
+    return -1;
+  }
+
+  /* Set the checkpoint of the new subscriber to 
+   * the old subscriber's checkpoint */
+  if (jlog_ctx_read_checkpoint(new_ctx, &chkpt)) {
+    return -1;
+  }
+
+  jlog_ctx_close(new_ctx);
+  return 0;
+}
+
 int jlog_ctx_write(jlog_ctx *ctx, const void *data, size_t len) {
   jlog_message m;
   m.mess = (void *)data;
