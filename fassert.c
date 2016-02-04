@@ -8,14 +8,16 @@
 
 #include "fassert.h"
 
+static const char *bn = "/var/log/circonus/";
+
 static int fd = -1;
 
 static int openit(void)
 {
-  char fn[128];
+  char fn[512];
 
   memset(fn, 0, sizeof(fn));
-  (void)snprintf(fn, sizeof(fn)-1, "../ernie.fassert%ld", time(NULL));
+  (void)snprintf(fn, sizeof(fn)-1, "%s/ernie.fassert%ld", bn, time(NULL));
   int xfd = open(fn, O_CREAT|O_EXCL|O_WRONLY, 0644);
   return xfd;
 }

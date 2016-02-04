@@ -92,6 +92,8 @@
 #include <sys/mman.h>
 #endif
 
+#include "fassert.h"
+
 #define BUFFERED_INDICES 1024
 
 static jlog_file *__jlog_open_writer(jlog_ctx *ctx);
@@ -340,6 +342,7 @@ static int __jlog_unlink_datafile(jlog_ctx *ctx, u_int32_t log) {
   char file[MAXPATHLEN];
   int len;
 
+  memset(file, 0, sizeof(file));
   if(ctx->current_log == log) {
     __jlog_close_reader(ctx);
     __jlog_close_indexer(ctx);
@@ -366,6 +369,7 @@ static int __jlog_open_metastore(jlog_ctx *ctx)
   char file[MAXPATHLEN];
   int len;
 
+  memset(file, 0, sizeof(file));
 #ifdef DEBUG
   fprintf(stderr, "__jlog_open_metastore\n");
 #endif
@@ -374,6 +378,7 @@ static int __jlog_open_metastore(jlog_ctx *ctx)
 #ifdef ENAMETOOLONG
     ctx->last_errno = ENAMETOOLONG;
 #endif
+    FASSERT(0, "__jlog_open_metastore: filename too long");
     ctx->last_error = JLOG_ERR_CREATE_META;
     return -1;
   }
@@ -385,6 +390,7 @@ static int __jlog_open_metastore(jlog_ctx *ctx)
 
   if (!ctx->metastore) {
     ctx->last_errno = errno;
+    FASSERT(0, "__jlog_open_metastore: file create failed");
     ctx->last_error = JLOG_ERR_CREATE_META;
     return -1;
   }
@@ -406,6 +412,7 @@ int jlog_pending_readers(jlog_ctx *ctx, u_int32_t log,
   u_int32_t earliest = 0;
   jlog_id id;
 
+  memset(file, 0, sizeof(file));
   readers = 0;
 
   dir = opendir(ctx->path);
@@ -483,6 +490,7 @@ int jlog_ctx_list_subscribers(jlog_ctx *ctx, char ***subs) {
   char *p;
   int len;
 
+  memset(file, 0, sizeof(file));
   js.subs = calloc(16, sizeof(char *));
   js.allocd = 16;
 
@@ -533,6 +541,7 @@ static int __jlog_save_metastore(jlog_ctx *ctx, int ilocked)
 #endif
 
   if (!ilocked && !jlog_file_lock(ctx->metastore)) {
+    FASSERT(0, "__jlog_save_metastore: cannot get lock");
     return -1;
   }
 
@@ -540,12 +549,14 @@ static int __jlog_save_metastore(jlog_ctx *ctx, int ilocked)
     int rv, flags = MS_INVALIDATE;
     if(ctx->meta->safety == JLOG_SAFE) flags |= MS_SYNC;
     rv = msync((void *)(ctx->meta), sizeof(*ctx->meta), flags);
+    FASSERT(rv >= 0, "jlog_save_metastore");
     if (!ilocked) jlog_file_unlock(ctx->metastore);
     return rv;
   }
   else {
     if (!jlog_file_pwrite(ctx->metastore, ctx->meta, sizeof(*ctx->meta), 0)) {
       if (!ilocked) jlog_file_unlock(ctx->metastore);
+      FASSERT(0, "jlog_file_pwrite failed");
       return -1;
     }
     if (ctx->meta->safety == JLOG_SAFE) {
@@ -567,12 +578,14 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
 #endif
 
   if (!ilocked && !jlog_file_lock(ctx->metastore)) {
+    FASSERT(0, "__jlog_restore_metastore: cannot get lock");
     return -1;
   }
 
   if(ctx->meta_is_mapped == 0) {
     int rv;
     rv = jlog_file_map_rdwr(ctx->metastore, &base, &len);
+    FASSERT(rv == 1, "jlog_file_map_rdwr");
     if(rv != 1) {
       if (!ilocked) jlog_file_unlock(ctx->metastore);
       return -1;
@@ -586,6 +599,7 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
        jlog_file_pwrite(ctx->metastore, &dummy, sizeof(dummy), 12);
        rv = jlog_file_map_rdwr(ctx->metastore, &base, &len);
     }
+    FASSERT(rv == 1, "jlog_file_map_rdwr");
     if(rv != 1 || len != sizeof(*ctx->meta)) {
       if (!ilocked) jlog_file_unlock(ctx->metastore);
       return -1;
@@ -649,8 +663,10 @@ static int __jlog_set_checkpoint(jlog_ctx *ctx, const char *s, const jlog_id *id
     if (!jlog_file_pread(f, &old_id, sizeof(old_id), 0))
       goto failset;
   }
-  if (!jlog_file_pwrite(f, id, sizeof(*id), 0))
+  if (!jlog_file_pwrite(f, id, sizeof(*id), 0)) {
+    FASSERT(0, "jlog_file_pwrite failed in jlog_set_checkpoint");
     goto failset;
+  }
   if (ctx->meta->safety == JLOG_SAFE) {
     jlog_file_sync(f);
   }
@@ -717,6 +733,7 @@ static jlog_file *__jlog_open_named_checkpoint(jlog_ctx *ctx, const char *cpname
 static jlog_file *__jlog_open_reader(jlog_ctx *ctx, u_int32_t log) {
   char file[MAXPATHLEN];
 
+  memset(file, 0, sizeof(file));
   if(ctx->current_log != log) {
     __jlog_close_reader(ctx);
     __jlog_close_indexer(ctx);
@@ -764,16 +781,22 @@ static jlog_file *__jlog_open_writer(jlog_ctx *ctx) {
     return ctx->data;
   }
 
+  memset(file, 0, sizeof(file));
+  FASSERT(ctx != NULL, "__jlog_open_writer");
   if(!jlog_file_lock(ctx->metastore))
     SYS_FAIL(JLOG_ERR_LOCK);
-  if(__jlog_restore_metastore(ctx, 1))
+  int x;
+  if(x = __jlog_restore_metastore(ctx, 1)) {
+    FASSERT(x == 0, "__jlog_open_writer calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
+  }
   ctx->current_log =  ctx->meta->storage_log;
   STRSETDATAFILE(ctx, file, ctx->current_log);
 #ifdef DEBUG
   fprintf(stderr, "opening log file[rw]: '%s'\n", file);
 #endif
   ctx->data = jlog_file_open(file, O_CREAT, ctx->file_mode);
+  FASSERT(ctx->data != NULL, "__jlog_open_writer calls jlog_file_open");
  finish:
   jlog_file_unlock(ctx->metastore);
   return ctx->data;
@@ -808,6 +831,7 @@ static jlog_file *__jlog_open_indexer(jlog_ctx *ctx, u_int32_t log) {
   char file[MAXPATHLEN];
   int len;
 
+  memset(file, 0, sizeof(file));
   if(ctx->current_log != log) {
     __jlog_close_reader(ctx);
     __jlog_close_indexer(ctx);
@@ -1114,6 +1138,7 @@ int jlog_ctx_alter_safety(jlog_ctx *ctx, jlog_safety safety) {
     ctx->meta->safety = safety;
     if(ctx->context_mode == JLOG_APPEND) {
       if(__jlog_save_metastore(ctx, 0) != 0) {
+	FASSERT(0, "jlog_ctx_alter_safety calls jlog_save_metastore");
         SYS_FAIL(JLOG_ERR_CREATE_META);
       }
     }
@@ -1129,6 +1154,7 @@ int jlog_ctx_alter_journal_size(jlog_ctx *ctx, size_t size) {
     ctx->meta->unit_limit = size;
     if(ctx->context_mode == JLOG_APPEND) {
       if(__jlog_save_metastore(ctx, 0) != 0) {
+	FASSERT(0, "jlog_ctx_alter_journal_size calls jlog_save_metastore");
         SYS_FAIL(JLOG_ERR_CREATE_META);
       }
     }
@@ -1154,8 +1180,15 @@ int jlog_ctx_open_writer(jlog_ctx *ctx) {
   while((rv = stat(ctx->path, &sb)) == -1 && errno == EINTR);
   if(rv == -1) SYS_FAIL(JLOG_ERR_OPEN);
   if(!S_ISDIR(sb.st_mode)) SYS_FAIL(JLOG_ERR_NOTDIR);
-  if(__jlog_open_metastore(ctx) != 0) SYS_FAIL(JLOG_ERR_META_OPEN);
-  if(__jlog_restore_metastore(ctx, 0)) SYS_FAIL(JLOG_ERR_META_OPEN);
+  FASSERT(ctx != NULL, "jlog_ctx_open_writer");
+  if(__jlog_open_metastore(ctx) != 0) {
+    FASSERT(0, "jlog_ctx_open_writer calls jlog_open_metastore");
+    SYS_FAIL(JLOG_ERR_META_OPEN);
+  }
+  if(__jlog_restore_metastore(ctx, 0)) {
+    FASSERT(0, "jlog_ctx_open_writer calls jlog_restore_metastore");
+    SYS_FAIL(JLOG_ERR_META_OPEN);
+  }
  finish:
   if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
   ctx->context_mode = JLOG_INVALID;
@@ -1176,10 +1209,17 @@ int jlog_ctx_open_reader(jlog_ctx *ctx, const char *subscriber) {
   while((rv = stat(ctx->path, &sb)) == -1 && errno == EINTR);
   if(rv == -1) SYS_FAIL(JLOG_ERR_OPEN);
   if(!S_ISDIR(sb.st_mode)) SYS_FAIL(JLOG_ERR_NOTDIR);
-  if(__jlog_open_metastore(ctx) != 0) SYS_FAIL(JLOG_ERR_META_OPEN);
+  FASSERT(ctx != NULL, "__jlog_ctx_open_reader");
+  if(__jlog_open_metastore(ctx) != 0) {
+    FASSERT(0, "jlog_ctx_open_reader calls jlog_open_metastore");
+    SYS_FAIL(JLOG_ERR_META_OPEN);
+  }
   if(jlog_get_checkpoint(ctx, ctx->subscriber_name, &dummy))
     SYS_FAIL(JLOG_ERR_INVALID_SUBSCRIBER);
-  if(__jlog_restore_metastore(ctx, 0)) SYS_FAIL(JLOG_ERR_META_OPEN);
+  if(__jlog_restore_metastore(ctx, 0)) {
+    FASSERT(0, "jlog_ctx_open_reader calls jlog_restore_metastore");
+    SYS_FAIL(JLOG_ERR_META_OPEN);
+  }
  finish:
   if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
   ctx->context_mode = JLOG_INVALID;
@@ -1212,10 +1252,14 @@ int jlog_ctx_init(jlog_ctx *ctx) {
     SYS_FAIL(JLOG_ERR_CREATE_MKDIR);
   chmod(ctx->path, dirmode);
   /* Setup our initial state and store our instance metadata */
-  if(__jlog_open_metastore(ctx) != 0)
+  if(__jlog_open_metastore(ctx) != 0) {
+    FASSERT(0, "jlog_ctx_init calls jlog_open_metastore");
     SYS_FAIL(JLOG_ERR_CREATE_META);
-  if(__jlog_save_metastore(ctx, 0) != 0)
+  }
+  if(__jlog_save_metastore(ctx, 0) != 0) {
+    FASSERT(0, "jlog_ctx_init calls jlog_save_metastore");
     SYS_FAIL(JLOG_ERR_CREATE_META);
+  }
  finish:
   if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
   return -1;
@@ -1234,22 +1278,31 @@ int jlog_ctx_close(jlog_ctx *ctx) {
 
 static int __jlog_metastore_atomic_increment(jlog_ctx *ctx) {
   char file[MAXPATHLEN];
+
 #ifdef DEBUG
   fprintf(stderr, "atomic increment on %u\n", ctx->current_log);
 #endif
+  memset(file, 0, sizeof(file));
+  FASSERT(ctx != NULL, "__jlog_metastore_atomic_increment");
   if(ctx->data) SYS_FAIL(JLOG_ERR_NOT_SUPPORTED);
   if (!jlog_file_lock(ctx->metastore))
     SYS_FAIL(JLOG_ERR_LOCK);
-  if(__jlog_restore_metastore(ctx, 1))
+  if(__jlog_restore_metastore(ctx, 1)) {
+    FASSERT(0,
+	    "jlog_metastore_atomic_increment calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
+  }
   if(ctx->meta->storage_log == ctx->current_log) {
     /* We're the first ones to it, so we get to increment it */
     ctx->current_log++;
     STRSETDATAFILE(ctx, file, ctx->current_log);
     ctx->data = jlog_file_open(file, O_CREAT, ctx->file_mode);
     ctx->meta->storage_log = ctx->current_log;
-    if(__jlog_save_metastore(ctx, 1))
+    if(__jlog_save_metastore(ctx, 1)) {
+      FASSERT(0,
+	      "jlog_metastore_atomic_increment calls jlog_save_metastore");
       SYS_FAIL(JLOG_ERR_META_OPEN);
+    }
   }
  finish:
   jlog_file_unlock(ctx->metastore);
@@ -1303,11 +1356,15 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
     hdr.tv_usec = now.tv_usec;
   }
   hdr.mlen = mess->mess_len;
-  if (!jlog_file_pwrite(ctx->data, &hdr, sizeof(hdr), current_offset))
+  if (!jlog_file_pwrite(ctx->data, &hdr, sizeof(hdr), current_offset)) {
+    FASSERT(0, "jlog_file_pwrite failed in jlog_ctx_write_message");
     SYS_FAIL(JLOG_ERR_FILE_WRITE);
+  }
   current_offset += sizeof(hdr);
-  if (!jlog_file_pwrite(ctx->data, mess->mess, mess->mess_len, current_offset))
+  if (!jlog_file_pwrite(ctx->data, mess->mess, mess->mess_len, current_offset)) {
+    FASSERT(0, "jlog_file_pwrite failed in jlog_ctx_write_message");
     SYS_FAIL(JLOG_ERR_FILE_WRITE);
+  }
   current_offset += mess->mess_len;
 
   if(ctx->meta->unit_limit <= current_offset) {
@@ -1385,9 +1442,15 @@ int jlog_ctx_add_subscriber(jlog_ctx *ctx, const char *s, jlog_position whence) 
   if(whence == JLOG_END) {
     jlog_id start, finish;
     memset(&chkpt, 0, sizeof(chkpt));
-    if(__jlog_open_metastore(ctx) != 0) SYS_FAIL(JLOG_ERR_META_OPEN);
-    if(__jlog_restore_metastore(ctx, 0))
+    FASSERT(ctx != NULL, "__jlog_ctx_add_subscriber");
+    if(__jlog_open_metastore(ctx) != 0) {
+      FASSERT(0, "jlog_ctx_add_subscriber calls jlog_open_metastore");
       SYS_FAIL(JLOG_ERR_META_OPEN);
+    }
+    if(__jlog_restore_metastore(ctx, 0)) {
+      FASSERT(0, "jlog_ctx_add_subscriber calls jlog_restore_metastore");
+      SYS_FAIL(JLOG_ERR_META_OPEN);
+    }
     chkpt.log = ctx->meta->storage_log;
     if(__jlog_set_checkpoint(ctx, s, &chkpt) != 0)
       SYS_FAIL(JLOG_ERR_CHECKPOINT);
@@ -1466,6 +1529,7 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
       int ferr, len;
       struct stat sb = {0};
 
+      memset(file, 0, sizeof(file));
       STRSETDATAFILE(ctx, file, start->log + 1);
       while((ferr = stat(file, &sb)) == -1 && errno == EINTR);
       /* That file doesn't exist... bad, but we can fake a recovery by
@@ -1506,6 +1570,7 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
     int ferr, len;
     struct stat sb = {0};
 
+    memset(file, 0, sizeof(file));
     STRSETDATAFILE(ctx, file, start->log + 1);
     while((ferr = stat(file, &sb)) == -1 && errno == EINTR);
     if(ferr) {
@@ -1797,6 +1862,9 @@ int jlog_clean(const char *file) {
     if(is_datafile(de->d_name, &logid) && logid < earliest) {
       char fullfile[MAXPATHLEN];
       char fullidx[MAXPATHLEN];
+
+      memset(fullfile, 0, sizeof(fullfile));
+      memset(fullidx, 0, sizeof(fullidx));
       snprintf(fullfile, sizeof(fullfile), "%s/%s", file, de->d_name);
       snprintf(fullidx, sizeof(fullidx), "%s/%s" INDEX_EXT, file, de->d_name);
       (void)unlink(fullfile);

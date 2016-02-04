@@ -42,9 +42,9 @@ srcdir=@srcdir@
 top_srcdir=@top_srcdir@
 
 AOBJS= \
-	jlog.o jlog_hash.o jlog_io.o
+	jlog.o jlog_hash.o jlog_io.o fassert.o
 SOOBJS= \
-	jlog.lo jlog_hash.lo jlog_io.lo
+	jlog.lo jlog_hash.lo jlog_io.lo fassert.lo
 
 all:	libjlog.$(DOTSO) libjlog.a jlogctl jlogtail test
 
@@ -96,7 +96,7 @@ java/jlogTest.class:	java/jlogTest.java java/jlog.jar
 	cd java && $(JAVAC) -cp jlog.jar jlogTest.java
 
 java/com_omniti_labs_jlog.lo:	java/com_omniti_labs_jlog.c
-	$(CC) -Wall -I. $(CPPFLAGS) $(CFLAGS) $(SHCFLAGS) -c $< -o $@
+	$(CC) -Wall -I. -I/usr/java/include -I/usr/java//include/solaris $(CPPFLAGS) $(CFLAGS) $(SHCFLAGS) -c $< -o $@
 
 java/libjlog.jnilib:	java/com_omniti_labs_jlog.lo $(SOOBJS)
 	$(SHLD) -o $@ java/com_omniti_labs_jlog.lo $(SOOBJS) $(LDFLAGS) $(LIBS)
@@ -116,6 +116,7 @@ install:
 	$(INSTALL) -m 0644 jlog.h $(DESTDIR)$(includedir)/jlog.h
 	$(INSTALL) -m 0644 jlog_private.h $(DESTDIR)$(includedir)/jlog_private.h
 	$(INSTALL) -m 0644 jlog_io.h $(DESTDIR)$(includedir)/jlog_io.h
+	$(INSTALL) -m 0644 fassert.h $(DESTDIR)$(includedir)/fassert.h
 	$(INSTALL) -m 0644 jlog_config.h $(DESTDIR)$(includedir)/jlog_config.h
 
 install-perl:
