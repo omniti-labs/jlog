@@ -1053,6 +1053,7 @@ jlog_ctx *jlog_new(const char *path) {
   ctx->file_mode = DEFAULT_FILE_MODE;
   ctx->context_mode = JLOG_NEW;
   ctx->path = strdup(path);
+  fassertxsetpath(path);
   return ctx;
 }
 

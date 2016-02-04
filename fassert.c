@@ -1,24 +1,58 @@
 #include <stdio.h>
+
+#include "jlog_config.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
+#ifdef HAVE_TIME_H
 #include <time.h>
+#endif
 #include <libgen.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#include <sys/param.h>
 
 #include "fassert.h"
 
-static const char *bn = "/var/log/circonus/";
+static const char bn[MAXPATHLEN];
 
 static int fd = -1;
 
+void fassertxsetpath(const char *path)
+{
+  if ( path == NULL || path[0] == 0 )
+    memset((void *)&bn[0], 0, sizeof(bn));
+  else
+    {
+      size_t leen = strlen(path);
+      if ( leen >= MAXPATHLEN )
+	return;
+      memcpy((void *)&bn[0], (void *)path, leen);
+    }
+}
+
+const char *fassertxgetpath(void)
+{
+  return &bn[0];
+}
+
 static int openit(void)
 {
-  char fn[512];
-
-  memset(fn, 0, sizeof(fn));
-  (void)snprintf(fn, sizeof(fn)-1, "%s/ernie.fassert%ld", bn, time(NULL));
+  if ( bn[0] == 0 )
+    return -1;
+  size_t leen = strlen(bn) + 30;
+  if ( leen >= MAXPATHLEN )
+    return -1;
+  char *fn = (char *)calloc(leen+1, sizeof(char));
+  if ( fn == NULL )
+    return -1;
+  (void)snprintf(fn, leen, "%s/ernie.fassert%ld", bn, time(NULL));
   int xfd = open(fn, O_CREAT|O_EXCL|O_WRONLY, 0644);
+  free((void *)fn);
   return xfd;
 }
 
@@ -49,9 +83,9 @@ void fassertx(bool tf, int ln, const char *fn, const char *str)
       str = "(no extra info)";
       leen = strlen(str);
     }
-  memset(s, 0, sizeof(s));
-  memset(s2, 0, sizeof(s2));
-  memset(s3, 0, sizeof(s3));
+  memset((void *)&s[0], 0, sizeof(s));
+  memset((void *)&s2[0], 0, sizeof(s2));
+  memset((void *)&s3[0], 0, sizeof(s3));
   time_t tx = 0;
   (void)time(&tx);
   (void)snprintf(s2, sizeof(s2)-1, "%ld: ", tx);
@@ -60,7 +94,7 @@ void fassertx(bool tf, int ln, const char *fn, const char *str)
   leenrun += leen2;
   if ( ln > 0 )
     {
-      memset(s2, 0, sizeof(s2));
+      memset((void *)&s2[0], 0, sizeof(s2));
       (void)snprintf(s2, sizeof(s2)-1, "line=%d ", ln);
       leen2 = strlen(s2);
       memcpy((void *)&s[leenrun], (void *)&s2[0], leen2);
@@ -84,7 +118,7 @@ void fassertx(bool tf, int ln, const char *fn, const char *str)
   memcpy((void *)&s[leenrun], str, leen);
   leenrun += leen;
   char nl = '\n';
-  memcpy((void *)&s[leenrun], &nl, 1);
+  memcpy((void *)&s[leenrun], (void *)&nl, 1);
   leenrun++;
   (void)write(fd, s, leenrun);
 }
