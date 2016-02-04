@@ -539,7 +539,7 @@ static int __jlog_save_metastore(jlog_ctx *ctx, int ilocked)
   if(ctx->meta_is_mapped) {
     int rv, flags = MS_INVALIDATE;
     if(ctx->meta->safety == JLOG_SAFE) flags |= MS_SYNC;
-    rv = msync(ctx->meta, sizeof(*ctx->meta), flags);
+    rv = msync((void *)(ctx->meta), sizeof(*ctx->meta), flags);
     if (!ilocked) jlog_file_unlock(ctx->metastore);
     return rv;
   }
