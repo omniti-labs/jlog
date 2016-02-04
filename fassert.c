@@ -50,7 +50,7 @@ static int openit(void)
   char *fn = (char *)calloc(leen+1, sizeof(char));
   if ( fn == NULL )
     return -1;
-  (void)snprintf(fn, leen, "%s/ernie.fassert%ld", bn, time(NULL));
+  (void)snprintf(fn, leen, "%s%cernie.fassert%ld", bn, IFS_CH, time(NULL));
   int xfd = open(fn, O_CREAT|O_EXCL|O_WRONLY, 0644);
   free((void *)fn);
   return xfd;
