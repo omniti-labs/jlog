@@ -4,17 +4,29 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#ifdef HAVE_FCNTL_H
+#if HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
-#ifdef HAVE_TIME_H
+#if HAVE_TIME_H
 #include <time.h>
 #endif
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#if HAVE_LIBGEN_H
 #include <libgen.h>
-#ifdef HAVE_UNISTD_H
+#endif
+#if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#if HAVE_SYS_PARAM_H
 #include <sys/param.h>
+#endif
+#if HAVE_STDBOOL_H
+#include <stdbool.h>
+#else
+#include "fakebool.h"
+#endif
 
 #include "fassert.h"
 

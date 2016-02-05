@@ -66,6 +66,7 @@
       (4) read entries from last_read+1 -> index of record index
 
 */
+
 #include <stdio.h>
 
 #include "jlog_config.h"
@@ -90,6 +91,11 @@
 #endif
 #if HAVE_SYS_MMAN_H
 #include <sys/mman.h>
+#endif
+#if HAVE_STDBOOL_H
+#include <stdbool.h>
+#else
+#include "fakebool.h"
 #endif
 
 #include "fassert.h"
@@ -378,7 +384,7 @@ static int __jlog_open_metastore(jlog_ctx *ctx)
 #ifdef ENAMETOOLONG
     ctx->last_errno = ENAMETOOLONG;
 #endif
-    FASSERT(0, "__jlog_open_metastore: filename too long");
+    FASSERT(false, "__jlog_open_metastore: filename too long");
     ctx->last_error = JLOG_ERR_CREATE_META;
     return -1;
   }
@@ -390,7 +396,7 @@ static int __jlog_open_metastore(jlog_ctx *ctx)
 
   if (!ctx->metastore) {
     ctx->last_errno = errno;
-    FASSERT(0, "__jlog_open_metastore: file create failed");
+    FASSERT(false, "__jlog_open_metastore: file create failed");
     ctx->last_error = JLOG_ERR_CREATE_META;
     return -1;
   }
@@ -541,7 +547,7 @@ static int __jlog_save_metastore(jlog_ctx *ctx, int ilocked)
 #endif
 
   if (!ilocked && !jlog_file_lock(ctx->metastore)) {
-    FASSERT(0, "__jlog_save_metastore: cannot get lock");
+    FASSERT(false, "__jlog_save_metastore: cannot get lock");
     return -1;
   }
 
@@ -556,7 +562,7 @@ static int __jlog_save_metastore(jlog_ctx *ctx, int ilocked)
   else {
     if (!jlog_file_pwrite(ctx->metastore, ctx->meta, sizeof(*ctx->meta), 0)) {
       if (!ilocked) jlog_file_unlock(ctx->metastore);
-      FASSERT(0, "jlog_file_pwrite failed");
+      FASSERT(false, "jlog_file_pwrite failed");
       return -1;
     }
     if (ctx->meta->safety == JLOG_SAFE) {
@@ -578,7 +584,7 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
 #endif
 
   if (!ilocked && !jlog_file_lock(ctx->metastore)) {
-    FASSERT(0, "__jlog_restore_metastore: cannot get lock");
+    FASSERT(false, "__jlog_restore_metastore: cannot get lock");
     return -1;
   }
 
@@ -664,7 +670,7 @@ static int __jlog_set_checkpoint(jlog_ctx *ctx, const char *s, const jlog_id *id
       goto failset;
   }
   if (!jlog_file_pwrite(f, id, sizeof(*id), 0)) {
-    FASSERT(0, "jlog_file_pwrite failed in jlog_set_checkpoint");
+    FASSERT(false, "jlog_file_pwrite failed in jlog_set_checkpoint");
     goto failset;
   }
   if (ctx->meta->safety == JLOG_SAFE) {
@@ -1139,7 +1145,7 @@ int jlog_ctx_alter_safety(jlog_ctx *ctx, jlog_safety safety) {
     ctx->meta->safety = safety;
     if(ctx->context_mode == JLOG_APPEND) {
       if(__jlog_save_metastore(ctx, 0) != 0) {
-	FASSERT(0, "jlog_ctx_alter_safety calls jlog_save_metastore");
+	FASSERT(false, "jlog_ctx_alter_safety calls jlog_save_metastore");
         SYS_FAIL(JLOG_ERR_CREATE_META);
       }
     }
@@ -1155,7 +1161,7 @@ int jlog_ctx_alter_journal_size(jlog_ctx *ctx, size_t size) {
     ctx->meta->unit_limit = size;
     if(ctx->context_mode == JLOG_APPEND) {
       if(__jlog_save_metastore(ctx, 0) != 0) {
-	FASSERT(0, "jlog_ctx_alter_journal_size calls jlog_save_metastore");
+	FASSERT(false, "jlog_ctx_alter_journal_size calls jlog_save_metastore");
         SYS_FAIL(JLOG_ERR_CREATE_META);
       }
     }
@@ -1183,11 +1189,11 @@ int jlog_ctx_open_writer(jlog_ctx *ctx) {
   if(!S_ISDIR(sb.st_mode)) SYS_FAIL(JLOG_ERR_NOTDIR);
   FASSERT(ctx != NULL, "jlog_ctx_open_writer");
   if(__jlog_open_metastore(ctx) != 0) {
-    FASSERT(0, "jlog_ctx_open_writer calls jlog_open_metastore");
+    FASSERT(false, "jlog_ctx_open_writer calls jlog_open_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
   if(__jlog_restore_metastore(ctx, 0)) {
-    FASSERT(0, "jlog_ctx_open_writer calls jlog_restore_metastore");
+    FASSERT(false, "jlog_ctx_open_writer calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
  finish:
@@ -1212,13 +1218,13 @@ int jlog_ctx_open_reader(jlog_ctx *ctx, const char *subscriber) {
   if(!S_ISDIR(sb.st_mode)) SYS_FAIL(JLOG_ERR_NOTDIR);
   FASSERT(ctx != NULL, "__jlog_ctx_open_reader");
   if(__jlog_open_metastore(ctx) != 0) {
-    FASSERT(0, "jlog_ctx_open_reader calls jlog_open_metastore");
+    FASSERT(false, "jlog_ctx_open_reader calls jlog_open_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
   if(jlog_get_checkpoint(ctx, ctx->subscriber_name, &dummy))
     SYS_FAIL(JLOG_ERR_INVALID_SUBSCRIBER);
   if(__jlog_restore_metastore(ctx, 0)) {
-    FASSERT(0, "jlog_ctx_open_reader calls jlog_restore_metastore");
+    FASSERT(false, "jlog_ctx_open_reader calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
  finish:
@@ -1254,11 +1260,11 @@ int jlog_ctx_init(jlog_ctx *ctx) {
   chmod(ctx->path, dirmode);
   /* Setup our initial state and store our instance metadata */
   if(__jlog_open_metastore(ctx) != 0) {
-    FASSERT(0, "jlog_ctx_init calls jlog_open_metastore");
+    FASSERT(false, "jlog_ctx_init calls jlog_open_metastore");
     SYS_FAIL(JLOG_ERR_CREATE_META);
   }
   if(__jlog_save_metastore(ctx, 0) != 0) {
-    FASSERT(0, "jlog_ctx_init calls jlog_save_metastore");
+    FASSERT(false, "jlog_ctx_init calls jlog_save_metastore");
     SYS_FAIL(JLOG_ERR_CREATE_META);
   }
  finish:
@@ -1289,7 +1295,7 @@ static int __jlog_metastore_atomic_increment(jlog_ctx *ctx) {
   if (!jlog_file_lock(ctx->metastore))
     SYS_FAIL(JLOG_ERR_LOCK);
   if(__jlog_restore_metastore(ctx, 1)) {
-    FASSERT(0,
+    FASSERT(false,
 	    "jlog_metastore_atomic_increment calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
@@ -1300,7 +1306,7 @@ static int __jlog_metastore_atomic_increment(jlog_ctx *ctx) {
     ctx->data = jlog_file_open(file, O_CREAT, ctx->file_mode);
     ctx->meta->storage_log = ctx->current_log;
     if(__jlog_save_metastore(ctx, 1)) {
-      FASSERT(0,
+      FASSERT(false,
 	      "jlog_metastore_atomic_increment calls jlog_save_metastore");
       SYS_FAIL(JLOG_ERR_META_OPEN);
     }
@@ -1358,12 +1364,12 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
   }
   hdr.mlen = mess->mess_len;
   if (!jlog_file_pwrite(ctx->data, &hdr, sizeof(hdr), current_offset)) {
-    FASSERT(0, "jlog_file_pwrite failed in jlog_ctx_write_message");
+    FASSERT(false, "jlog_file_pwrite failed in jlog_ctx_write_message");
     SYS_FAIL(JLOG_ERR_FILE_WRITE);
   }
   current_offset += sizeof(hdr);
   if (!jlog_file_pwrite(ctx->data, mess->mess, mess->mess_len, current_offset)) {
-    FASSERT(0, "jlog_file_pwrite failed in jlog_ctx_write_message");
+    FASSERT(false, "jlog_file_pwrite failed in jlog_ctx_write_message");
     SYS_FAIL(JLOG_ERR_FILE_WRITE);
   }
   current_offset += mess->mess_len;
@@ -1445,11 +1451,11 @@ int jlog_ctx_add_subscriber(jlog_ctx *ctx, const char *s, jlog_position whence) 
     memset(&chkpt, 0, sizeof(chkpt));
     FASSERT(ctx != NULL, "__jlog_ctx_add_subscriber");
     if(__jlog_open_metastore(ctx) != 0) {
-      FASSERT(0, "jlog_ctx_add_subscriber calls jlog_open_metastore");
+      FASSERT(false, "jlog_ctx_add_subscriber calls jlog_open_metastore");
       SYS_FAIL(JLOG_ERR_META_OPEN);
     }
     if(__jlog_restore_metastore(ctx, 0)) {
-      FASSERT(0, "jlog_ctx_add_subscriber calls jlog_restore_metastore");
+      FASSERT(false, "jlog_ctx_add_subscriber calls jlog_restore_metastore");
       SYS_FAIL(JLOG_ERR_META_OPEN);
     }
     chkpt.log = ctx->meta->storage_log;
