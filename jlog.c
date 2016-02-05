@@ -1831,6 +1831,12 @@ int jlog_ctx_advance_id(jlog_ctx *ctx, jlog_id *cur,
   return 0;
 }
 
+/* exported */
+bool jlog_ctx_repair(jlog_ctx *ctx, bool aggressive)
+{
+  return true;			/* GAGNON */
+}
+
 static int is_datafile(const char *f, u_int32_t *logid) {
   int i;
   u_int32_t l = 0;

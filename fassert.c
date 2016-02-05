@@ -56,13 +56,13 @@ static int openit(void)
 {
   if ( bn[0] == 0 )
     return -1;
-  size_t leen = strlen(bn) + 30;
+  size_t leen = strlen(bn) + 24;
   if ( leen >= MAXPATHLEN )
     return -1;
   char *fn = (char *)calloc(leen+1, sizeof(char));
   if ( fn == NULL )
     return -1;
-  (void)snprintf(fn, leen, "%s%cernie.fassert%ld", bn, IFS_CH, time(NULL));
+  (void)snprintf(fn, leen, "%s%cfassert%ld", bn, IFS_CH, time(NULL));
   int xfd = open(fn, O_CREAT|O_EXCL|O_WRONLY, 0644);
   free((void *)fn);
   return xfd;
