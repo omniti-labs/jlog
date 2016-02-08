@@ -40,7 +40,7 @@ file documents the changes.
 
 7. This file, V210_CHANGES, was created.
 
-8. Tests were added to jtest.c and jthreadtest.c.
+8. Tests were added to jtest.c
 
 9. Some bug fixes were made on an ad hoc basis as they were observed in
    the code. For example, there is a configure test for sys/param.h, but

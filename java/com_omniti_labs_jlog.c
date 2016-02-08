@@ -331,6 +331,19 @@ void Java_com_omniti_labs_jlog_close
 
 /*
  * Class:     com_omniti_labs_jlog
+ * Method:    repair
+ * Signature: (Z)Z
+ */
+JNIEXPORT jboolean JNICALL Java_com_omniti_labs_jlog_repair
+  (JNIEnv *jenv, jobject self, jboolean aggro) {
+  jlog_ctx *ctx;
+  FETCH_CTX(jenv,self,ctx);
+  bool b = jlog_ctx_repair(ctx, aggro);
+  return b;
+}
+
+/*
+ * Class:     com_omniti_labs_jlog
  * Method:    alter_mode
  * Signature: (I)V
  */
