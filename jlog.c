@@ -1831,12 +1831,6 @@ int jlog_ctx_advance_id(jlog_ctx *ctx, jlog_id *cur,
   return 0;
 }
 
-/* exported */
-bool jlog_ctx_repair(jlog_ctx *ctx, bool aggressive)
-{
-  return true;			/* GAGNON */
-}
-
 static int is_datafile(const char *f, u_int32_t *logid) {
   int i;
   u_int32_t l = 0;
@@ -1889,6 +1883,83 @@ int jlog_clean(const char *file) {
  out:
   jlog_ctx_close(log);
   return rv;
+}
+
+/*
+  This code attempts to repair problems with the metastore file and
+  also a checkpoint file, within a jlog directory. The top level
+  function takes a boolean parameter and returns a boolean result.
+  If the boolean argument is false, then non-aggressive repairs
+  are attempted. If the boolean argument is true, and if the
+  non-aggressive repairs were not successful, then an aggressive
+  repair approach is attempted. This consists of (a) attempting
+  to move any fassert logfiles to the parent directory; (b) deleting
+  all files in the log directory; (c) deleting the log directory
+  itself.
+
+  The reader will note that some of this functionality is addressed
+  by other code within this file. An early decision was made not
+  to reuse any of this code, but rather to attempt a solution from
+  first principles. This is not due to a bad case of NIH, instead
+  it is due to a desire to implement all and only the behaviors
+  stated, without any (apparent) possibility of side effects.
+*/
+
+static bool findel(char *pth, unsigned int *earp, unsigned int *latp) {
+  return true;			/* GAGNON */
+}
+
+static bool repair_metastore(char *pth, unsigned int lat) {
+  return true;			/* GAGNON */
+}
+
+static bool repair_checksumfile(char *pth, unsigned int ear) {
+  return true;			/* GAGNON */
+}
+
+static void try_to_save_fasserts(char *pth) {
+  return;			/* GAGNON */
+}
+
+static bool rmcontents_and_dir(char *pth) {
+  return true;			/* GAGNON */
+}
+
+/* exported */
+bool jlog_ctx_repair(jlog_ctx *ctx, bool aggressive) {
+  // step 1: extract the directory path
+  char *pth;
+
+  if ( ctx != NULL )
+    pth = ctx->path;
+  else
+    pth = fassertxgetpath();
+  if ( pth == NULL || pth[0] == '\0' )
+    return false;		/* hopeless without a dir name */
+  // step 2: find the earliest and the latest files with hex names
+  unsigned int ear = 0;
+  unsigned int lat = 0;
+  bool b0 = findel(pth, &ear, &lat);
+  if ( b0 == true ) {
+    // step 3: attempt to repair the metastore. It might not need any
+    // repair, in which case none will happen
+    bool b1 = repair_metastore(pth, lat);
+    // step 4: attempt to repair the checksum file. It might not need
+    // any repair, in which case none will happen
+    bool b2 = repair_checksumfile(pth, ear);
+    // if non-aggressive repair succeeded, then declare success
+    if ( (b1 == true) && (b2 == true) )
+      return true;
+  }
+  // if aggressive repair is not authorized, fail
+  if ( aggressive == false )
+    return false;
+  // step 5: if there are any fassert files, try to save them by
+  // moving them to the parent directory of "pth"
+  try_to_save_fasserts(pth);
+  // step 6: destroy the directory with extreme prejudice
+  bool b3 = rmcontents_and_dir(pth);
+  return b3;
 }
 
 /* vim:se ts=2 sw=2 et: */
