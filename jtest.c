@@ -44,6 +44,7 @@ jlog_ctx *ctx;
 void usage() {
   fprintf(stderr, "options:\n\tinit\n\tread <count>\n\twrite <len> <count>\n");
 }
+
 void jcreate() {
   ctx = jlog_new(LOGNAME);
   jlog_ctx_alter_journal_size(ctx, 1024);
@@ -51,6 +52,25 @@ void jcreate() {
     fprintf(stderr, "jlog_ctx_init failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
   } else {
     jlog_ctx_add_subscriber(ctx, SUBSCRIBER, JLOG_BEGIN);
+  }
+  jlog_ctx_close(ctx);
+}
+
+void jrepair() {
+  ctx = jlog_new(LOGNAME);
+  if(jlog_ctx_init(ctx) != 0) {
+    fprintf(stderr, "jlog_ctx_init failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+  } else {
+    bool b = jlog_ctx_repair(ctx, false);
+    if ( b != true ) {
+      (void)fprintf(stderr, "jlog_ctx_repair(false) failed: %d %s\n",
+		    jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+    }
+    b = jlog_ctx_repair(ctx, true);
+    if ( b != true ) {
+      (void)fprintf(stderr, "jlog_ctx_repair(true) failed: %d %s\n",
+		    jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+    }
   }
   jlog_ctx_close(ctx);
 }
@@ -136,6 +156,11 @@ int main(int argc, char **argv) {
       if(i+1 >= argc) { usage(); exit(-1); }
       i++;
       jopenr(SUBSCRIBER, atoi(argv[i]));
+      exit(0);
+    } else if(!strcmp(argv[i], "repair")) {
+      if(i+1 >= argc) { usage(); exit(-1); }
+      i++;
+      jrepair();
       exit(0);
     } else {
       fprintf(stderr, "command '%s' not understood\n", argv[i]);
