@@ -16,7 +16,7 @@ PERL=@PERL@
 SHCFLAGS=@SHCFLAGS@
 DOTSO=@DOTSO@
 JAVAC=@JAVAC@
-JAVAH=@JAVAH@
+JAVAH=`dirname ${JAVAC}`/javah
 JAR=@JAR@
 
 MAJOR_VERSION=2
@@ -108,7 +108,7 @@ java/jlogTest.class:	java/jlogTest.java java/jlog.jar
 	cd java && $(JAVAC) -cp jlog.jar jlogTest.java
 
 java/com_omniti_labs_jlog.lo:	java/com_omniti_labs_jlog.c
-	$(CC) -Wall -I. -I/usr/java/include -I/usr/java//include/solaris $(CPPFLAGS) $(CFLAGS) $(SHCFLAGS) -c $< -o $@
+	$(CC) -Wall -I. $(CPPFLAGS) $(CFLAGS) $(SHCFLAGS) -c $< -o $@
 
 java/libjlog.jnilib:	java/com_omniti_labs_jlog.lo $(SOOBJS)
 	$(SHLD) -o $@ java/com_omniti_labs_jlog.lo $(SOOBJS) $(LDFLAGS) $(LIBS)

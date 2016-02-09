@@ -239,6 +239,7 @@ jobject Java_com_omniti_labs_jlog_get_1error
     case JLOG_ERR_ILLEGAL_CHECKPOINT: mapenum(JLOG_ERR_ILLEGAL_CHECKPOINT); break;
     case JLOG_ERR_INVALID_SUBSCRIBER: mapenum(JLOG_ERR_INVALID_SUBSCRIBER); break;
     case JLOG_ERR_ILLEGAL_LOGID: mapenum(JLOG_ERR_ILLEGAL_LOGID); break;
+    case JLOG_ERR_CLOSE_LOGID: mapenum(JLOG_ERR_CLOSE_LOGID); break;
     case JLOG_ERR_SUBSCRIBER_EXISTS: mapenum(JLOG_ERR_SUBSCRIBER_EXISTS); break;
     case JLOG_ERR_CHECKPOINT: mapenum(JLOG_ERR_CHECKPOINT); break;
     case JLOG_ERR_NOT_SUPPORTED: mapenum(JLOG_ERR_NOT_SUPPORTED); break;

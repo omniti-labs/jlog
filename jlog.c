@@ -1905,60 +1905,199 @@ int jlog_clean(const char *file) {
   stated, without any (apparent) possibility of side effects.
 */
 
-static bool findel(char *pth, unsigned int *earp, unsigned int *latp) {
+static bool findel(DIR *dir, unsigned int *earp, unsigned int *latp) {
+  unsigned int maxx = 0;
+  unsigned int minn = 0;
+  unsigned int hexx = 0;
+  bool havemaxx = false;
+  bool haveminn = false;
+  struct dirent *ent;
+  int nent = 0;
+
+  if ( dir == NULL )
+    return false;
+  (void)rewinddir(dir);
+  while ( (ent = readdir(dir)) != NULL ) {
+    if ( ent->d_name[0] != '\0' ) {
+      nent++;
+      if ( strlen(ent->d_name) == 8 &&
+	   sscanf(ent->d_name, "%x", &hexx) == 1 ) {
+	if ( havemaxx == false ) {
+	  havemaxx = true;
+	  maxx = hexx;
+	} else {
+	  if ( hexx > maxx )
+	    maxx = hexx;
+	}
+	if ( haveminn == false ) {
+	  haveminn = true;
+	  minn = hexx;
+	} else {
+	  if ( hexx < minn )
+	    minn = hexx;
+	}
+      }
+    }
+  }
+  if ( (havemaxx == true) && (latp != NULL) )
+    *latp = maxx;
+  if ( (haveminn == true) && (earp != NULL) )
+    *earp = minn;
+  // a valid directory has at least . and .. entries
+  return (nent >= 2);
+}
+
+/*
+  The metastore repair command is:
+   perl -e 'print pack("IIII", 0xLATEST_FILE_HERE, 4*1024*1024, 1, 0x663A7318);
+      > metastore
+   The final hex number is known as DEFAULT_HDR_MAGIC
+*/
+
+static bool metastore_ok_p(char *ag, unsigned int lat) {
+  int fd = open(ag, O_RDONLY);
+  FASSERT(fd >= 0, "cannot open metastore file");
+  if ( fd < 0 )
+    return false;
+  // now we use a very slightly tricky way to get the filesize on
+  // systems that don't necessarily have <sys/stat.h>
+  off_t oof = lseek(fd, 0, SEEK_END);
+  (void)lseek(fd, 0, SEEK_SET);
+  unsigned int fourI = 4*sizeof(unsigned int);
+  FASSERT(oof == (off_t)fourI, "metastore size invalid");
+  if ( oof != (off_t)fourI ) {
+    (void)close(fd);
+    return false;
+  }
+  unsigned int goal[4];
+  goal[0] = lat;
+  goal[1] = 4*1024*1024;
+  goal[2] = 1;
+  goal[3] = DEFAULT_HDR_MAGIC;
+  unsigned int have[4];
+  int rd = read(fd, &have[0], fourI);
+  (void)close(fd);
+  fd = -1;
+  FASSERT(rd == fourI, "read error on metastore file");
+  if ( rd != fourI )
+    return false;
+  int gotem = 0;
+  int i;
+  for(i=0;i<4;i++) {
+    if ( goal[i] == have[i] )
+      gotem++;
+  }
+  FASSERT(gotem == 4, "metastore contents incorrect");
+  return (gotem == 4);
+}
+
+static bool repair_metastore(const char *pth, unsigned int lat) {
+  if ( pth == NULL || pth[0] == '\0' ) {
+    FASSERT(false, "invalid metastore path");
+    return false;
+  }
+  size_t leen = strlen(pth);
+  if ( (leen == 0) || (leen > MAXPATHLEN-12) ) {
+    FASSERT(false, "invalid metastore path length");
+    return false;
+  }
+  size_t leen2 = leen + strlen("metastore") + 3; 
+  char *ag = (char *)calloc(leen2, sizeof(char));
+  if ( ag == NULL )		/* out of memory, so bail */
+    return false;
+  memset(ag, 0, leen2);
+  (void)snprintf(ag, leen2-1, "%s%cmetastore", pth, IFS_CH);
+  bool b = metastore_ok_p(ag, lat);
+  FASSERT(b, "metastore integrity check failed");
+  if ( b == false ) {
+    free((void *)ag);
+    return false;
+  }
+  unsigned int goal[4];
+  goal[0] = lat;
+  goal[1] = 4*1024*1024;
+  goal[2] = 1;
+  goal[3] = DEFAULT_HDR_MAGIC;
+  (void)unlink(ag);		/* start from scratch */
+  int fd = creat(ag, DEFAULT_FILE_MODE);
+  free((void *)ag);
+  ag = NULL;
+  FASSERT(fd >= 0, "cannot create new metastore file");
+  if ( fd < 0 )
+    return false;
+  int wr = write(fd, &goal[0], sizeof(goal));
+  (void)close(fd);
+  FASSERT(wr == sizeof(goal), "cannot write new metastore file");
+  return (wr == sizeof(goal));
+}
+
+static bool repair_checksumfile(DIR *dir, unsigned int ear) {
   return true;			/* GAGNON */
 }
 
-static bool repair_metastore(char *pth, unsigned int lat) {
-  return true;			/* GAGNON */
-}
-
-static bool repair_checksumfile(char *pth, unsigned int ear) {
-  return true;			/* GAGNON */
-}
-
-static void try_to_save_fasserts(char *pth) {
+static void try_to_save_fasserts(const char *pth, DIR *dir) {
   return;			/* GAGNON */
 }
 
-static bool rmcontents_and_dir(char *pth) {
+static bool rmcontents_and_dir(const char *pth, DIR *dir) {
   return true;			/* GAGNON */
 }
 
 /* exported */
 bool jlog_ctx_repair(jlog_ctx *ctx, bool aggressive) {
   // step 1: extract the directory path
-  char *pth;
+  const char *pth;
+  DIR *dir = NULL;
 
   if ( ctx != NULL )
     pth = ctx->path;
   else
     pth = fassertxgetpath();
-  if ( pth == NULL || pth[0] == '\0' )
+  if ( pth == NULL || pth[0] == '\0' ) {
+    FASSERT(false, "repair command cannot find jlog path");
     return false;		/* hopeless without a dir name */
+  }
   // step 2: find the earliest and the latest files with hex names
+  dir = opendir(pth);
+  FASSERT(dir != NULL, "cannot open jlog directory");
+  if ( dir == NULL ) {
+    bool bx = false;
+    if ( aggressive == true )
+      bx = rmcontents_and_dir(pth, NULL);
+    return bx;
+  }
   unsigned int ear = 0;
   unsigned int lat = 0;
-  bool b0 = findel(pth, &ear, &lat);
+  bool b0 = findel(dir, &ear, &lat);
+  FASSERT(b0, "cannot find hex files in jlog directory");
   if ( b0 == true ) {
     // step 3: attempt to repair the metastore. It might not need any
     // repair, in which case none will happen
     bool b1 = repair_metastore(pth, lat);
+    FASSERT(b1, "cannot repair metastore");
     // step 4: attempt to repair the checksum file. It might not need
     // any repair, in which case none will happen
-    bool b2 = repair_checksumfile(pth, ear);
+    bool b2 = repair_checksumfile(dir, ear);
+    FASSERT(b2, "cannot repair checksum file");
     // if non-aggressive repair succeeded, then declare success
-    if ( (b1 == true) && (b2 == true) )
+    if ( (b1 == true) && (b2 == true) ) {
+      (void)closedir(dir);
       return true;
+    }
   }
   // if aggressive repair is not authorized, fail
-  if ( aggressive == false )
+  FASSERT(aggressive, "non-aggressive repair failed");
+  if ( aggressive == false ) {
+    (void)closedir(dir);
     return false;
+  }
   // step 5: if there are any fassert files, try to save them by
   // moving them to the parent directory of "pth"
-  try_to_save_fasserts(pth);
+  try_to_save_fasserts(pth, dir);
   // step 6: destroy the directory with extreme prejudice
-  bool b3 = rmcontents_and_dir(pth);
+  bool b3 = rmcontents_and_dir(pth, dir);
+  FASSERT(b3, "Aggressive repair of jlog directory failed");
+  (void)closedir(dir);
   return b3;
 }
 
