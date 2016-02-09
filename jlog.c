@@ -2009,10 +2009,6 @@ static bool repair_metastore(const char *pth, unsigned int lat) {
   (void)snprintf(ag, leen2-1, "%s%cmetastore", pth, IFS_CH);
   bool b = metastore_ok_p(ag, lat);
   FASSERT(b, "metastore integrity check failed");
-  if ( b == false ) {
-    free((void *)ag);
-    return false;
-  }
   unsigned int goal[4];
   goal[0] = lat;
   goal[1] = 4*1024*1024;
@@ -2031,8 +2027,95 @@ static bool repair_metastore(const char *pth, unsigned int lat) {
   return (wr == sizeof(goal));
 }
 
-static bool repair_checksumfile(DIR *dir, unsigned int ear) {
-  return true;			/* GAGNON */
+static bool new_checkpoint(char *ag, int fd, unsigned int ear) {
+  bool newfd = false;
+  if ( ag == NULL || ag[0] == '\0' ) {
+    FASSERT(false, "invalid checkpoint path");
+    return false;
+  }
+  if ( fd < 0 ) {
+    (void)unlink(ag);
+    fd = creat(ag, DEFAULT_FILE_MODE);
+    FASSERT(fd >= 0, "cannot create checkpoint file");
+    if ( fd < 0 )
+      return false;
+    else
+      newfd = true;
+  }
+  (void)ftruncate(fd, 0);
+  (void)lseek(fd, 0, SEEK_SET);
+  unsigned int goal[2];
+  goal[0] = ear;
+  goal[1] = 0;
+  int wr = write(fd, goal, sizeof(goal));
+  if ( newfd == true )
+    (void)close(fd);
+  FASSERT(wr == sizeof(goal), "cannot repair checkpoint file");
+  return (wr == sizeof(goal));
+}
+
+static bool repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
+  FASSERT(dir != NULL, "invalid directory");
+  if ( dir == NULL )
+    return false;
+  struct dirent *ent = NULL;
+
+  (void)rewinddir(dir);
+  size_t twoI = 2*sizeof(unsigned int);
+  bool sta = false;
+  while ( (ent = readdir(dir)) != NULL ) {
+    if ( ent->d_name[0] != '\0' ) {
+      if ( strncmp(ent->d_name, "cp.", 3) == 0 ) {
+	sta = true;
+	break;
+      }
+    }
+  }
+  FASSERT(sta, "could not find a checkpoint file");
+  if ( sta == false )
+    return sta;
+  size_t leen = strlen(pth) + strlen(ent->d_name) + 3;
+  FASSERT(leen < MAXPATHLEN, "invalid checkpoint path length");
+  if ( leen >= MAXPATHLEN )
+    return false;
+  char *ag = (char *)calloc(leen+1, sizeof(char));
+  if ( ag == NULL )	/* out of memory, so bail */
+    return false;
+  (void)snprintf(ag, leen-1, "%s%c%s", pth, IFS_CH, ent->d_name);
+  unsigned int goal[2];
+  goal[0] = ear;
+  goal[1] = 0;
+#ifndef O_RDWR
+#define O_RDWR  02
+#endif
+  int fd = open(ag, O_RDWR);
+  sta = false;
+  FASSERT(fd >= 0, "cannot open checkpoint file");
+  if ( fd >= 0 ) {
+    off_t oof = lseek(fd, 0, SEEK_END);
+    (void)lseek(fd, 0, SEEK_SET);
+    FASSERT(oof != (off_t)twoI, "checkpoint file size incorrect");
+    if ( oof == (off_t)twoI ) {
+      unsigned int have[2];
+      int rd = read(fd, have, sizeof(have));
+      FASSERT(rd == sizeof(have), "cannot read checkpoint file");
+      if ( rd == sizeof(have) ) {
+	if ( (goal[0] != have[0]) || (goal[1] != have[1]) ) {
+	  FASSERT(false, "invalid checkpoint data");
+	} else
+	  sta = true;
+      }
+    }
+  }
+  if ( sta == false ) {
+    sta = new_checkpoint(ag, fd, ear);
+    FASSERT(sta, "cannot create new checkpoint file");
+  }
+  if ( fd >= 0 )
+    (void)close(fd);
+  if ( ag != NULL )
+    (void)free((void *)ag);
+  return sta;
 }
 
 static void try_to_save_fasserts(const char *pth, DIR *dir) {
@@ -2075,10 +2158,10 @@ bool jlog_ctx_repair(jlog_ctx *ctx, bool aggressive) {
     // repair, in which case none will happen
     bool b1 = repair_metastore(pth, lat);
     FASSERT(b1, "cannot repair metastore");
-    // step 4: attempt to repair the checksum file. It might not need
+    // step 4: attempt to repair the checkpoint file. It might not need
     // any repair, in which case none will happen
-    bool b2 = repair_checksumfile(dir, ear);
-    FASSERT(b2, "cannot repair checksum file");
+    bool b2 = repair_checkpointfile(dir, pth, ear);
+    FASSERT(b2, "cannot repair checkpoint file");
     // if non-aggressive repair succeeded, then declare success
     if ( (b1 == true) && (b2 == true) ) {
       (void)closedir(dir);
