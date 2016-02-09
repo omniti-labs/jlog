@@ -2,6 +2,7 @@
 #define _FASSERT_H_
 
 extern void  fassertx(bool tf, int ln, const char *fn, const char *str);
+extern void  fassertxend(void);
 extern void  fassertxsetpath(const char *path);
 extern const char *fassertxgetpath(void);
 

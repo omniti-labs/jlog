@@ -134,3 +134,11 @@ void fassertx(bool tf, int ln, const char *fn, const char *str)
   leenrun++;
   (void)write(fd, s, leenrun);
 }
+
+void fassertxend(void) {
+  if ( fd >= 0 ) {
+    (void)close(fd);
+    fd = -1;
+  }
+  memset((void *)&bn[0], 0, sizeof(bn));
+}

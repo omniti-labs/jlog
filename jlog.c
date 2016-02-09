@@ -2029,6 +2029,7 @@ static bool repair_metastore(const char *pth, unsigned int lat) {
 
 static bool new_checkpoint(char *ag, int fd, unsigned int ear) {
   bool newfd = false;
+  bool sta = false;
   if ( ag == NULL || ag[0] == '\0' ) {
     FASSERT(false, "invalid checkpoint path");
     return false;
@@ -2042,16 +2043,23 @@ static bool new_checkpoint(char *ag, int fd, unsigned int ear) {
     else
       newfd = true;
   }
-  (void)ftruncate(fd, 0);
-  (void)lseek(fd, 0, SEEK_SET);
-  unsigned int goal[2];
-  goal[0] = ear;
-  goal[1] = 0;
-  int wr = write(fd, goal, sizeof(goal));
+  int x = ftruncate(fd, 0);
+  FASSERT(x >= 0, "ftruncate failed to zero out checkpoint file");
+  if ( x >= 0 ) {
+    off_t xcvr = lseek(fd, 0, SEEK_SET);
+    FASSERT(xcvr == 0, "cannot seek to beginning of checkpoint file");
+    if ( xcvr == 0 ) {
+      unsigned int goal[2];
+      goal[0] = ear;
+      goal[1] = 0;
+      int wr = write(fd, goal, sizeof(goal));
+      FASSERT(wr == sizeof(goal), "cannot write checkpoint file");
+      sta = (wr == sizeof(goal));
+    }
+  }
   if ( newfd == true )
     (void)close(fd);
-  FASSERT(wr == sizeof(goal), "cannot repair checkpoint file");
-  return (wr == sizeof(goal));
+  return sta;
 }
 
 static bool repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
@@ -2118,12 +2126,94 @@ static bool repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   return sta;
 }
 
-static void try_to_save_fasserts(const char *pth, DIR *dir) {
+static char *makeparentname(const char *pth, size_t fnlen, int *off2fnp) {
+  return NULL;			/* GAGNON */
+}
+
+static void schedule_one_file(char *fn) {
   return;			/* GAGNON */
 }
 
+static void move_the_files(const char *pth, char *parent, int off2fn) {
+#ifdef DUSTY_SPRINGFIELD
+  (void)printf("I would like the Dusty Springfield special, with extra dust\n");
+#endif
+  return;			/* GAGNON */
+}
+
+static void delete_the_files(const char *pth) {
+  return;			/* GAGNON */
+}
+
+/*
+  if there are fassert files in the jlog directory, try to move them
+  to the parent directory. It is ok, for the moment, if this fails.
+  Also, not to be circular, never call FASSERT() in this function,
+  or any of its callees.
+*/
+
+static void try_to_save_fasserts(const char *pth, DIR *dir) {
+  if ( pth == NULL || pth[0] == '\0' || dir == NULL )
+  return;
+  size_t leen = strlen(pth);
+  // an fassert file has the form fassertT, where T is the time as a long
+  size_t flen = strlen("fassert");
+  size_t fnlen = flen + 10 + 3;
+  if ( (leen + fnlen) >= MAXPATHLEN )
+    return;
+  int off2fn = 0;
+  char *parent = makeparentname(pth, fnlen, &off2fn);
+  if ( parent == NULL )
+    return;
+  struct dirent *ent;
+  (void)rewinddir(dir);
+  int ntomove = 0;
+  while ( (ent = readdir(dir)) != NULL ) {
+    if ( ent->d_name[0] != '\0' ) {
+      if ( strncmp("fassert", ent->d_name, flen) == 0 ) {
+	// if we attempt to do a rename() during a directory traversal
+	// using readdir(), the results will be undesirable
+	schedule_one_file(ent->d_name);
+	ntomove++;
+      }
+    }
+  }
+  if ( ntomove > 0 )
+    move_the_files(pth, parent, off2fn);
+  free((void *)parent);
+}
+
+/*
+  Try as hard as we can to remove all files. Ignore failures of intermediate
+  steps, because the user can always manually remove the directory and its
+  contents if all else fails.
+
+  We cannot use FASSERT in this function because it might create a new file
+  in the directory we are trying to remove.
+*/
+
 static bool rmcontents_and_dir(const char *pth, DIR *dir) {
-  return true;			/* GAGNON */
+  bool sta = false;
+  if ( pth == NULL || pth[0] == '\0' )
+    return false;
+  int ntodelete = 0;
+  if ( dir != NULL ) {
+    struct dirent *ent = NULL;
+    while ( (ent = readdir(dir)) != NULL ) {
+      if ( ent->d_name[0] != '\0' ) {
+	if ( (strcmp(ent->d_name, ".") != 0) &&
+	     (strcmp(ent->d_name, "..") != 0) ) {
+	  schedule_one_file(ent->d_name);
+	  ntodelete++;
+	}
+      }
+    }
+    (void)closedir(dir);
+  }
+  if ( ntodelete > 0 )
+    delete_the_files(pth);
+  sta = rmdir(pth);
+  return sta;
 }
 
 /* exported */
@@ -2175,12 +2265,14 @@ bool jlog_ctx_repair(jlog_ctx *ctx, bool aggressive) {
     return false;
   }
   // step 5: if there are any fassert files, try to save them by
-  // moving them to the parent directory of "pth"
+  // moving them to the parent directory of "pth". Also make sure
+  // to close the current fassert file.
+  fassertxend();
   try_to_save_fasserts(pth, dir);
   // step 6: destroy the directory with extreme prejudice
   bool b3 = rmcontents_and_dir(pth, dir);
   FASSERT(b3, "Aggressive repair of jlog directory failed");
-  (void)closedir(dir);
+  //  (void)closedir(dir);
   return b3;
 }
 
