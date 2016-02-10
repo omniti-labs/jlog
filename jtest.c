@@ -42,7 +42,8 @@
 jlog_ctx *ctx;
 
 void usage() {
-  fprintf(stderr, "options:\n\tinit\n\tread <count>\n\twrite <len> <count>\n");
+  fprintf(stderr,
+	  "options:\n\tinit\n\tread <count>\n\twrite <len> <count>\n\trepair\n");
 }
 
 void jcreate() {
@@ -56,13 +57,69 @@ void jcreate() {
   jlog_ctx_close(ctx);
 }
 
+/*
+  In an errort to test all functionality of the repair function, we add
+  the follow to the jlog directory:
+     file 00000001, arbitrary contents
+     file 00000003, arbitrary contents
+     file 0000010a, arbitrary contents
+  
+  We also corrupt the contents of the file metastore
+
+  The non-aggressive repair should clean this up nicely
+*/
+
+static const char *names[] = { "00000001", "00000003", "0000010a" } ;
+
+// this must be at least 7*3 characters, 3=number of names above
+
+                              /*1      2      3      4      5      */
+                              /*12345671234567123456712345671234567*/
+static const char streeng[] =  "Gloria!FahdahtIthinktheyvegotyournu";
+
+static void addonefile(const char *logname, const char *nam, int idx) {
+  size_t leen = strlen(logname) + strlen(nam) + 4;
+  char *ag = (char *)calloc(leen, sizeof(char));
+  if ( ag == NULL )
+    return;
+  (void)snprintf(ag, leen-1, "%s%c%s", logname, IFS_CH, nam);
+  int fd = creat(ag, 02);
+  if ( fd >= 0 ) {
+    (void)write(fd, &streeng[7*idx], 7);
+    (void)close(fd);
+  }
+  free((void *)ag);
+}
+
+static void corruptmetastore(const char *logname) {
+  size_t leen = strlen(logname) + strlen("metastore") + 4;
+  char *ag = (char *)calloc(leen, sizeof(char));
+  if ( ag == NULL )
+    return;
+  (void)snprintf(ag, leen-1, "%s%cmetastore", logname, IFS_CH);
+  int fd = open(ag, 02);
+  if ( fd < 0 )
+    return;
+  (void)write(fd, &streeng[0], 7);
+  (void)close(fd);
+}
+
+static void addsomefiles(const char *logname) {
+  int i;
+  for(i=0;i<(sizeof(names)/sizeof(char *));i++)
+    addonefile(logname, names[i], i);
+  corruptmetastore(logname);
+}
+
 void jrepair() {
   ctx = jlog_new(LOGNAME);
   if(jlog_ctx_init(ctx) != 0) {
     fprintf(stderr, "jlog_ctx_init failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
   } else {
+    addsomefiles(LOGNAME);
     bool b = jlog_ctx_repair(ctx, false);
     if ( b != true ) {
+      // GAGNON: need to set these error values in repair code
       (void)fprintf(stderr, "jlog_ctx_repair(false) failed: %d %s\n",
 		    jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
       b = jlog_ctx_repair(ctx, true);

@@ -1905,6 +1905,13 @@ int jlog_clean(const char *file) {
   first principles. This is not due to a bad case of NIH, instead
   it is due to a desire to implement all and only the behaviors
   stated, without any (apparent) possibility of side effects.
+
+  The reader will also notice that this code uses memory allocation
+  for filenames and directory paths, rather than static variables of
+  size MAXPATHLEN. This is also intentional. Having large local
+  variables (like 4k in this case) can lead to unfortunate behavior
+  on some systems. The compiler should do the right thing, but that
+  does not mean that it will do the right thing.
 */
 
 // find the earliest and latest hex files in the directory
@@ -1967,7 +1974,7 @@ static bool metastore_ok_p(char *ag, unsigned int lat) {
   // systems that don't necessarily have <sys/stat.h>
   off_t oof = lseek(fd, 0, SEEK_END);
   (void)lseek(fd, 0, SEEK_SET);
-  unsigned int fourI = 4*sizeof(unsigned int);
+  size_t fourI = 4*sizeof(unsigned int);
   FASSERT(oof == (off_t)fourI, "metastore size invalid");
   if ( oof != (off_t)fourI ) {
     (void)close(fd);
@@ -2005,11 +2012,10 @@ static bool repair_metastore(const char *pth, unsigned int lat) {
     FASSERT(false, "invalid metastore path length");
     return false;
   }
-  size_t leen2 = leen + strlen("metastore") + 3; 
+  size_t leen2 = leen + strlen("metastore") + 4; 
   char *ag = (char *)calloc(leen2, sizeof(char));
   if ( ag == NULL )		/* out of memory, so bail */
     return false;
-  memset(ag, 0, leen2);
   (void)snprintf(ag, leen2-1, "%s%cmetastore", pth, IFS_CH);
   bool b = metastore_ok_p(ag, lat);
   FASSERT(b, "metastore integrity check failed");
@@ -2050,9 +2056,9 @@ static bool new_checkpoint(char *ag, int fd, unsigned int ear) {
   int x = ftruncate(fd, 0);
   FASSERT(x >= 0, "ftruncate failed to zero out checkpoint file");
   if ( x >= 0 ) {
-    off_t xcvr = lseek(fd, 0, SEEK_SET);
-    FASSERT(xcvr == 0, "cannot seek to beginning of checkpoint file");
-    if ( xcvr == 0 ) {
+    off_t xcvR = lseek(fd, 0, SEEK_SET);
+    FASSERT(xcvR == 0, "cannot seek to beginning of checkpoint file");
+    if ( xcvR == 0 ) {
       unsigned int goal[2];
       goal[0] = ear;
       goal[1] = 0;
@@ -2065,6 +2071,8 @@ static bool new_checkpoint(char *ag, int fd, unsigned int ear) {
     (void)close(fd);
   return sta;
 }
+
+static const int five = 5;
 
 static bool repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   FASSERT(dir != NULL, "invalid directory");
@@ -2086,7 +2094,7 @@ static bool repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   FASSERT(sta, "could not find a checkpoint file");
   if ( sta == false )
     return sta;
-  size_t leen = strlen(pth) + strlen(ent->d_name) + 5;
+  size_t leen = strlen(pth) + strlen(ent->d_name) + five;
   FASSERT(leen < MAXPATHLEN, "invalid checkpoint path length");
   if ( leen >= MAXPATHLEN )
     return false;
@@ -2143,7 +2151,7 @@ static const char *findparentdirectory(const char *pth, int *off2fnp) {
     strt = leen - 2;
   else
     strt = leen - 1;
-  char *sep = strrchr(&ptr[strt], IFS_CH);
+  char *sep = strrchr(&pth[strt], IFS_CH);
   *off2fnp = (int)(sep - &pth[0]);
   char *ag = strdup(pth);
   if ( ag == NULL )
@@ -2169,7 +2177,13 @@ typedef struct _strlist {
   struct _strlist *next;
 } strlist;
 
-static strlist +strhead = NULL;
+static strlist *strhead = NULL;
+
+/*
+  When doing a directory traveral using readdir(), it is not safe to
+  perform a rename() or unlink() during the traversal. So we have to
+  save these filenames for processing after the traversal is done.
+*/
 
 static void schedule_one_file(char *fn) {
   if ( fn == NULL || fn[0] == '\0' )
@@ -2187,7 +2201,7 @@ static void schedule_one_file(char *fn) {
 static void destroy_all_schedule_memory(void)
 {
   strlist *runn = strhead;
-  if ( runn != NULL ) {
+  while ( runn != NULL ) {
     strlist *nxt = runn->next;
     if ( runn->entry != NULL ) {
       free((void *)(runn->entry));
@@ -2199,12 +2213,10 @@ static void destroy_all_schedule_memory(void)
   strhead = NULL;
 }
 
-static const int five = 5;
-
 static void move_one_file(const char *pth, char *parent, int off2fn,
 			  char *nam) {
   size_t leen = strlen(pth) + strlen(nam) + five;
-  if ( leen > MAXPATHLEN )
+  if ( leen >= MAXPATHLEN )
     return;
   char *ag = (char *)calloc(leen, sizeof(char));
   if ( ag == NULL )
@@ -2230,7 +2242,7 @@ static void move_the_files(const char *pth, char *parent, int off2fn) {
 
 static void delete_one_file(const char *pth, char *nam) {
   size_t leen = strlen(pth) + strlen(nam) + five;
-  if ( leen > MAXPATHLEN )
+  if ( leen >= MAXPATHLEN )
     return;
   char *ag = (char *)calloc(leen, sizeof(char));
   if ( ag == NULL )
@@ -2304,6 +2316,7 @@ static bool rmcontents_and_dir(const char *pth, DIR *dir) {
   int ntodelete = 0;
   if ( dir != NULL ) {
     struct dirent *ent = NULL;
+    (void)rewinddir(dir);
     while ( (ent = readdir(dir)) != NULL ) {
       if ( ent->d_name[0] != '\0' ) {
 	if ( (strcmp(ent->d_name, ".") != 0) &&
@@ -2318,7 +2331,7 @@ static bool rmcontents_and_dir(const char *pth, DIR *dir) {
   if ( ntodelete > 0 )
     delete_the_files(pth);
   sta = rmdir(pth);
-  return sta;
+  return (sta >= 0);
 }
 
 /* exported */
@@ -2350,11 +2363,11 @@ bool jlog_ctx_repair(jlog_ctx *ctx, bool aggressive) {
   FASSERT(b0, "cannot find hex files in jlog directory");
   if ( b0 == true ) {
     // step 3: attempt to repair the metastore. It might not need any
-    // repair, in which case none will happen
+    // repair, in which case nothing will happen
     bool b1 = repair_metastore(pth, lat);
     FASSERT(b1, "cannot repair metastore");
     // step 4: attempt to repair the checkpoint file. It might not need
-    // any repair, in which case none will happen
+    // any repair, in which case nothing will happen
     bool b2 = repair_checkpointfile(dir, pth, ear);
     FASSERT(b2, "cannot repair checkpoint file");
     // if non-aggressive repair succeeded, then declare success
