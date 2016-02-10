@@ -65,11 +65,11 @@ void jrepair() {
     if ( b != true ) {
       (void)fprintf(stderr, "jlog_ctx_repair(false) failed: %d %s\n",
 		    jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
-    }
-    b = jlog_ctx_repair(ctx, true);
-    if ( b != true ) {
-      (void)fprintf(stderr, "jlog_ctx_repair(true) failed: %d %s\n",
-		    jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+      b = jlog_ctx_repair(ctx, true);
+      if ( b != true ) {
+	(void)fprintf(stderr, "jlog_ctx_repair(true) failed: %d %s\n",
+		      jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+      }
     }
   }
   jlog_ctx_close(ctx);

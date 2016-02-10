@@ -1885,6 +1885,8 @@ int jlog_clean(const char *file) {
   return rv;
 }
 
+/* ------------------ jlog_ctx_repair() and friends ----------- */
+
 /*
   This code attempts to repair problems with the metastore file and
   also a checkpoint file, within a jlog directory. The top level
@@ -1904,6 +1906,8 @@ int jlog_clean(const char *file) {
   it is due to a desire to implement all and only the behaviors
   stated, without any (apparent) possibility of side effects.
 */
+
+// find the earliest and latest hex files in the directory
 
 static bool findel(DIR *dir, unsigned int *earp, unsigned int *latp) {
   unsigned int maxx = 0;
@@ -1997,7 +2001,7 @@ static bool repair_metastore(const char *pth, unsigned int lat) {
     return false;
   }
   size_t leen = strlen(pth);
-  if ( (leen == 0) || (leen > MAXPATHLEN-12) ) {
+  if ( (leen == 0) || (leen > (MAXPATHLEN-12)) ) {
     FASSERT(false, "invalid metastore path length");
     return false;
   }
@@ -2082,7 +2086,7 @@ static bool repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   FASSERT(sta, "could not find a checkpoint file");
   if ( sta == false )
     return sta;
-  size_t leen = strlen(pth) + strlen(ent->d_name) + 3;
+  size_t leen = strlen(pth) + strlen(ent->d_name) + 5;
   FASSERT(leen < MAXPATHLEN, "invalid checkpoint path length");
   if ( leen >= MAXPATHLEN )
     return false;
@@ -2093,9 +2097,6 @@ static bool repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   unsigned int goal[2];
   goal[0] = ear;
   goal[1] = 0;
-#ifndef O_RDWR
-#define O_RDWR  02
-#endif
   int fd = open(ag, O_RDWR);
   sta = false;
   FASSERT(fd >= 0, "cannot open checkpoint file");
@@ -2126,23 +2127,127 @@ static bool repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   return sta;
 }
 
-static char *makeparentname(const char *pth, size_t fnlen, int *off2fnp) {
-  return NULL;			/* GAGNON */
+// we want a directory of the form DIRsepDIRsep, with a separator
+// already at the end
+
+static const char *findparentdirectory(const char *pth, int *off2fnp) {
+  size_t strt = 0;
+  size_t leen = strlen(pth);
+  // special case: the top level directory
+  if ( leen == 1 && pth[0] == IFS_CH ) {
+    *off2fnp = 1;
+    return strdup(pth);
+  }
+  // is the last char already a sep?
+  if ( pth[leen-1] == IFS_CH )
+    strt = leen - 2;
+  else
+    strt = leen - 1;
+  char *sep = strrchr(&ptr[strt], IFS_CH);
+  *off2fnp = (int)(sep - &pth[0]);
+  char *ag = strdup(pth);
+  if ( ag == NULL )
+    return;
+  ag[*off2fnp] = '\0';
+  return ag;
 }
 
+static char *makeparentname(const char *pth, size_t fnlen, int *off2fnp) {
+  const char *pdir = findparentdirectory(pth, off2fnp);
+  if ( pdir == NULL || pdir[0] == '\0' )
+    return NULL;
+  char *ag = (char *)calloc(fnlen, sizeof(char));
+  if ( ag == NULL )
+    return(NULL);
+  (void)memcpy((void *)ag, pdir, strlen(pdir));
+  free((void *)pdir);
+  return ag;
+}
+
+typedef struct _strlist {
+  char *entry;
+  struct _strlist *next;
+} strlist;
+
+static strlist +strhead = NULL;
+
 static void schedule_one_file(char *fn) {
-  return;			/* GAGNON */
+  if ( fn == NULL || fn[0] == '\0' )
+    return;
+  strlist *snew = (strlist *)calloc(1, sizeof(strlist));
+  if ( snew == NULL )		/* no memory, bail */
+    return;
+  snew->entry = strdup(fn);
+  if ( snew->entry == NULL )
+    return;			/* dangerous to free memory, if out of mem */
+  snew->next = strhead;
+  strhead = snew;
+}
+
+static void destroy_all_schedule_memory(void)
+{
+  strlist *runn = strhead;
+  if ( runn != NULL ) {
+    strlist *nxt = runn->next;
+    if ( runn->entry != NULL ) {
+      free((void *)(runn->entry));
+      runn->entry = NULL;
+    }
+    free((void *)runn);
+    runn = nxt;
+  }
+  strhead = NULL;
+}
+
+static const int five = 5;
+
+static void move_one_file(const char *pth, char *parent, int off2fn,
+			  char *nam) {
+  size_t leen = strlen(pth) + strlen(nam) + five;
+  if ( leen > MAXPATHLEN )
+    return;
+  char *ag = (char *)calloc(leen, sizeof(char));
+  if ( ag == NULL )
+    return;
+  (void)snprintf(ag, leen-1, "%s%c%s", pth, IFS_CH, nam);
+  (void)memcpy(&parent[off2fn], nam, 1 + strlen(nam)); /* copy the NUL */
+  (void)rename(ag, parent);
+  free((void *)ag);
 }
 
 static void move_the_files(const char *pth, char *parent, int off2fn) {
 #ifdef DUSTY_SPRINGFIELD
-  (void)printf("I would like the Dusty Springfield special, with extra dust\n");
+  (void)printf("I'd like the Dusty Springfield special, with extra dust\n");
 #endif
-  return;			/* GAGNON */
+  strlist *runn = strhead;
+  while ( runn != NULL ) {
+    if ( runn->entry != NULL && runn->entry[0] != '\0' )
+      move_one_file(pth, parent, off2fn, runn->entry);
+    runn = runn->next;
+  }
+  destroy_all_schedule_memory();
+}
+
+static void delete_one_file(const char *pth, char *nam) {
+  size_t leen = strlen(pth) + strlen(nam) + five;
+  if ( leen > MAXPATHLEN )
+    return;
+  char *ag = (char *)calloc(leen, sizeof(char));
+  if ( ag == NULL )
+    return;
+  (void)snprintf(ag, leen-1, "%s%c%s", pth, IFS_CH, nam);
+  (void)unlink(ag);
+  free((void *)ag);
 }
 
 static void delete_the_files(const char *pth) {
-  return;			/* GAGNON */
+  strlist *runn = strhead;
+  while ( runn != NULL ) {
+    if ( runn->entry != NULL && runn->entry[0] != '\0' )
+      delete_one_file(pth, runn->entry);
+    runn = runn->next;
+  }
+  destroy_all_schedule_memory();
 }
 
 /*
@@ -2271,9 +2376,11 @@ bool jlog_ctx_repair(jlog_ctx *ctx, bool aggressive) {
   try_to_save_fasserts(pth, dir);
   // step 6: destroy the directory with extreme prejudice
   bool b3 = rmcontents_and_dir(pth, dir);
-  FASSERT(b3, "Aggressive repair of jlog directory failed");
+  // FASSERT(b3, "Aggressive repair of jlog directory failed");
   //  (void)closedir(dir);
   return b3;
 }
+
+/* -------------end of jlog_ctx_repair() and friends ----------- */
 
 /* vim:se ts=2 sw=2 et: */
