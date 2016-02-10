@@ -215,7 +215,6 @@ int main(int argc, char **argv) {
       jopenr(SUBSCRIBER, atoi(argv[i]));
       exit(0);
     } else if(!strcmp(argv[i], "repair")) {
-      if(i+1 >= argc) { usage(); exit(-1); }
       i++;
       jrepair();
       exit(0);
