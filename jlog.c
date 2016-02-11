@@ -1232,6 +1232,7 @@ int jlog_ctx_open_reader(jlog_ctx *ctx, const char *subscriber) {
   ctx->context_mode = JLOG_INVALID;
   return -1;
 }
+
 int jlog_ctx_init(jlog_ctx *ctx) {
   int rv;
   struct stat sb;
@@ -1258,6 +1259,9 @@ int jlog_ctx_init(jlog_ctx *ctx) {
   if(mkdir(ctx->path, dirmode) == -1)
     SYS_FAIL(JLOG_ERR_CREATE_MKDIR);
   chmod(ctx->path, dirmode);
+  (void)printf("Setting path to %p %s (%x)\n",
+	       ctx->path, ctx->path, ctx->path[0]);
+  fassertxsetpath(ctx->path);
   /* Setup our initial state and store our instance metadata */
   if(__jlog_open_metastore(ctx) != 0) {
     FASSERT(false, "jlog_ctx_init calls jlog_open_metastore");
@@ -1267,7 +1271,9 @@ int jlog_ctx_init(jlog_ctx *ctx) {
     FASSERT(false, "jlog_ctx_init calls jlog_save_metastore");
     SYS_FAIL(JLOG_ERR_CREATE_META);
   }
+  FASSERT(false, "Start of fassert log");
  finish:
+  FASSERT(ctx->last_error == JLOG_ERR_SUCCESS, "jlog_ctx_init failed");
   if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
   return -1;
 }
@@ -2079,6 +2085,8 @@ static bool repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   if ( dir == NULL )
     return false;
   struct dirent *ent = NULL;
+  char *ag = NULL;
+  int   fd = -1;
 
   (void)rewinddir(dir);
   size_t twoI = 2*sizeof(unsigned int);
@@ -2092,20 +2100,22 @@ static bool repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
     }
   }
   FASSERT(sta, "could not find a checkpoint file");
+  // we cannot simply create a checkpoint file if we don't have the
+  // filename, so there is nothing to do here
   if ( sta == false )
-    return sta;
+    return true;
   size_t leen = strlen(pth) + strlen(ent->d_name) + five;
   FASSERT(leen < MAXPATHLEN, "invalid checkpoint path length");
   if ( leen >= MAXPATHLEN )
     return false;
-  char *ag = (char *)calloc(leen+1, sizeof(char));
+  ag = (char *)calloc(leen+1, sizeof(char));
   if ( ag == NULL )	/* out of memory, so bail */
     return false;
   (void)snprintf(ag, leen-1, "%s%c%s", pth, IFS_CH, ent->d_name);
   unsigned int goal[2];
   goal[0] = ear;
   goal[1] = 0;
-  int fd = open(ag, O_RDWR);
+  fd = open(ag, O_RDWR);
   sta = false;
   FASSERT(fd >= 0, "cannot open checkpoint file");
   if ( fd >= 0 ) {

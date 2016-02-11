@@ -30,20 +30,20 @@
 
 #include "fassert.h"
 
-static const char bn[MAXPATHLEN];
+static char bn[MAXPATHLEN];
 
 static int fd = -1;
 
-void fassertxsetpath(const char *path)
-{
+void fassertxsetpath(const char *path) {
   if ( path == NULL || path[0] == 0 )
-    memset((void *)&bn[0], 0, sizeof(bn));
+    return;
   else
     {
       size_t leen = strlen(path);
       if ( leen >= MAXPATHLEN )
 	return;
       memcpy((void *)&bn[0], (void *)path, leen);
+      //      (void)printf("Value of path is %s (%x)\n", bn, bn[0]);
     }
 }
 
@@ -54,7 +54,9 @@ const char *fassertxgetpath(void)
 
 static int openit(void)
 {
-  if ( bn[0] == 0 )
+  //  (void)printf("BN[0] is %c %x\n", bn[0], bn[0]);
+  //  (void)printf("BN is %s\n", bn);
+  if ( bn[0] == '\0' )
     return -1;
   size_t leen = strlen(bn) + 24;
   if ( leen >= MAXPATHLEN )
@@ -68,8 +70,7 @@ static int openit(void)
   return xfd;
 }
 
-void fassertx(bool tf, int ln, const char *fn, const char *str)
-{
+void fassertx(bool tf, int ln, const char *fn, const char *str) {
   char s[512 + 32 + 512 + 32 + 17];
   char s2[31];
   char s3[512 + 10];
@@ -140,5 +141,4 @@ void fassertxend(void) {
     (void)close(fd);
     fd = -1;
   }
-  memset((void *)&bn[0], 0, sizeof(bn));
 }
