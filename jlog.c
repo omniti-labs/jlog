@@ -1145,7 +1145,7 @@ int jlog_ctx_alter_safety(jlog_ctx *ctx, jlog_safety safety) {
     ctx->meta->safety = safety;
     if(ctx->context_mode == JLOG_APPEND) {
       if(__jlog_save_metastore(ctx, 0) != 0) {
-	FASSERT(false, "jlog_ctx_alter_safety calls jlog_save_metastore");
+        FASSERT(false, "jlog_ctx_alter_safety calls jlog_save_metastore");
         SYS_FAIL(JLOG_ERR_CREATE_META);
       }
     }
@@ -1161,7 +1161,7 @@ int jlog_ctx_alter_journal_size(jlog_ctx *ctx, size_t size) {
     ctx->meta->unit_limit = size;
     if(ctx->context_mode == JLOG_APPEND) {
       if(__jlog_save_metastore(ctx, 0) != 0) {
-	FASSERT(false, "jlog_ctx_alter_journal_size calls jlog_save_metastore");
+        FASSERT(false, "jlog_ctx_alter_journal_size calls jlog_save_metastore");
         SYS_FAIL(JLOG_ERR_CREATE_META);
       }
     }
@@ -1260,7 +1260,7 @@ int jlog_ctx_init(jlog_ctx *ctx) {
     SYS_FAIL(JLOG_ERR_CREATE_MKDIR);
   chmod(ctx->path, dirmode);
   (void)printf("Setting path to %p %s (%x)\n",
-	       ctx->path, ctx->path, ctx->path[0]);
+               ctx->path, ctx->path, ctx->path[0]);
   fassertxsetpath(ctx->path);
   /* Setup our initial state and store our instance metadata */
   if(__jlog_open_metastore(ctx) != 0) {
@@ -1302,7 +1302,7 @@ static int __jlog_metastore_atomic_increment(jlog_ctx *ctx) {
     SYS_FAIL(JLOG_ERR_LOCK);
   if(__jlog_restore_metastore(ctx, 1)) {
     FASSERT(false,
-	    "jlog_metastore_atomic_increment calls jlog_restore_metastore");
+            "jlog_metastore_atomic_increment calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
   if(ctx->meta->storage_log == ctx->current_log) {
@@ -1313,7 +1313,7 @@ static int __jlog_metastore_atomic_increment(jlog_ctx *ctx) {
     ctx->meta->storage_log = ctx->current_log;
     if(__jlog_save_metastore(ctx, 1)) {
       FASSERT(false,
-	      "jlog_metastore_atomic_increment calls jlog_save_metastore");
+              "jlog_metastore_atomic_increment calls jlog_save_metastore");
       SYS_FAIL(JLOG_ERR_META_OPEN);
     }
   }
@@ -1938,21 +1938,21 @@ static bool findel(DIR *dir, unsigned int *earp, unsigned int *latp) {
     if ( ent->d_name[0] != '\0' ) {
       nent++;
       if ( strlen(ent->d_name) == 8 &&
-	   sscanf(ent->d_name, "%x", &hexx) == 1 ) {
-	if ( havemaxx == false ) {
-	  havemaxx = true;
-	  maxx = hexx;
-	} else {
-	  if ( hexx > maxx )
-	    maxx = hexx;
-	}
-	if ( haveminn == false ) {
-	  haveminn = true;
-	  minn = hexx;
-	} else {
-	  if ( hexx < minn )
-	    minn = hexx;
-	}
+           sscanf(ent->d_name, "%x", &hexx) == 1 ) {
+        if ( havemaxx == false ) {
+          havemaxx = true;
+          maxx = hexx;
+        } else {
+          if ( hexx > maxx )
+            maxx = hexx;
+        }
+        if ( haveminn == false ) {
+          haveminn = true;
+          minn = hexx;
+        } else {
+          if ( hexx < minn )
+            minn = hexx;
+        }
       }
     }
   }
@@ -2020,7 +2020,7 @@ static bool repair_metastore(const char *pth, unsigned int lat) {
   }
   size_t leen2 = leen + strlen("metastore") + 4; 
   char *ag = (char *)calloc(leen2, sizeof(char));
-  if ( ag == NULL )		/* out of memory, so bail */
+  if ( ag == NULL )             /* out of memory, so bail */
     return false;
   (void)snprintf(ag, leen2-1, "%s%cmetastore", pth, IFS_CH);
   bool b = metastore_ok_p(ag, lat);
@@ -2030,7 +2030,7 @@ static bool repair_metastore(const char *pth, unsigned int lat) {
   goal[1] = 4*1024*1024;
   goal[2] = 1;
   goal[3] = DEFAULT_HDR_MAGIC;
-  (void)unlink(ag);		/* start from scratch */
+  (void)unlink(ag);             /* start from scratch */
   int fd = creat(ag, DEFAULT_FILE_MODE);
   free((void *)ag);
   ag = NULL;
@@ -2094,8 +2094,8 @@ static bool repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   while ( (ent = readdir(dir)) != NULL ) {
     if ( ent->d_name[0] != '\0' ) {
       if ( strncmp(ent->d_name, "cp.", 3) == 0 ) {
-	sta = true;
-	break;
+        sta = true;
+        break;
       }
     }
   }
@@ -2109,7 +2109,7 @@ static bool repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   if ( leen >= MAXPATHLEN )
     return false;
   ag = (char *)calloc(leen+1, sizeof(char));
-  if ( ag == NULL )	/* out of memory, so bail */
+  if ( ag == NULL )     /* out of memory, so bail */
     return false;
   (void)snprintf(ag, leen-1, "%s%c%s", pth, IFS_CH, ent->d_name);
   unsigned int goal[2];
@@ -2127,10 +2127,10 @@ static bool repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
       int rd = read(fd, have, sizeof(have));
       FASSERT(rd == sizeof(have), "cannot read checkpoint file");
       if ( rd == sizeof(have) ) {
-	if ( (goal[0] != have[0]) || (goal[1] != have[1]) ) {
-	  FASSERT(false, "invalid checkpoint data");
-	} else
-	  sta = true;
+        if ( (goal[0] != have[0]) || (goal[1] != have[1]) ) {
+          FASSERT(false, "invalid checkpoint data");
+        } else
+          sta = true;
       }
     }
   }
@@ -2199,11 +2199,11 @@ static void schedule_one_file(char *fn) {
   if ( fn == NULL || fn[0] == '\0' )
     return;
   strlist *snew = (strlist *)calloc(1, sizeof(strlist));
-  if ( snew == NULL )		/* no memory, bail */
+  if ( snew == NULL )           /* no memory, bail */
     return;
   snew->entry = strdup(fn);
   if ( snew->entry == NULL )
-    return;			/* dangerous to free memory, if out of mem */
+    return;                     /* dangerous to free memory, if out of mem */
   snew->next = strhead;
   strhead = snew;
 }
@@ -2224,7 +2224,7 @@ static void destroy_all_schedule_memory(void)
 }
 
 static void move_one_file(const char *pth, char *parent, int off2fn,
-			  char *nam) {
+                          char *nam) {
   size_t leen = strlen(pth) + strlen(nam) + five;
   if ( leen >= MAXPATHLEN )
     return;
@@ -2298,10 +2298,10 @@ static void try_to_save_fasserts(const char *pth, DIR *dir) {
   while ( (ent = readdir(dir)) != NULL ) {
     if ( ent->d_name[0] != '\0' ) {
       if ( strncmp("fassert", ent->d_name, flen) == 0 ) {
-	// if we attempt to do a rename() during a directory traversal
-	// using readdir(), the results will be undesirable
-	schedule_one_file(ent->d_name);
-	ntomove++;
+        // if we attempt to do a rename() during a directory traversal
+        // using readdir(), the results will be undesirable
+        schedule_one_file(ent->d_name);
+        ntomove++;
       }
     }
   }
@@ -2329,11 +2329,11 @@ static bool rmcontents_and_dir(const char *pth, DIR *dir) {
     (void)rewinddir(dir);
     while ( (ent = readdir(dir)) != NULL ) {
       if ( ent->d_name[0] != '\0' ) {
-	if ( (strcmp(ent->d_name, ".") != 0) &&
-	     (strcmp(ent->d_name, "..") != 0) ) {
-	  schedule_one_file(ent->d_name);
-	  ntodelete++;
-	}
+        if ( (strcmp(ent->d_name, ".") != 0) &&
+             (strcmp(ent->d_name, "..") != 0) ) {
+          schedule_one_file(ent->d_name);
+          ntodelete++;
+        }
       }
     }
     (void)closedir(dir);
@@ -2356,7 +2356,7 @@ bool jlog_ctx_repair(jlog_ctx *ctx, bool aggressive) {
     pth = fassertxgetpath();
   if ( pth == NULL || pth[0] == '\0' ) {
     FASSERT(false, "repair command cannot find jlog path");
-    return false;		/* hopeless without a dir name */
+    return false;               /* hopeless without a dir name */
   }
   // step 2: find the earliest and the latest files with hex names
   dir = opendir(pth);

@@ -42,7 +42,13 @@ file documents the changes.
 
 8. Tests were added to jtest.c
 
-9. Some bug fixes were made on an ad hoc basis as they were observed in
-   the code. For example, there is a configure test for sys/param.h, but
-   the #include <sys/param.h> was not conditioned on #if HAVE_SYS_PARAM_H.
-   A thorough code review as not done at this time.
+9. Some bug fixes were made as they were observed in the code. These bug
+   fixes are:
+
+   a. #include <sys/param.h> should be bracketed with #if HAVE_SYS_PARAM_H.
+   b. javah is now run in the java-bits build to create the bridge .h file
+   c. a trivial makefile was created in the python directory to eliminate
+        errors from "make clean" and "gmake clean"
+   d. two additional directories were added to the search for jni.h
+   e. stdbool.h was added to the include files searched
+

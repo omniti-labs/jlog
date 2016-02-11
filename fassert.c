@@ -41,7 +41,7 @@ void fassertxsetpath(const char *path) {
     {
       size_t leen = strlen(path);
       if ( leen >= MAXPATHLEN )
-	return;
+        return;
       memcpy((void *)&bn[0], (void *)path, leen);
       //      (void)printf("Value of path is %s (%x)\n", bn, bn[0]);
     }
@@ -81,7 +81,7 @@ void fassertx(bool tf, int ln, const char *fn, const char *str) {
     {
       fd = openit();
       if ( fd < 0 )
-	return;
+        return;
     }
   size_t leenrun = 0;
   size_t leen = 0;
@@ -89,7 +89,7 @@ void fassertx(bool tf, int ln, const char *fn, const char *str) {
     {
       leen = strlen(str);
       if ( leen > 512 )
-	leen = 512;
+        leen = 512;
     }
   else
     {
@@ -120,7 +120,7 @@ void fassertx(bool tf, int ln, const char *fn, const char *str) {
       // of it would be really bad
       char *xfn = strdup(fn);
       if ( xfn == NULL )
-	return;			/* out of memory, nothing to do */
+        return;                 /* out of memory, nothing to do */
       char *bn = basename(xfn);
       (void)snprintf(s3, sizeof(s3)-1, "file=%s ", bn);
       free((void *)xfn);
