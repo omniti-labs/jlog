@@ -63,15 +63,17 @@ void jcreate() {
      file 00000001, arbitrary contents
      file 00000003, arbitrary contents
      file 0000010a, arbitrary contents
+     file cp.7473,  arbitrary contents
   
   We also corrupt the contents of the file metastore
 
   The non-aggressive repair should clean this up nicely
 */
 
-static const char *names[] = { "00000001", "00000003", "0000010a" } ;
+static const char *names[] = { "00000001", "00000003", "0000010a",
+                               "cp.7473" } ;
 
-// this must be at least 7*3 characters, 3=number of names above
+// this must be at least 7*4 characters, 4=number of names above
 
                               /*1      2      3      4      5      */
                               /*12345671234567123456712345671234567*/
