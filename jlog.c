@@ -2094,8 +2094,12 @@ static bool repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   while ( (ent = readdir(dir)) != NULL ) {
     if ( ent->d_name[0] != '\0' ) {
       if ( strncmp(ent->d_name, "cp.", 3) == 0 ) {
-        sta = true;
-        break;
+        // ~ = 7e
+        if ( ent->d_name[3] != '7' || (ent->d_name[4] != 'e' &&
+                                       ent->d_name[4] != 'E') ) {
+          sta = true;
+          break;
+        }
       }
     }
   }
