@@ -128,7 +128,6 @@ install:
 	$(INSTALL) -m 0644 jlog.h $(DESTDIR)$(includedir)/jlog.h
 	$(INSTALL) -m 0644 jlog_private.h $(DESTDIR)$(includedir)/jlog_private.h
 	$(INSTALL) -m 0644 jlog_io.h $(DESTDIR)$(includedir)/jlog_io.h
-	$(INSTALL) -m 0644 fassert.h $(DESTDIR)$(includedir)/fassert.h
 	$(INSTALL) -m 0644 jlog_config.h $(DESTDIR)$(includedir)/jlog_config.h
 
 install-perl:
