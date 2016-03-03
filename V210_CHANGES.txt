@@ -42,4 +42,3 @@ file documents the changes.
    c. a trivial makefile was created in the python directory to eliminate
         errors from "make clean" and "gmake clean"
    d. two additional directories were added to the search for jni.h
-

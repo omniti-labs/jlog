@@ -37,13 +37,17 @@
 #define  MIN(x, y)               ((x) < (y) ? (x) : (y))
 #endif
 
+#ifndef DEFAULT_FILE_MODE
+#define DEFAULT_FILE_MODE 0640
+#endif
+
 #define SUBSCRIBER "voyeur"
 #define LOGNAME    "/tmp/jtest.foo"
 jlog_ctx *ctx;
 
 void usage() {
   fprintf(stderr,
-	  "options:\n\tinit\n\tread <count>\n\twrite <len> <count>\n\trepair\n");
+          "options:\n\tinit\n\tread <count>\n\twrite <len> <count>\n\trepair\n");
 }
 
 void jcreate() {
@@ -85,7 +89,7 @@ static void addonefile(const char *logname, const char *nam, int idx) {
   if ( ag == NULL )
     return;
   (void)snprintf(ag, leen-1, "%s%c%s", logname, IFS_CH, nam);
-  int fd = creat(ag, 02);
+  int fd = creat(ag, DEFAULT_FILE_MODE);
   if ( fd >= 0 ) {
     (void)write(fd, &streeng[7*idx], 7);
     (void)close(fd);
@@ -121,14 +125,17 @@ void jrepair() {
     addsomefiles(LOGNAME);
     int b = jlog_ctx_repair(ctx, 0);
     if ( b != 1 ) {
-      // GAGNON: need to set these error values in repair code
       (void)fprintf(stderr, "jlog_ctx_repair(0) failed: %d %s\n",
-		    jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+                    jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
       b = jlog_ctx_repair(ctx, 1);
       if ( b != 1 ) {
-	(void)fprintf(stderr, "jlog_ctx_repair(1) failed: %d %s\n",
-		      jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+        (void)fprintf(stderr, "jlog_ctx_repair(1) failed: %d %s\n",
+                      jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+      } else {
+        (void)printf("Aggressive file repair succeeded\n");
       }
+    } else {
+      (void)printf("Non-aggressive file repair succeeded\n");
     }
   }
   jlog_ctx_close(ctx);

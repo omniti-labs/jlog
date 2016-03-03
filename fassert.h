@@ -13,8 +13,8 @@ extern const char *fassertxgetpath(void);
 */
 
 #define FASSERT(A,B)  { int tf = (A); if ( tf == 0 ) \
-					fprintf(stderr, "%s: %s %d\n", \
-					  (const char *)(B), __FILE__, \
-						__LINE__); }
+                                        fprintf(stderr, "%s: %s %d\n", \
+                                          (const char *)(B), __FILE__, \
+                                                __LINE__); }
 
 #endif

@@ -602,4 +602,3 @@ jobject Java_com_omniti_labs_jlog_last_1log_1id
   }
   return make_jlog_Id(jenv, id);
 }
-

@@ -543,6 +543,7 @@ static int __jlog_save_metastore(jlog_ctx *ctx, int ilocked)
 
   if (!ilocked && !jlog_file_lock(ctx->metastore)) {
     FASSERT(0, "__jlog_save_metastore: cannot get lock");
+    ctx->last_error = JLOG_ERR_LOCK;
     return -1;
   }
 
@@ -552,12 +553,15 @@ static int __jlog_save_metastore(jlog_ctx *ctx, int ilocked)
     rv = msync((void *)(ctx->meta), sizeof(*ctx->meta), flags);
     FASSERT(rv >= 0, "jlog_save_metastore");
     if (!ilocked) jlog_file_unlock(ctx->metastore);
+    if ( rv < 0 )
+      ctx->last_error = JLOG_ERR_FILE_WRITE;
     return rv;
   }
   else {
     if (!jlog_file_pwrite(ctx->metastore, ctx->meta, sizeof(*ctx->meta), 0)) {
       if (!ilocked) jlog_file_unlock(ctx->metastore);
       FASSERT(0, "jlog_file_pwrite failed");
+      ctx->last_error = JLOG_ERR_FILE_WRITE;
       return -1;
     }
     if (ctx->meta->safety == JLOG_SAFE) {
@@ -580,6 +584,7 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
 
   if (!ilocked && !jlog_file_lock(ctx->metastore)) {
     FASSERT(0, "__jlog_restore_metastore: cannot get lock");
+    ctx->last_error = JLOG_ERR_LOCK;
     return -1;
   }
 
@@ -589,6 +594,7 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
     FASSERT(rv == 1, "jlog_file_map_rdwr");
     if(rv != 1) {
       if (!ilocked) jlog_file_unlock(ctx->metastore);
+      ctx->last_error = JLOG_ERR_OPEN;
       return -1;
     }
     if(len == 12) {
@@ -603,6 +609,7 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
     FASSERT(rv == 1, "jlog_file_map_rdwr");
     if(rv != 1 || len != sizeof(*ctx->meta)) {
       if (!ilocked) jlog_file_unlock(ctx->metastore);
+      ctx->last_error = JLOG_ERR_OPEN;
       return -1;
     }
     ctx->meta = base;
@@ -666,6 +673,7 @@ static int __jlog_set_checkpoint(jlog_ctx *ctx, const char *s, const jlog_id *id
   }
   if (!jlog_file_pwrite(f, id, sizeof(*id), 0)) {
     FASSERT(0, "jlog_file_pwrite failed in jlog_set_checkpoint");
+    ctx->last_error = JLOG_ERR_FILE_WRITE;
     goto failset;
   }
   if (ctx->meta->safety == JLOG_SAFE) {
@@ -798,6 +806,7 @@ static jlog_file *__jlog_open_writer(jlog_ctx *ctx) {
 #endif
   ctx->data = jlog_file_open(file, O_CREAT, ctx->file_mode);
   FASSERT(ctx->data != NULL, "__jlog_open_writer calls jlog_file_open");
+  ctx->last_error = JLOG_ERR_FILE_OPEN;
  finish:
   jlog_file_unlock(ctx->metastore);
   return ctx->data;
@@ -1254,8 +1263,6 @@ int jlog_ctx_init(jlog_ctx *ctx) {
   if(mkdir(ctx->path, dirmode) == -1)
     SYS_FAIL(JLOG_ERR_CREATE_MKDIR);
   chmod(ctx->path, dirmode);
-  (void)printf("Setting path to %p %s (%x)\n",
-               ctx->path, ctx->path, ctx->path[0]);
   // fassertxsetpath(ctx->path);
   /* Setup our initial state and store our instance metadata */
   if(__jlog_open_metastore(ctx) != 0) {
@@ -1266,12 +1273,13 @@ int jlog_ctx_init(jlog_ctx *ctx) {
     FASSERT(0, "jlog_ctx_init calls jlog_save_metastore");
     SYS_FAIL(JLOG_ERR_CREATE_META);
   }
-  FASSERT(0, "Start of fassert log");
+  //  FASSERT(0, "Start of fassert log");
  finish:
   FASSERT(ctx->last_error == JLOG_ERR_SUCCESS, "jlog_ctx_init failed");
   if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
   return -1;
 }
+
 int jlog_ctx_close(jlog_ctx *ctx) {
   __jlog_close_writer(ctx);
   __jlog_close_indexer(ctx);
@@ -2088,16 +2096,16 @@ static int repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   while ( (ent = readdir(dir)) != NULL ) {
     if ( ent->d_name[0] != '\0' ) {
       if ( strncmp(ent->d_name, "cp.", 3) == 0 ) {
-	char n[3];
-	n[0] = ent->d_name[3];
-	if ( n[0] != 0 )
-	  n[1] = ent->d_name[4];
-	else
-	  n[1] = 0;
-	n[2] = 0;
-	int tilde = (int)'~';
-	int mtilde = 0;
-	if ( (sscanf(n, "%d", &mtilde) != 1) || (mtilde != tilde ) ) {
+        char n[3];
+        n[0] = ent->d_name[3];
+        if ( n[0] != 0 )
+          n[1] = ent->d_name[4];
+        else
+          n[1] = 0;
+        n[2] = 0;
+        int tilde = (int)'~';
+        int mtilde = 0;
+        if ( (sscanf(n, "%d", &mtilde) != 1) || (mtilde != tilde ) ) {
           sta = 1;
           break;
         }
@@ -2361,12 +2369,11 @@ int jlog_ctx_repair(jlog_ctx *ctx, int aggressive) {
 
   if ( ctx != NULL )
     pth = ctx->path;
-  /*
   else
-    pth = fassertxgetpath();
-  */
+    pth = NULL; // fassertxgetpath();
   if ( pth == NULL || pth[0] == '\0' ) {
     FASSERT(0, "repair command cannot find jlog path");
+    ctx->last_error = JLOG_ERR_NOTDIR;
     return 0;               /* hopeless without a dir name */
   }
   // step 2: find the earliest and the latest files with hex names
@@ -2376,6 +2383,10 @@ int jlog_ctx_repair(jlog_ctx *ctx, int aggressive) {
     int bx = 0;
     if ( aggressive == 1 )
       bx = rmcontents_and_dir(pth, NULL);
+    if ( bx == 0 )
+      ctx->last_error = JLOG_ERR_NOTDIR;
+    else
+      ctx->last_error = JLOG_ERR_SUCCESS;
     return bx;
   }
   unsigned int ear = 0;
@@ -2394,6 +2405,7 @@ int jlog_ctx_repair(jlog_ctx *ctx, int aggressive) {
     // if non-aggressive repair succeeded, then declare success
     if ( (b1 == 1) && (b2 == 1) ) {
       (void)closedir(dir);
+      ctx->last_error = JLOG_ERR_SUCCESS;
       return 1;
     }
   }
@@ -2401,6 +2413,7 @@ int jlog_ctx_repair(jlog_ctx *ctx, int aggressive) {
   FASSERT(aggressive, "non-aggressive repair failed");
   if ( aggressive == 0 ) {
     (void)closedir(dir);
+    ctx->last_error = JLOG_ERR_CREATE_META;
     return 0;
   }
   // step 5: if there are any fassert files, try to save them by
@@ -2412,6 +2425,10 @@ int jlog_ctx_repair(jlog_ctx *ctx, int aggressive) {
   int b3 = rmcontents_and_dir(pth, dir);
   FASSERT(b3, "Aggressive repair of jlog directory failed");
   //  (void)closedir(dir);
+  if ( b3 == 0 )
+    ctx->last_error = JLOG_ERR_NOTDIR;
+  else
+    ctx->last_error = JLOG_ERR_SUCCESS;
   return b3;
 }
 
