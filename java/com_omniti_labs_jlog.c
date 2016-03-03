@@ -333,13 +333,13 @@ void Java_com_omniti_labs_jlog_close
 /*
  * Class:     com_omniti_labs_jlog
  * Method:    repair
- * Signature: (Z)Z
+ * Signature: (I)I
  */
-JNIEXPORT jboolean JNICALL Java_com_omniti_labs_jlog_repair
-  (JNIEnv *jenv, jobject self, jboolean aggro) {
+JNIEXPORT jint JNICALL Java_com_omniti_labs_jlog_repair
+  (JNIEnv *jenv, jobject self, jint aggro) {
   jlog_ctx *ctx;
   FETCH_CTX(jenv,self,ctx);
-  bool b = jlog_ctx_repair(ctx, aggro);
+  jint b = (jint)jlog_ctx_repair(ctx, (int)aggro);
   return b;
 }
 

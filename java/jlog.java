@@ -127,7 +127,7 @@ public class jlog {
   public native void open_reader(String sub)
     throws jlogAlreadyOpenedException, jlogIOException, jlogInvalidSubscriberException;
   public native void close();
-  public native boolean repair(boolean aggressive);
+  public native int repair(int aggressive);
   private native void alter_mode(int mode);
   private native void alter_journal_size(long size);
   private native void alter_safety(jlog_safety safety);

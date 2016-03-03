@@ -119,14 +119,14 @@ void jrepair() {
     fprintf(stderr, "jlog_ctx_init failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
   } else {
     addsomefiles(LOGNAME);
-    bool b = jlog_ctx_repair(ctx, false);
-    if ( b != true ) {
+    int b = jlog_ctx_repair(ctx, 0);
+    if ( b != 1 ) {
       // GAGNON: need to set these error values in repair code
-      (void)fprintf(stderr, "jlog_ctx_repair(false) failed: %d %s\n",
+      (void)fprintf(stderr, "jlog_ctx_repair(0) failed: %d %s\n",
 		    jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
-      b = jlog_ctx_repair(ctx, true);
-      if ( b != true ) {
-	(void)fprintf(stderr, "jlog_ctx_repair(true) failed: %d %s\n",
+      b = jlog_ctx_repair(ctx, 1);
+      if ( b != 1 ) {
+	(void)fprintf(stderr, "jlog_ctx_repair(1) failed: %d %s\n",
 		      jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
       }
     }

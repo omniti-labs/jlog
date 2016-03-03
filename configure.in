@@ -47,7 +47,7 @@ AC_CHECK_LIB(rt, sem_init, , )
 AC_FUNC_STRFTIME
 
 # Checks for header files.
-AC_CHECK_HEADERS(sys/file.h sys/types.h dirent.h sys/param.h stdbool.h libgen.h stdint.h fcntl.h errno.h limits.h \
+AC_CHECK_HEADERS(sys/file.h sys/types.h dirent.h sys/param.h libgen.h stdint.h fcntl.h errno.h limits.h \
                  sys/resource.h pthread.h semaphore.h pwd.h stdio.h stdlib.h string.h \
                  ctype.h unistd.h time.h sys/stat.h sys/time.h unistd.h sys/mman.h jni.h)
 

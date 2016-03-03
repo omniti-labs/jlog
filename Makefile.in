@@ -43,9 +43,9 @@ srcdir=@srcdir@
 top_srcdir=@top_srcdir@
 
 AOBJS= \
-	jlog.o jlog_hash.o jlog_io.o fassert.o
+	jlog.o jlog_hash.o jlog_io.o
 SOOBJS= \
-	jlog.lo jlog_hash.lo jlog_io.lo fassert.lo
+	jlog.lo jlog_hash.lo jlog_io.lo
 
 all:	libjlog.$(DOTSO) libjlog.a jlogctl jlogtail test
 

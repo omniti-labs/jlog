@@ -91,7 +91,7 @@ public class jlogTest {
     long end = ctx.raw_size();
     log("checking that size " + (sizeup ? "increased" : "decreased"));
     if(sizeup && (end < start)) fail("size didn't increase as exptected");
-    if(!sizeup && (end > start)) fail("size didn't decrease as exptected");
+    if(!sizeup && (end > start)) fail("size didn't decrease as expected");
   }
  
   public jlogTest(String[] called_args) {

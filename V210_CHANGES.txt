@@ -5,36 +5,28 @@ file documents the changes.
 
 1. Revision was bumped to 2.1.0
 
-2. Function bool jlog_ctx_repair(bool aggressive) added to jlog.c
+2. Function int jlog_ctx_repair(int aggressive) added to jlog.c
    In non-aggressive mode this function examines the metastore file
    and tries to fix it. It then examines the checkpoint file and
-   tries to fix that. If both succeed then the function returns true.
+   tries to fix that. If both succeed then the function returns 1.
    If one or both fail, and aggressive mode is set, then the
    function attempts to delete all files in the jlog PATH directory
    (except the fassert files, see below), and then removes the
    directory itself.
 
-   The function returns true on success and false on failure.
+   The function returns 1 on success and 0 on failure.
 
 3. A JNI bridge was built with a java function with signature
 
-   public native boolean repair(boolean aggressive);
+   public native int repair(int aggressive);
 
 4. A macro FASSERT() was created to log assertion failures throughout
    the jlog.c code in an effort to track down the pesky misbehaviors
    that sometimes occur. Unlike assert(), FASSERT() does not crash
-   the process. It logs assertion failures to files named fassertT,
-   where T is the time the assertion file was created. There are
-   now many calls to FASSERT in the code.
-
-   Note that when repair() attempts to delete the jlog directory,
-   if there are any fassert files in that directory, then an
-   attempt is made to move those files to the parent directory.
+   the process. It logs assertion failures to stderr.
 
 5. Various small changes were made to configure.in and jlog_config.in
-   to detect the presence of stdbool.h and a few other include files.
-   If stdbool.h is not found, alternate definitions are extracted
-   from the file fakebool.h.
+   to detect the presence of a few other include files.
 
 6. A few trivial compiler warnings were addressed.
 
@@ -50,5 +42,4 @@ file documents the changes.
    c. a trivial makefile was created in the python directory to eliminate
         errors from "make clean" and "gmake clean"
    d. two additional directories were added to the search for jni.h
-   e. stdbool.h was added to the include files searched
 
