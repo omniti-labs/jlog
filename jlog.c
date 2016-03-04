@@ -806,7 +806,10 @@ static jlog_file *__jlog_open_writer(jlog_ctx *ctx) {
 #endif
   ctx->data = jlog_file_open(file, O_CREAT, ctx->file_mode);
   FASSERT(ctx->data != NULL, "__jlog_open_writer calls jlog_file_open");
-  ctx->last_error = JLOG_ERR_FILE_OPEN;
+  if ( ctx->data == NULL )
+    ctx->last_error = JLOG_ERR_FILE_OPEN;
+  else
+    ctx->last_error = JLOG_ERR_SUCCESS;
  finish:
   jlog_file_unlock(ctx->metastore);
   return ctx->data;
