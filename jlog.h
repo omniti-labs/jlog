@@ -140,6 +140,7 @@ JLOG_API(int)       jlog_ctx_close(jlog_ctx *ctx);
 
 JLOG_API(int)       jlog_ctx_alter_mode(jlog_ctx *ctx, int mode);
 JLOG_API(int)       jlog_ctx_alter_journal_size(jlog_ctx *ctx, size_t size);
+JLOG_API(int)       jlog_ctx_repair(jlog_ctx *ctx, int aggressive);
 JLOG_API(int)       jlog_ctx_alter_safety(jlog_ctx *ctx, jlog_safety safety);
 JLOG_API(int)       jlog_ctx_add_subscriber(jlog_ctx *ctx, const char *subscriber,
                                             jlog_position whence);

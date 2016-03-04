@@ -38,6 +38,7 @@
 
 #undef HAVE_FCNTL_H
 #undef HAVE_SYS_TYPES_H
+#undef HAVE_LIBGEN_H
 #undef HAVE_DIRENT_H
 #undef HAVE_ERRNO_H
 #undef HAVE_STRING_H
@@ -72,6 +73,11 @@
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
 #endif
+#if HAVE_LIBGEN_H
+#include <libgen.h>
+#endif
+
+
 
 /* The number of bytes in a char.  */
 #undef SIZEOF_CHAR

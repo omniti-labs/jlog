@@ -239,6 +239,7 @@ jobject Java_com_omniti_labs_jlog_get_1error
     case JLOG_ERR_ILLEGAL_CHECKPOINT: mapenum(JLOG_ERR_ILLEGAL_CHECKPOINT); break;
     case JLOG_ERR_INVALID_SUBSCRIBER: mapenum(JLOG_ERR_INVALID_SUBSCRIBER); break;
     case JLOG_ERR_ILLEGAL_LOGID: mapenum(JLOG_ERR_ILLEGAL_LOGID); break;
+    case JLOG_ERR_CLOSE_LOGID: mapenum(JLOG_ERR_CLOSE_LOGID); break;
     case JLOG_ERR_SUBSCRIBER_EXISTS: mapenum(JLOG_ERR_SUBSCRIBER_EXISTS); break;
     case JLOG_ERR_CHECKPOINT: mapenum(JLOG_ERR_CHECKPOINT); break;
     case JLOG_ERR_NOT_SUPPORTED: mapenum(JLOG_ERR_NOT_SUPPORTED); break;
@@ -327,6 +328,19 @@ void Java_com_omniti_labs_jlog_close
   ctx = NULL;
   SET_CTX(jenv,self,ctx);
   SET_SUBSCRIBER(jenv,self,NULL);
+}
+
+/*
+ * Class:     com_omniti_labs_jlog
+ * Method:    repair
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_com_omniti_labs_jlog_repair
+  (JNIEnv *jenv, jobject self, jint aggro) {
+  jlog_ctx *ctx;
+  FETCH_CTX(jenv,self,ctx);
+  jint b = (jint)jlog_ctx_repair(ctx, (int)aggro);
+  return b;
 }
 
 /*
@@ -588,4 +602,3 @@ jobject Java_com_omniti_labs_jlog_last_1log_1id
   }
   return make_jlog_Id(jenv, id);
 }
-

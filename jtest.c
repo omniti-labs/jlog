@@ -37,13 +37,19 @@
 #define  MIN(x, y)               ((x) < (y) ? (x) : (y))
 #endif
 
+#ifndef DEFAULT_FILE_MODE
+#define DEFAULT_FILE_MODE 0640
+#endif
+
 #define SUBSCRIBER "voyeur"
 #define LOGNAME    "/tmp/jtest.foo"
 jlog_ctx *ctx;
 
 void usage() {
-  fprintf(stderr, "options:\n\tinit\n\tread <count>\n\twrite <len> <count>\n");
+  fprintf(stderr,
+          "options:\n\tinit\n\tread <count>\n\twrite <len> <count>\n\trepair\n");
 }
+
 void jcreate() {
   ctx = jlog_new(LOGNAME);
   jlog_ctx_alter_journal_size(ctx, 1024);
@@ -51,6 +57,86 @@ void jcreate() {
     fprintf(stderr, "jlog_ctx_init failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
   } else {
     jlog_ctx_add_subscriber(ctx, SUBSCRIBER, JLOG_BEGIN);
+  }
+  jlog_ctx_close(ctx);
+}
+
+/*
+  In an errort to test all functionality of the repair function, we add
+  the follow to the jlog directory:
+     file 00000001, arbitrary contents
+     file 00000003, arbitrary contents
+     file 0000010a, arbitrary contents
+     file cp.7473,  arbitrary contents
+  
+  We also corrupt the contents of the file metastore
+
+  The non-aggressive repair should clean this up nicely
+*/
+
+static const char *names[] = { "00000001", "00000003", "0000010a",
+                               "cp.7473" } ;
+
+// this must be at least 7*4 characters, 4=number of names above
+
+                              /*1      2      3      4      5      */
+                              /*12345671234567123456712345671234567*/
+static const char streeng[] =  "Gloria!FahdahtIthinktheyvegotyournu";
+
+static void addonefile(const char *logname, const char *nam, int idx) {
+  size_t leen = strlen(logname) + strlen(nam) + 4;
+  char *ag = (char *)calloc(leen, sizeof(char));
+  if ( ag == NULL )
+    return;
+  (void)snprintf(ag, leen-1, "%s%c%s", logname, IFS_CH, nam);
+  int fd = creat(ag, DEFAULT_FILE_MODE);
+  if ( fd >= 0 ) {
+    (void)write(fd, &streeng[7*idx], 7);
+    (void)close(fd);
+  }
+  free((void *)ag);
+}
+
+static void corruptmetastore(const char *logname) {
+  size_t leen = strlen(logname) + strlen("metastore") + 4;
+  char *ag = (char *)calloc(leen, sizeof(char));
+  if ( ag == NULL )
+    return;
+  (void)snprintf(ag, leen-1, "%s%cmetastore", logname, IFS_CH);
+  int fd = open(ag, 02);
+  if ( fd < 0 )
+    return;
+  (void)write(fd, &streeng[0], 7);
+  (void)close(fd);
+}
+
+static void addsomefiles(const char *logname) {
+  int i;
+  for(i=0;i<(sizeof(names)/sizeof(char *));i++)
+    addonefile(logname, names[i], i);
+  corruptmetastore(logname);
+}
+
+void jrepair() {
+  ctx = jlog_new(LOGNAME);
+  if(jlog_ctx_init(ctx) != 0) {
+    fprintf(stderr, "jlog_ctx_init failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+  } else {
+    addsomefiles(LOGNAME);
+    int b = jlog_ctx_repair(ctx, 0);
+    if ( b != 1 ) {
+      (void)fprintf(stderr, "jlog_ctx_repair(0) failed: %d %s\n",
+                    jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+      b = jlog_ctx_repair(ctx, 1);
+      if ( b != 1 ) {
+        (void)fprintf(stderr, "jlog_ctx_repair(1) failed: %d %s\n",
+                      jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+      } else {
+        (void)printf("Aggressive file repair succeeded\n");
+      }
+    } else {
+      (void)printf("Non-aggressive file repair succeeded\n");
+    }
   }
   jlog_ctx_close(ctx);
 }
@@ -136,6 +222,10 @@ int main(int argc, char **argv) {
       if(i+1 >= argc) { usage(); exit(-1); }
       i++;
       jopenr(SUBSCRIBER, atoi(argv[i]));
+      exit(0);
+    } else if(!strcmp(argv[i], "repair")) {
+      i++;
+      jrepair();
       exit(0);
     } else {
       fprintf(stderr, "command '%s' not understood\n", argv[i]);
