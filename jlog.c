@@ -795,8 +795,8 @@ static jlog_file *__jlog_open_writer(jlog_ctx *ctx) {
   if(!jlog_file_lock(ctx->metastore))
     SYS_FAIL(JLOG_ERR_LOCK);
   int x;
-// UNFIXED WARNING: "parentheses suggested"
-  if(x = __jlog_restore_metastore(ctx, 1)) {
+  x = __jlog_restore_metastore(ctx, 1);
+  if(x) {
     FASSERT(x == 0, "__jlog_open_writer calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
@@ -2162,7 +2162,7 @@ static int repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   return sta;
 }
 
-#ifdef notdef
+#if 0
 
 // we want a directory of the form DIRsepDIRsep, with a separator
 // already at the end
@@ -2244,7 +2244,7 @@ static void destroy_all_schedule_memory(void)
   strhead = NULL;
 }
 
-#ifdef notdef
+#if 0
 
 static void move_one_file(const char *pth, char *parent, int off2fn,
                           char *nam) {
@@ -2297,7 +2297,7 @@ static void delete_the_files(const char *pth) {
   destroy_all_schedule_memory();
 }
 
-#ifdef notdef
+#if 0
 
 /*
   if there are fassert files in the jlog directory, try to move them
