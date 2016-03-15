@@ -33,6 +33,22 @@
 #include <stdio.h>
 #include "jlog.h"
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#else
+extern int close(int);
+extern int write(int, void *, unsigned);
+#endif
+
+#ifdef HAVE_FCNTL_H
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#else
+extern int open(const char *, int);
+extern int creat(const char *, int);
+#endif
+
 #ifndef MIN
 #define  MIN(x, y)               ((x) < (y) ? (x) : (y))
 #endif

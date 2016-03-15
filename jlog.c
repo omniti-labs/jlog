@@ -795,6 +795,7 @@ static jlog_file *__jlog_open_writer(jlog_ctx *ctx) {
   if(!jlog_file_lock(ctx->metastore))
     SYS_FAIL(JLOG_ERR_LOCK);
   int x;
+// UNFIXED WARNING: "parentheses suggested"
   if(x = __jlog_restore_metastore(ctx, 1)) {
     FASSERT(x == 0, "__jlog_open_writer calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
@@ -2161,6 +2162,8 @@ static int repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   return sta;
 }
 
+#ifdef notdef
+
 // we want a directory of the form DIRsepDIRsep, with a separator
 // already at the end
 
@@ -2181,7 +2184,7 @@ static const char *findparentdirectory(const char *pth, int *off2fnp) {
   *off2fnp = (int)(sep - &pth[0]);
   char *ag = strdup(pth);
   if ( ag == NULL )
-    return;
+    return NULL;
   ag[*off2fnp] = '\0';
   return ag;
 }
@@ -2197,6 +2200,8 @@ static char *makeparentname(const char *pth, size_t fnlen, int *off2fnp) {
   free((void *)pdir);
   return ag;
 }
+
+#endif
 
 typedef struct _strlist {
   char *entry;
@@ -2239,6 +2244,8 @@ static void destroy_all_schedule_memory(void)
   strhead = NULL;
 }
 
+#ifdef notdef
+
 static void move_one_file(const char *pth, char *parent, int off2fn,
                           char *nam) {
   size_t leen = strlen(pth) + strlen(nam) + five;
@@ -2265,6 +2272,8 @@ static void move_the_files(const char *pth, char *parent, int off2fn) {
   }
   destroy_all_schedule_memory();
 }
+
+#endif
 
 static void delete_one_file(const char *pth, char *nam) {
   size_t leen = strlen(pth) + strlen(nam) + five;
