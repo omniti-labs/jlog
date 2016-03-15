@@ -80,7 +80,6 @@ void jcreate(jlog_safety s) {
 void *writer(void *unused) {
   jlog_ctx *ctx;
   int i;
-  size_t newsize;
   char foo[72];
   ctx = jlog_new(LOGNAME);
   memset(foo, 'X', sizeof(foo)-1);
