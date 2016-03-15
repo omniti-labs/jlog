@@ -50,10 +50,10 @@ SOOBJS= \
 all:	libjlog.$(DOTSO) libjlog.a jlogctl jlogtail test
 
 .c.o:
-	$(CC) $(CPPFLAGS) -Wall $(CFLAGS) -c $<
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
 
 .c.lo:
-	$(CC) $(CPPFLAGS) $(CFLAGS) -Wall $(SHCFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(SHCFLAGS) -c $< -o $@
 
 test:	jthreadtest jtest
 
@@ -108,7 +108,7 @@ java/jlogTest.class:	java/jlogTest.java java/jlog.jar
 	cd java && $(JAVAC) -cp jlog.jar jlogTest.java
 
 java/com_omniti_labs_jlog.lo:	java/com_omniti_labs_jlog.c
-	$(CC) -Wall -I. $(CPPFLAGS) $(CFLAGS) $(SHCFLAGS) -c $< -o $@
+	$(CC) -I. $(CPPFLAGS) $(CFLAGS) $(SHCFLAGS) -c $< -o $@
 
 java/libjlog.jnilib:	java/com_omniti_labs_jlog.lo $(SOOBJS)
 	$(SHLD) -o $@ java/com_omniti_labs_jlog.lo $(SOOBJS) $(LDFLAGS) $(LIBS)
