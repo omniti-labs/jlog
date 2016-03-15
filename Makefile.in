@@ -50,10 +50,10 @@ SOOBJS= \
 all:	libjlog.$(DOTSO) libjlog.a jlogctl jlogtail test
 
 .c.o:
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
+	$(CC) $(CPPFLAGS) -Wall $(CFLAGS) -c $<
 
 .c.lo:
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(SHCFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -Wall $(SHCFLAGS) -c $< -o $@
 
 test:	jthreadtest jtest
 
