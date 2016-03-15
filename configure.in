@@ -2,7 +2,7 @@ dnl vim:ts=2:sw=2:et:
 AC_INIT(jlog.c)
 AC_CONFIG_HEADER(jlog_config.h)
 
-AC_SUBST(CPPFLAGS, "$CPPFLAGS -I/usr/java/include -I/usr/java/include/solaris -Wno-int-to-pointer-cast")
+AC_SUBST(CPPFLAGS, "$CPPFLAGS -I/usr/java/include -I/usr/java/include/solaris")
 
 AC_PROG_CC
 AC_C_INLINE
@@ -66,6 +66,10 @@ AC_CACHE_CHECK([for u_int type], ac_cv_have_u_int, [
 		[ ac_cv_have_u_int="no" ]
 	)
 ])
+
+if test "x$GCC" = "xyes" ; then
+    CFLAGS="$CFLAGS -Wall -Wno-int-to-pointer-cast"
+fi
 
 if test "x$ac_cv_have_u_int" = "xyes" ; then
 	AC_DEFINE(HAVE_U_INT)
