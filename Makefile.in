@@ -16,8 +16,9 @@ PERL=@PERL@
 SHCFLAGS=@SHCFLAGS@
 DOTSO=@DOTSO@
 JAVAC=@JAVAC@
-JAVAH=`dirname ${JAVAC}`/javah
+JAVAH=@JAVAH@
 JAR=@JAR@
+JAVA_BITS=@JAVA_BITS@
 
 MAJOR_VERSION=2
 MINOR_VERSION=1
@@ -47,7 +48,7 @@ AOBJS= \
 SOOBJS= \
 	jlog.lo jlog_hash.lo jlog_io.lo
 
-all:	libjlog.$(DOTSO) libjlog.a jlogctl jlogtail test
+all:	libjlog.$(DOTSO) libjlog.a jlogctl jlogtail test $(JAVA_BITS)
 
 .c.o:
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
