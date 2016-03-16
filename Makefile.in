@@ -117,15 +117,18 @@ java/libjlog.jnilib:	java/com_omniti_labs_jlog.lo $(SOOBJS)
 install:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(bindir)
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(libdir)
+	$(srcdir)/mkinstalldirs $(DESTDIR)$(libdir)/java
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(includedir)
 	$(INSTALL) -m 0755 jlogctl $(DESTDIR)$(bindir)/jlogctl
 	$(INSTALL) -m 0755 jlogtail $(DESTDIR)$(bindir)/jlogtail
 	$(INSTALL) -m 0755 jlog_change_endian.pl $(DESTDIR)$(bindir)/jlog_change_endian
 	$(INSTALL) -m 0755 jlog_sanity_check.pl $(DESTDIR)$(bindir)/jlog_sanity_check
-	$(INSTALL) -m 0755 libjlog.a $(DESTDIR)$(libdir)/libjlog.a
-	$(INSTALL) -m 0755 libjlog.$(DOTSO) $(DESTDIR)$(libdir)/$(LIBLONG)
-	$(LN_S) -f $(LIBLONG) $(DESTDIR)$(libdir)/$(LIBSHORT)
-	$(LN_S) -f $(LIBLONG) $(DESTDIR)$(libdir)/$(LIBMAJOR)
+	$(INSTALL) -m 0755 libjlog.a $(DESTDIR)$(libdir)/java/libjlog.a
+	$(INSTALL) -m 0644 java/jlog.jar $(DESTDIR)$(libdir)/java/jlog.jar
+	$(INSTALL) -m 0755 java/libjlog.jnilib $(DESTDIR)$(libdir)/java/libjlog.jnilib
+	$(INSTALL) -m 0755 libjlog.$(DOTSO) $(DESTDIR)$(libdir)/java/$(LIBLONG)
+	$(LN_S) -f $(LIBLONG) $(DESTDIR)$(libdir)/java/$(LIBSHORT)
+	$(LN_S) -f $(LIBLONG) $(DESTDIR)$(libdir)/java/$(LIBMAJOR)
 	$(INSTALL) -m 0644 jlog.h $(DESTDIR)$(includedir)/jlog.h
 	$(INSTALL) -m 0644 jlog_private.h $(DESTDIR)$(includedir)/jlog_private.h
 	$(INSTALL) -m 0644 jlog_io.h $(DESTDIR)$(includedir)/jlog_io.h
@@ -141,7 +144,7 @@ clean:
 	rm -f *.o *.lo *.$(DOTSO) *.a jthreadtest jtest jlogctl jlogtail
 	rm -f java/*.jar java/*.jnilib java/*.lo
 	-if test -f perl/Makefile ; then cd perl ; make clean ; fi
-	cd python && make clean
+	-if test -f python/Makefile ; then cd python ; make clean ; fi
 
 distclean: 	clean
 	rm -f Makefile jlog_config.h perl/Makefile.PL
