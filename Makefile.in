@@ -126,6 +126,7 @@ install:
 	$(INSTALL) -m 0755 libjlog.a $(DESTDIR)$(libdir)/java/libjlog.a
 	$(INSTALL) -m 0644 java/jlog.jar $(DESTDIR)$(libdir)/java/jlog.jar
 	$(INSTALL) -m 0755 java/libjlog.jnilib $(DESTDIR)$(libdir)/java/libjlog.jnilib
+	$(LN_S) -f $(DESTDIR)$(libdir)/java/libjlog.jnilib $(DESTDIR)$(libdir)/java/libjnijlog.so
 	$(INSTALL) -m 0755 libjlog.$(DOTSO) $(DESTDIR)$(libdir)/java/$(LIBLONG)
 	$(LN_S) -f $(LIBLONG) $(DESTDIR)$(libdir)/java/$(LIBSHORT)
 	$(LN_S) -f $(LIBLONG) $(DESTDIR)$(libdir)/java/$(LIBMAJOR)
