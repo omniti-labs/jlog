@@ -187,6 +187,18 @@ public class jlog {
   }
 
   static {
-    System.loadLibrary("jlog");
+    try {
+      System.load("libjlog.so");
+   } catch (Exception e) {
+     System.err.println("Cannot load jlog library: " + e);
+     System.exit(-1);
+   }
+    try {
+      System.load("libjlog.jnilib");
+   } catch (Exception e) {
+     System.err.println("Cannot load jlog JNI library: " + e);
+     System.exit(-1);
+   }
+   System.out.println("Dependant libraries loaded successfully");
   }
 }
