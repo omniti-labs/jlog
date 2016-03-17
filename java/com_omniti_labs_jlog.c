@@ -335,7 +335,7 @@ void Java_com_omniti_labs_jlog_close
  * Method:    repair
  * Signature: (I)I
  */
-JNIEXPORT jint JNICALL Java_com_omniti_labs_jlog_repair
+jint Java_com_omniti_labs_jlog_repair
   (JNIEnv *jenv, jobject self, jint aggro) {
   jlog_ctx *ctx;
   FETCH_CTX(jenv,self,ctx);

@@ -16,6 +16,7 @@ AC_PATH_PROG(AR, ar)
 AC_PATH_PROGS(PERL, perl)
 AC_PATH_PROGS(JAVAC, javac)
 AC_PATH_PROGS(JAR, jar)
+AC_PATH_PROGS(JAVAH, javah)
 AC_SUBST(PERL)
 
 # Checks for data types
@@ -47,9 +48,10 @@ AC_CHECK_LIB(rt, sem_init, , )
 AC_FUNC_STRFTIME
 
 # Checks for header files.
-AC_CHECK_HEADERS(sys/file.h sys/types.h dirent.h sys/param.h libgen.h stdint.h fcntl.h errno.h limits.h \
-                 sys/resource.h pthread.h semaphore.h pwd.h stdio.h stdlib.h string.h \
-                 ctype.h unistd.h time.h sys/stat.h sys/time.h unistd.h sys/mman.h jni.h)
+AC_CHECK_HEADERS(sys/file.h sys/types.h dirent.h sys/param.h libgen.h \
+   stdint.h fcntl.h errno.h limits.h jni.h \
+   sys/resource.h pthread.h semaphore.h pwd.h stdio.h stdlib.h string.h \
+   ctype.h unistd.h time.h sys/stat.h sys/time.h unistd.h sys/mman.h)
 
 JAVA_BITS=java-bits
 if test "x$ac_cv_header_jni_h" != "xyes" ; then
