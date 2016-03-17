@@ -2,7 +2,7 @@ dnl vim:ts=2:sw=2:et:
 AC_INIT(jlog.c)
 AC_CONFIG_HEADER(jlog_config.h)
 
-AC_SUBST(CPPFLAGS, "$CPPFLAGS -I/usr/java/include -I/usr/java/include/solaris -I/opt/circonus/jdk1.8.0_74/include -I/opt/circonus/jdk1.8.0_74/include/solaris")
+AC_SUBST(CPPFLAGS, "$CPPFLAGS -I/usr/java/include -I/usr/java/include/solaris")
 
 AC_PROG_CC
 AC_C_INLINE

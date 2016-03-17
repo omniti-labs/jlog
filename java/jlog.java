@@ -194,13 +194,11 @@ public class jlog {
      System.exit(-1);
    }
     try {
-      // System.load("/opt/circonus/lib/java/libjlog.jnilib");
       System.loadLibrary("jnijlog");
    } catch (Exception e) {
      System.err.println("Cannot load jlog JNI library: " + e);
      System.exit(-1);
    }
-
-   System.out.println("Dependant libraries loaded successfully");
   }
+
 }
