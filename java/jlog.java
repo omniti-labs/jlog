@@ -188,7 +188,7 @@ public class jlog {
 
   static {
     try {
-      System.load("libjlog.so");
+      System.loadLibrary(jlog");
    } catch (Exception e) {
      System.err.println("Cannot load jlog library: " + e);
      System.exit(-1);
