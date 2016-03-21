@@ -48,7 +48,7 @@ AOBJS= \
 SOOBJS= \
 	jlog.lo jlog_hash.lo jlog_io.lo
 
-all:	libjlog.$(DOTSO) libjlog.a jlogctl jlogtail test $(JAVA_BITS)
+all:	libjlog.$(DOTSO) libjlog.a jlogctl jlogtail test
 
 .c.o:
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
@@ -111,16 +111,12 @@ java/libjlog.jnilib:	java/com_omniti_labs_jlog.lo $(SOOBJS)
 install:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(bindir)
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(libdir)
-	$(srcdir)/mkinstalldirs $(DESTDIR)$(libdir)/java
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(includedir)
 	$(INSTALL) -m 0755 jlogctl $(DESTDIR)$(bindir)/jlogctl
 	$(INSTALL) -m 0755 jlogtail $(DESTDIR)$(bindir)/jlogtail
 	$(INSTALL) -m 0755 jlog_change_endian.pl $(DESTDIR)$(bindir)/jlog_change_endian
 	$(INSTALL) -m 0755 jlog_sanity_check.pl $(DESTDIR)$(bindir)/jlog_sanity_check
 	$(INSTALL) -m 0755 libjlog.a $(DESTDIR)$(libdir)/libjlog.a
-	$(INSTALL) -m 0644 java/jlog.jar $(DESTDIR)$(libdir)/java/jlog.jar
-	$(INSTALL) -m 0755 java/libjlog.jnilib $(DESTDIR)$(libdir)/java/libjlog.jnilib
-	$(LN_S) -f $(DESTDIR)$(libdir)/java/libjlog.jnilib $(DESTDIR)$(libdir)/java/libjnijlog.so
 	$(INSTALL) -m 0755 libjlog.$(DOTSO) $(DESTDIR)$(libdir)/$(LIBLONG)
 	$(LN_S) -f $(LIBLONG) $(DESTDIR)$(libdir)/$(LIBSHORT)
 	$(LN_S) -f $(LIBLONG) $(DESTDIR)$(libdir)/$(LIBMAJOR)
@@ -128,6 +124,12 @@ install:
 	$(INSTALL) -m 0644 jlog_private.h $(DESTDIR)$(includedir)/jlog_private.h
 	$(INSTALL) -m 0644 jlog_io.h $(DESTDIR)$(includedir)/jlog_io.h
 	$(INSTALL) -m 0644 jlog_config.h $(DESTDIR)$(includedir)/jlog_config.h
+
+java-bits-install:
+	$(srcdir)/mkinstalldirs $(DESTDIR)$(libdir)/java
+	$(INSTALL) -m 0644 java/jlog.jar $(DESTDIR)$(libdir)/java/jlog.jar
+	$(INSTALL) -m 0755 java/libjlog.jnilib $(DESTDIR)$(libdir)/java/libjlog.jnilib
+	$(LN_S) -f $(DESTDIR)$(libdir)/java/libjlog.jnilib $(DESTDIR)$(libdir)/java/libjnijlog.so
 
 install-perl:
 	cd perl ; make install DESTDIR=$(DESTDIR) INSTALLDIRS=vendor
