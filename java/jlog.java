@@ -188,12 +188,6 @@ public class jlog {
 
   static {
     try {
-      System.loadLibrary("jlog");
-   } catch (Exception e) {
-     System.err.println("Cannot load jlog library: " + e);
-     System.exit(-1);
-   }
-    try {
       System.loadLibrary("jnijlog");
    } catch (Exception e) {
      System.err.println("Cannot load jlog JNI library: " + e);
