@@ -129,7 +129,7 @@ java-bits-install:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(libdir)/java
 	$(INSTALL) -m 0644 java/jlog.jar $(DESTDIR)$(libdir)/java/jlog.jar
 	$(INSTALL) -m 0755 java/libjlog.jnilib $(DESTDIR)$(libdir)/java/libjlog.jnilib
-	$(LN_S) -f $(DESTDIR)$(libdir)/java/libjlog.jnilib $(DESTDIR)$(libdir)/java/libjnijlog.so
+	$(LN_S) -f libjlog.jnilib $(DESTDIR)$(libdir)/java/libjnijlog.so
 
 install-perl:
 	cd perl ; make install DESTDIR=$(DESTDIR) INSTALLDIRS=vendor
