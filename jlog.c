@@ -1528,6 +1528,20 @@ int jlog_ctx_add_subscriber_copy_checkpoint(jlog_ctx *old_ctx, const char *new,
   return 0;
 }
 
+int jlog_ctx_set_subscriber_checkpoint(jlog_ctx *ctx, const char *s,
+                                const jlog_id *checkpoint) 
+{
+
+  if (jlog_ctx_add_subscriber(ctx, s, JLOG_BEGIN)) {
+    if (errno != EEXIST) {
+      return -1;
+    }
+  }
+
+  return __jlog_set_checkpoint(ctx, s, checkpoint);
+}
+
+
 int jlog_ctx_write(jlog_ctx *ctx, const void *data, size_t len) {
   jlog_message m;
   m.mess = (void *)data;

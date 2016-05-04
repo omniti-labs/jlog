@@ -147,6 +147,8 @@ JLOG_API(int)       jlog_ctx_add_subscriber(jlog_ctx *ctx, const char *subscribe
 JLOG_API(int)       jlog_ctx_add_subscriber_copy_checkpoint(jlog_ctx *ctx, 
                                                             const char *new_subscriber,
                                                             const char *old_subscriber);
+JLOG_API(int)       jlog_ctx_set_subscriber_checkpoint(jlog_ctx *ctx, const char *subscriber,
+                                            const jlog_id *checkpoint);
 JLOG_API(int)       jlog_ctx_remove_subscriber(jlog_ctx *ctx, const char *subscriber);
 
 JLOG_API(int)       jlog_ctx_write(jlog_ctx *ctx, const void *message, size_t mess_len);
