@@ -80,7 +80,7 @@ jlogtail: libjlog.a jlogtail.o
 	$(CC) $(CFLAGS) -o jlogtail jlogtail.o libjlog.a $(LDFLAGS) $(LIBS)
 
 libjlog.$(DOTSO): $(SOOBJS)
-	$(SHLD) $(LD_LIBJLOG_VERSION) -o libjlog.$(DOTSO) $(SOOBJS) $(LDFLAGS) $(LIBS)
+	$(SHLD) $(LD_LIBJLOG_VERSION) -o libjlog.$(DOTSO) $(SOOBJS) $(CFLAGS) $(LDFLAGS) $(LIBS)
 
 libjlog.a:	$(AOBJS)
 	$(AR) cr libjlog.a $(AOBJS)
