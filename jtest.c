@@ -49,6 +49,10 @@ extern int open(const char *, int);
 extern int creat(const char *, int);
 #endif
 
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
 #ifndef MIN
 #define  MIN(x, y)               ((x) < (y) ? (x) : (y))
 #endif
@@ -58,12 +62,13 @@ extern int creat(const char *, int);
 #endif
 
 #define SUBSCRIBER "voyeur"
+#define CHECKPOINT_SUBSCRIBER "voyeur-check"
 #define LOGNAME    "/tmp/jtest.foo"
 jlog_ctx *ctx;
 
 void usage() {
   fprintf(stderr,
-          "options:\n\tinit\n\tread <count>\n\twrite <len> <count>\n\trepair\n");
+          "options:\n\tinit\n\tread <count>\n\twrite <len> <count>\n\trepair\n\ttwo_checkpoints <count>");
 }
 
 void jcreate() {
@@ -78,7 +83,7 @@ void jcreate() {
 }
 
 /*
-  In an errort to test all functionality of the repair function, we add
+  In an effort to test all functionality of the repair function, we add
   the follow to the jlog directory:
      file 00000001, arbitrary contents
      file 00000003, arbitrary contents
@@ -212,6 +217,92 @@ void jopenr(char *s, int expect) {
   }
   jlog_ctx_close(ctx);
 }
+
+
+void jopenr_two_checks(const char *sub, const char *check_sub, int expect) {
+  char begins[20], ends[20];
+  jlog_id begin, end, checkpoint;
+  int count, pass = 0, orig_expect = expect;
+  jlog_message message;
+
+  ctx = jlog_new(LOGNAME);
+  if(jlog_ctx_open_reader(ctx, sub) != 0) {
+    fprintf(stderr, "jlog_ctx_open_reader failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+    exit(-1);
+  }
+
+  /* add our special trailing check point subscriber */
+  if (jlog_ctx_add_subscriber(ctx, check_sub, JLOG_BEGIN) != 0 && errno != EEXIST) {
+    fprintf(stderr, "jlog_ctx_add_subscriber failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+    exit(-1);
+  }
+
+  /* now move the checkpoint subscriber to where the real reader is */
+  if (jlog_get_checkpoint(ctx, sub, &checkpoint) != 0) {
+    fprintf(stderr, "jlog_get_checkpoint failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+    exit(-1);
+  }
+  
+  if (jlog_ctx_set_subscriber_checkpoint(ctx, check_sub, &checkpoint) != 0) {
+    fprintf(stderr, "jlog_ctx_set_subscriber_checkpoint failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+    exit(-1);
+  }
+
+ AGAIN:
+  pass++;
+  /* now we can read and eventually rewind to wherever checkpoint is */
+  while(expect > 0) {
+    if((count = jlog_ctx_read_interval(ctx, &begin, &end)) == -1) {
+      fprintf(stderr, "jlog_ctx_read_interval failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+      exit(-1);
+    }
+    jlog_snprint_logid(begins, sizeof(begins), &begin);
+    jlog_snprint_logid(ends, sizeof(ends), &end);
+    /* printf("reader [%s]  (%s, %s] count: %d\n", s, begins, ends, count); */
+    if(count > 0) {
+      int i;
+      count = MIN(count, expect);
+      for(i=0; i<count; i++, JLOG_ID_ADVANCE(&begin)) {
+        end = begin;
+        if(jlog_ctx_read_message(ctx, &begin, &message) != 0) {
+          fprintf(stderr, "read failed: %d\n", jlog_ctx_err(ctx));
+        } else {
+          expect--;
+          jlog_snprint_logid(begins, sizeof(begins), &begin);
+          fprintf(stderr, "[%7d] read: [%s]\n\t'%.*s'\n", expect, begins,
+                  message.mess_len, (char *)message.mess);
+        }
+      }
+      if(jlog_ctx_read_checkpoint(ctx, &end) != 0) {
+        fprintf(stderr, "checkpoint failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+      } else {
+        fprintf(stderr, "\tcheckpointed...\n");
+      }
+    }
+  }
+
+  /* move checkpoint to our original position */
+  if (jlog_get_checkpoint(ctx, check_sub, &checkpoint) != 0) {
+    fprintf(stderr, "jlog_get_checkpoint failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+    exit(-1);
+  }
+      
+  if (jlog_ctx_read_checkpoint(ctx, &checkpoint) != 0) {
+    fprintf(stderr, "checkpoint failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+  } else {
+    fprintf(stderr, "\trewound checkpoint...\n");
+    expect = orig_expect;
+  }
+
+  if (pass < 2) {
+    goto AGAIN;
+  }
+
+  fprintf(stderr, "\tpass 2 complete");
+  jlog_ctx_close(ctx);
+}
+
+
 int main(int argc, char **argv) {
   int i;
 #if _WIN32
@@ -243,7 +334,13 @@ int main(int argc, char **argv) {
       i++;
       jrepair();
       exit(0);
-    } else {
+    } else if (!strcmp(argv[i], "two_checkpoints")) {
+      i++;
+      jopenr_two_checks(SUBSCRIBER, CHECKPOINT_SUBSCRIBER, atoi(argv[i]));
+      exit(0);
+    }
+
+    else {
       fprintf(stderr, "command '%s' not understood\n", argv[i]);
       usage();
     }
