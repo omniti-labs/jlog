@@ -61,9 +61,10 @@ struct _jlog_file {
   int refcnt;
   int locked;
   pthread_mutex_t lock;
+  uint8_t multi_process;
 };
 
-jlog_file *jlog_file_open(const char *path, int flags, int mode)
+jlog_file *jlog_file_open(const char *path, int flags, int mode, int multi_process)
 {
   struct stat sb;
   jlog_file_id id;
@@ -111,6 +112,7 @@ jlog_file *jlog_file_open(const char *path, int flags, int mode)
   f->fd = fd;
   f->refcnt = 1;
   f->locked = 0;
+  f->multi_process = multi_process;
   pthread_mutex_init(&(f->lock), NULL);
   if (!jlog_hash_store(&jlog_files, (void *)&f->id, sizeof(jlog_file_id), f)) {
     while (close(f->fd) == -1 && errno == EINTR) ;
@@ -141,20 +143,24 @@ int jlog_file_lock(jlog_file *f)
   struct flock fl;
   int frv;
 
-  memset(&fl, 0, sizeof(fl));
-  fl.l_type = F_WRLCK;
-  fl.l_whence = SEEK_SET;
-  fl.l_start = 0;
-  fl.l_len = 0;
-
   if (pthread_mutex_lock(&(f->lock)) != 0) return 0;
-  while ((frv = fcntl(f->fd, F_SETLKW, &fl)) == -1 && (errno == EINTR || errno == EAGAIN)) ;
-  if (frv != 0) {
-    int save = errno;
-    pthread_mutex_unlock(&(f->lock));
-    errno = save;
-    return 0;
+
+  if (f->multi_process != 0) {
+    memset(&fl, 0, sizeof(fl));
+    fl.l_type = F_WRLCK;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = 0;
+    fl.l_len = 0;
+
+    while ((frv = fcntl(f->fd, F_SETLKW, &fl)) == -1 && (errno == EINTR || errno == EAGAIN)) ;
+    if (frv != 0) {
+      int save = errno;
+      pthread_mutex_unlock(&(f->lock));
+      errno = save;
+      return 0;
+    }
   }
+
   f->locked = 1;
   return 1;
 }
@@ -166,15 +172,17 @@ int jlog_file_unlock(jlog_file *f)
 
   if (!f->locked) return 0;
 
-  memset(&fl, 0, sizeof(fl));
-  fl.l_type = F_UNLCK;
-  fl.l_whence = SEEK_SET;
-  fl.l_start = 0;
-  fl.l_len = 0;
+  if (f->multi_process != 0) {
+    memset(&fl, 0, sizeof(fl));
+    fl.l_type = F_UNLCK;
+    fl.l_whence = SEEK_SET;
+    fl.l_start = 0;
+    fl.l_len = 0;
 
-  while ((frv = fcntl(f->fd, F_SETLKW, &fl)) == -1 && (errno == EINTR || errno == EAGAIN)) ;
-  if (frv != 0) return 0;
-  f->locked = 0;
+    while ((frv = fcntl(f->fd, F_SETLKW, &fl)) == -1 && (errno == EINTR || errno == EAGAIN)) ;
+    if (frv != 0) return 0;
+    f->locked = 0;
+  }
   pthread_mutex_unlock(&(f->lock));
   return 1;
 }
@@ -199,6 +207,18 @@ int jlog_file_pwrite(jlog_file *f, const void *buf, size_t nbyte, off_t offset)
     if (rv <= 0) return 0;
     nbyte -= rv;
     offset += rv;
+  }
+  return 1;
+}
+
+int jlog_file_pwritev(jlog_file *f, const struct iovec *vecs, int iov_count, off_t offset) 
+{
+  ssize_t rv = 0;
+  while (1) {
+    rv = pwritev(f->fd, vecs, iov_count, offset);
+    if (rv == -1 && errno == EINTR) continue;
+    if (rv <= 0) return 0;
+    break;
   }
   return 1;
 }

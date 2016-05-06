@@ -49,6 +49,7 @@
 #undef HAVE_TIME_H
 #undef HAVE_SYS_TIME_H
 #undef HAVE_SYS_STAT_H
+#undef HAVE_SYS_UIO_H
 #undef HAVE_INT64_T
 #undef HAVE_INTXX_T
 #undef HAVE_LONG_LONG_INT
