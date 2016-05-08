@@ -71,6 +71,7 @@
 
 #include "jlog_config.h"
 #include "jlog_private.h"
+#include "jlog_compress.h"
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -97,8 +98,12 @@
 #endif
 
 #include "fassert.h"
+#include <pthread.h>
 
 #define BUFFERED_INDICES 1024
+#define PRE_COMMIT_BUFFER_SIZE_DEFAULT 0
+#define IS_COMPRESS_MAGIC(ctx) (((ctx)->meta->hdr_magic & DEFAULT_HDR_MAGIC_COMPRESSION) == DEFAULT_HDR_MAGIC_COMPRESSION)
+
 
 static jlog_file *__jlog_open_writer(jlog_ctx *ctx);
 static int __jlog_close_writer(jlog_ctx *ctx);
@@ -111,6 +116,7 @@ static int __jlog_resync_index(jlog_ctx *ctx, u_int32_t log, jlog_id *last, int 
 static jlog_file *__jlog_open_named_checkpoint(jlog_ctx *ctx, const char *cpname, int flags);
 static int __jlog_mmap_reader(jlog_ctx *ctx, u_int32_t log);
 static int __jlog_munmap_reader(jlog_ctx *ctx);
+static int __jlog_metastore_atomic_increment(jlog_ctx *ctx);
 
 int jlog_snprint_logid(char *b, int n, const jlog_id *id) {
   return snprintf(b, n, "%08x:%08x", id->log, id->marker);
@@ -118,7 +124,13 @@ int jlog_snprint_logid(char *b, int n, const jlog_id *id) {
 
 int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
 {
-  jlog_message_header hdr;
+  jlog_message_header_compressed hdr;
+  size_t hdr_size = sizeof(jlog_message_header);
+  uint32_t *message_disk_len = &hdr.mlen;
+  if (IS_COMPRESS_MAGIC(ctx)) {
+    hdr_size = sizeof(jlog_message_header_compressed);
+    message_disk_len = &hdr.compressed_len;
+  }
   char *this, *next, *afternext = NULL, *mmap_end;
   int i, invalid_count = 0;
   struct {
@@ -158,37 +170,37 @@ int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
   mmap_end = (char*)ctx->mmap_base + ctx->mmap_len;
   /* these values will cause us to fall right into the error clause and
    * start searching for a valid header from offset 0 */
-  this = (char*)ctx->mmap_base - sizeof(hdr);
+  this = (char*)ctx->mmap_base - hdr_size;
   hdr.reserved = ctx->meta->hdr_magic;
   hdr.mlen = 0;
 
-  while (this + sizeof(hdr) <= mmap_end) {
-    next = this + sizeof(hdr) + hdr.mlen;
+  while (this + hdr_size <= mmap_end) {
+    next = this + hdr_size + *message_disk_len;
     if (next <= (char *)ctx->mmap_base) goto error;
     if (next == mmap_end) {
       this = next;
       break;
     }
-    if (next + sizeof(hdr) > mmap_end) goto error;
-    memcpy(&hdr, next, sizeof(hdr));
+    if (next + hdr_size > mmap_end) goto error;
+    memcpy(&hdr, next, hdr_size);
     if (hdr.reserved != ctx->meta->hdr_magic) goto error;
     this = next;
     continue;
   error:
-    for (next = this + sizeof(hdr); next + sizeof(hdr) <= mmap_end; next++) {
-      memcpy(&hdr, next, sizeof(hdr));
+    for (next = this + hdr_size; next + hdr_size <= mmap_end; next++) {
+      memcpy(&hdr, next, hdr_size);
       if (hdr.reserved == ctx->meta->hdr_magic) {
-        afternext = next + sizeof(hdr) + hdr.mlen;
+        afternext = next + hdr_size + *message_disk_len;
         if (afternext <= (char *)ctx->mmap_base) continue;
         if (afternext == mmap_end) break;
-        if (afternext + sizeof(hdr) > mmap_end) continue;
-        memcpy(&hdr, afternext, sizeof(hdr));
+        if (afternext + hdr_size > mmap_end) continue;
+        memcpy(&hdr, afternext, hdr_size);
         if (hdr.reserved == ctx->meta->hdr_magic) break;
       }
     }
     /* correct for while loop entry condition */
     if (this < (char *)ctx->mmap_base) this = ctx->mmap_base;
-    if (next + sizeof(hdr) > mmap_end) break;
+    if (next + hdr_size > mmap_end) break;
     if (next > this) TAG_INVALID(this, next);
     this = afternext;
   }
@@ -238,12 +250,19 @@ finish:
 
 int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log, int verbose)
 {
-  jlog_message_header hdr;
+  jlog_message_header_compressed hdr;
+  size_t hdr_size = sizeof(jlog_message_header);
+  uint32_t *message_disk_len = &hdr.mlen;
   char *this, *next, *mmap_end;
   int i;
   time_t timet;
   struct tm tm;
   char tbuff[128];
+
+  if (IS_COMPRESS_MAGIC(ctx)) {
+    hdr_size = sizeof(jlog_message_header_compressed);
+    message_disk_len = &hdr.compressed_len;
+  }
 
   ctx->last_error = JLOG_ERR_SUCCESS;
 
@@ -256,9 +275,9 @@ int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log, int verbose)
   mmap_end = (char*)ctx->mmap_base + ctx->mmap_len;
   this = ctx->mmap_base;
   i = 0;
-  while (this + sizeof(hdr) <= mmap_end) {
+  while (this + hdr_size <= mmap_end) {
     int initial = 1;
-    memcpy(&hdr, this, sizeof(hdr));
+    memcpy(&hdr, this, hdr_size);
     i++;
     if (hdr.reserved != ctx->meta->hdr_magic) {
       fprintf(stderr, "Message %d at [%ld] has invalid reserved value %u\n",
@@ -269,7 +288,7 @@ int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log, int verbose)
 #define PRINTMSGHDR do { if(initial) { \
   fprintf(stderr, "Message %d at [%ld] of (%lu+%u)", i, \
           (long int)(this - (char *)ctx->mmap_base), \
-          (long unsigned int)sizeof(hdr), hdr.mlen); \
+          (long unsigned int)hdr_size, *message_disk_len); \
   initial = 0; \
 } } while(0)
 
@@ -277,7 +296,7 @@ int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log, int verbose)
       PRINTMSGHDR;
     }
 
-    next = this + sizeof(hdr) + hdr.mlen;
+    next = this + hdr_size + *message_disk_len;
     if (next <= (char *)ctx->mmap_base) {
       PRINTMSGHDR;
       fprintf(stderr, " WRAPPED TO NEGATIVE OFFSET!\n");
@@ -401,6 +420,40 @@ static int __jlog_open_metastore(jlog_ctx *ctx)
 
   return 0;
 }
+
+static int __jlog_open_pre_commit(jlog_ctx *ctx)
+{
+  char file[MAXPATHLEN] = {0};
+  int len = 0;
+
+#ifdef DEBUG
+  fprintf(stderr, "__jlog_open_pre_commit\n");
+#endif
+  len = strlen(ctx->path);
+  if((len + 1 /* IFS_CH */ + 10 /* "pre_commit" */ + 1) > MAXPATHLEN) {
+#ifdef ENAMETOOLONG
+    ctx->last_errno = ENAMETOOLONG;
+#endif
+    FASSERT(0, "__jlog_open_pre_commit: filename too long");
+    ctx->last_error = JLOG_ERR_CREATE_PRE_COMMIT;
+    return -1;
+  }
+  memcpy(file, ctx->path, len);
+  file[len++] = IFS_CH;
+  memcpy(&file[len], "pre_commit", 11); /* "pre_commit" + '\0' */
+
+  ctx->pre_commit = jlog_file_open(file, O_CREAT, ctx->file_mode, ctx->multi_process);
+
+  if (!ctx->pre_commit) {
+    ctx->last_errno = errno;
+    FASSERT(0, "__jlog_open_pre_commit: file create failed");
+    ctx->last_error = JLOG_ERR_CREATE_PRE_COMMIT;
+    return -1;
+  }
+
+  return 0;
+}
+
 
 /* exported */
 int __jlog_pending_readers(jlog_ctx *ctx, u_int32_t log) {
@@ -617,6 +670,10 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
     }
     ctx->meta = base;
     ctx->meta_is_mapped = 1;
+
+    if (IS_COMPRESS_MAGIC(ctx)) {
+      jlog_set_compression_provider(ctx->meta->hdr_magic & 0xFF);
+    }
   }
 
   if (!ilocked) jlog_file_unlock(ctx->metastore);
@@ -625,6 +682,68 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
     ctx->pre_init.hdr_magic = ctx->meta->hdr_magic;
   return 0;
 }
+
+static int __jlog_map_pre_commit(jlog_ctx *ctx)
+{
+  off_t pre_commit_size = 0;
+#ifdef DEBUG
+  fprintf(stderr, "__jlog_map_pre_commit\n");
+#endif
+
+  if(ctx->pre_commit_is_mapped == 1) {
+    return 0;
+  }
+
+  if (!jlog_file_lock(ctx->pre_commit)) {
+    FASSERT(0, "__jlog_map_pre_commit: cannot get lock");
+    ctx->last_error = JLOG_ERR_LOCK;
+    return -1;
+  }
+
+  pre_commit_size = jlog_file_size(ctx->pre_commit);
+  if (pre_commit_size == 0) {
+    /* fill the pre_commit file with zero'd memory to hold incoming messages for block writes */
+    /* add space for the offset in the file at the front of the buffer */
+    char *space = calloc(1, ctx->pre_commit_buffer_len + sizeof(uint32_t));
+    if (!jlog_file_pwrite(ctx->pre_commit, space, ctx->pre_commit_buffer_len + sizeof(uint32_t), 0)) {
+      jlog_file_unlock(ctx->pre_commit);
+      FASSERT(0, "jlog_file_pwrite failed");
+      ctx->last_error = JLOG_ERR_FILE_WRITE;
+      free(space);
+      return -1;
+    }
+    if (ctx->meta->safety == JLOG_SAFE) {
+      jlog_file_sync(ctx->pre_commit);
+    }
+
+    pre_commit_size = jlog_file_size(ctx->pre_commit);
+    free(space);
+  }
+  
+  /* now map it */
+  if (jlog_file_map_rdwr(ctx->pre_commit, &ctx->pre_commit_buffer, &ctx->pre_commit_buffer_len) == 0) {
+      jlog_file_unlock(ctx->pre_commit);
+      FASSERT(0, "jlog_file_map_rdwr failed");
+      ctx->last_error = JLOG_ERR_PRE_COMMIT_OPEN;
+      return -1;
+  }
+
+  /* set our file pointer to the prefix space in the buffer */
+  ctx->pre_commit_pointer = (uint32_t *)(ctx->pre_commit_buffer);
+
+  /* move the writable buffer past the offset pointer */
+  ctx->pre_commit_buffer = ctx->pre_commit_buffer + sizeof(uint32_t);
+  ctx->pre_commit_end = ctx->pre_commit_buffer + ctx->pre_commit_buffer_len;
+
+  /* restore the current pos */
+  ctx->pre_commit_pos = ctx->pre_commit_buffer + *ctx->pre_commit_pointer;
+
+  /* we're good */
+  ctx->pre_commit_is_mapped = 1;
+  jlog_file_unlock(ctx->pre_commit);
+  return 0;
+}
+
 
 int jlog_get_checkpoint(jlog_ctx *ctx, const char *s, jlog_id *id) {
   jlog_file *f;
@@ -705,6 +824,18 @@ static int __jlog_close_metastore(jlog_ctx *ctx) {
     munmap((void *)ctx->meta, sizeof(*ctx->meta));
     ctx->meta = &ctx->pre_init;
     ctx->meta_is_mapped = 0;
+  }
+  return 0;
+}
+
+static int __jlog_close_pre_commit(jlog_ctx *ctx) {
+  if (ctx->pre_commit) {
+    jlog_file_close(ctx->pre_commit);
+    ctx->pre_commit = NULL;
+  }
+  if (ctx->pre_commit_is_mapped) {
+    munmap((void *)ctx->pre_commit_buffer, ctx->pre_commit_buffer_len);
+    ctx->pre_commit_is_mapped = 0;
   }
   return 0;
 }
@@ -877,13 +1008,20 @@ static int __jlog_close_indexer(jlog_ctx *ctx) {
 }
 
 static int
-___jlog_resync_index(jlog_ctx *ctx, u_int32_t log, jlog_id *last,
-                     int *closed) {
-  jlog_message_header logmhdr;
-  int i, second_try = 0;
-  off_t index_off, data_off, data_len;
-  u_int64_t index;
+___jlog_resync_index(jlog_ctx *ctx, u_int32_t log, jlog_id *last, int *closed) 
+{
   u_int64_t indices[BUFFERED_INDICES];
+  jlog_message_header_compressed logmhdr;
+  uint32_t *message_disk_len = &logmhdr.mlen;
+  off_t index_off, data_off, data_len;
+  size_t hdr_size = sizeof(jlog_message_header);
+  u_int64_t index;
+  int i, second_try = 0;
+
+  if (IS_COMPRESS_MAGIC(ctx)) {
+    hdr_size = sizeof(jlog_message_header_compressed);
+    message_disk_len = &logmhdr.compressed_len;
+  }
 
   ctx->last_error = JLOG_ERR_SUCCESS;
   if(closed) *closed = 0;
@@ -962,17 +1100,17 @@ restart:
 
   if (index_off > 0) {
     /* We are adding onto a partial index so we must advance a record */
-    if (!jlog_file_pread(ctx->data, &logmhdr, sizeof(logmhdr), data_off))
+    if (!jlog_file_pread(ctx->data, &logmhdr, hdr_size, data_off))
       SYS_FAIL(JLOG_ERR_FILE_READ);
-    if ((data_off += sizeof(logmhdr) + logmhdr.mlen) > data_len)
+    if ((data_off += hdr_size + *message_disk_len) > data_len)
       RESTART;
   }
 
   i = 0;
-  while (data_off + sizeof(logmhdr) <= data_len) {
+  while (data_off + hdr_size <= data_len) {
     off_t next_off = data_off;
 
-    if (!jlog_file_pread(ctx->data, &logmhdr, sizeof(logmhdr), data_off))
+    if (!jlog_file_pread(ctx->data, &logmhdr, hdr_size, data_off))
       SYS_FAIL(JLOG_ERR_FILE_READ);
     if (logmhdr.reserved != ctx->meta->hdr_magic) {
 #ifdef DEBUG
@@ -980,7 +1118,7 @@ restart:
 #endif
       SYS_FAIL(JLOG_ERR_FILE_CORRUPT);
     }
-    if ((next_off += sizeof(logmhdr) + logmhdr.mlen) > data_len)
+    if ((next_off += hdr_size + *message_disk_len) > data_len)
       break;
 
     /* Write our new index offset */
@@ -1069,6 +1207,9 @@ jlog_ctx *jlog_new(const char *path) {
   ctx->file_mode = DEFAULT_FILE_MODE;
   ctx->context_mode = JLOG_NEW;
   ctx->path = strdup(path);
+  ctx->pre_commit_buffer_len = PRE_COMMIT_BUFFER_SIZE_DEFAULT;
+  ctx->multi_process = 1;
+  pthread_mutex_init(&ctx->write_lock, NULL);
   //  fassertxsetpath(path);
   return ctx;
 }
@@ -1083,7 +1224,7 @@ size_t jlog_raw_size(jlog_ctx *ctx) {
   struct dirent *de;
   size_t totalsize = 0;
   int ferr, len;
-  char filename[MAXPATHLEN];
+  char filename[MAXPATHLEN] = {0};
 
   d = opendir(ctx->path);
   if(!d) return 0;
@@ -1165,10 +1306,105 @@ int jlog_ctx_alter_safety(jlog_ctx *ctx, jlog_safety safety) {
   return -1;
 }
 
-int jlog_ctx_set_multi_process(jlog_ctx *ctx, int mp) {
+int jlog_ctx_set_multi_process(jlog_ctx *ctx, uint8_t mp) {
   ctx->multi_process = mp;
   return 0;
 }
+
+int jlog_ctx_set_use_compression(jlog_ctx *ctx, uint8_t use) {
+  if (use != 0) {
+    ctx->pre_init.hdr_magic = DEFAULT_HDR_MAGIC_COMPRESSION | JLOG_COMPRESSION_LZ4;
+    jlog_set_compression_provider(JLOG_COMPRESSION_LZ4);
+  } else {
+    ctx->pre_init.hdr_magic = DEFAULT_HDR_MAGIC;
+  }    
+  return 0;
+}
+
+int jlog_ctx_set_compression_provider(jlog_ctx *ctx, jlog_compression_provider_choice cp) {
+  if ((ctx->pre_init.hdr_magic & DEFAULT_HDR_MAGIC_COMPRESSION) == DEFAULT_HDR_MAGIC_COMPRESSION) {
+    /* compression mode is on, set the proper flag */
+    ctx->pre_init.hdr_magic = DEFAULT_HDR_MAGIC_COMPRESSION | cp;
+    jlog_set_compression_provider(cp);
+  }
+  return 0;
+}
+
+int jlog_ctx_set_pre_commit_buffer_size(jlog_ctx *ctx, size_t s) {
+  ctx->pre_commit_buffer_len = s;
+  return 0;
+}
+
+int jlog_ctx_flush_pre_commit_buffer(jlog_ctx *ctx) 
+{
+  off_t current_offset = 0;
+
+  /* noop if we aren't using a pre_commit buffer */
+  if (ctx->pre_commit_buffer_len == 0) {
+    return 0;
+  }
+
+  ctx->last_error = JLOG_ERR_SUCCESS;
+  if(ctx->context_mode != JLOG_APPEND) {
+    ctx->last_error = JLOG_ERR_ILLEGAL_WRITE;
+    ctx->last_errno = EPERM;
+    return -1;
+  }
+  pthread_mutex_lock(&ctx->write_lock);
+ begin:
+  __jlog_open_writer(ctx);
+  if(!ctx->data) {
+    ctx->last_error = JLOG_ERR_FILE_OPEN;
+    ctx->last_errno = errno;
+    pthread_mutex_unlock(&ctx->write_lock);
+    return -1;
+  }
+
+  if (!jlog_file_lock(ctx->data)) {
+    ctx->last_error = JLOG_ERR_LOCK;
+    ctx->last_errno = errno;
+    pthread_mutex_unlock(&ctx->write_lock);
+    return -1;
+  }
+
+  if ((current_offset = jlog_file_size(ctx->data)) == -1)
+    SYS_FAIL(JLOG_ERR_FILE_SEEK);
+  if(ctx->meta->unit_limit <= current_offset) {
+    jlog_file_unlock(ctx->data);
+    __jlog_close_writer(ctx);
+    __jlog_metastore_atomic_increment(ctx);
+    goto begin;
+  }
+
+  /* we have to flush our pre_commit_buffer out to the real log */
+  if (!jlog_file_pwrite(ctx->data, ctx->pre_commit_buffer, 
+                        ctx->pre_commit_pos - ctx->pre_commit_buffer, 
+                        current_offset)) {
+    FASSERT(0, "jlog_file_pwrite failed in jlog_ctx_write_message");
+    SYS_FAIL(JLOG_ERR_FILE_WRITE);
+  }
+
+  current_offset += ctx->pre_commit_pos - ctx->pre_commit_buffer;
+
+  /* rewind the pre_commit_buffer to beginning */
+  ctx->pre_commit_pos = ctx->pre_commit_buffer;
+  /* ensure we save this in the mmapped data */
+  *ctx->pre_commit_pointer = 0;
+
+  if(ctx->meta->unit_limit <= current_offset) {
+    jlog_file_unlock(ctx->data);
+    __jlog_close_writer(ctx);
+    __jlog_metastore_atomic_increment(ctx);
+    pthread_mutex_unlock(&ctx->write_lock);
+    return 0;
+  }
+ finish:
+  jlog_file_unlock(ctx->data);
+  pthread_mutex_unlock(&ctx->write_lock);
+  if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
+  return -1;
+}
+
 
 int jlog_ctx_alter_journal_size(jlog_ctx *ctx, size_t size) {
   if(ctx->meta->unit_limit == size) return 0;
@@ -1194,9 +1430,11 @@ int jlog_ctx_open_writer(jlog_ctx *ctx) {
   int rv;
   struct stat sb;
 
+  pthread_mutex_lock(&ctx->write_lock);
   ctx->last_error = JLOG_ERR_SUCCESS;
   if(ctx->context_mode != JLOG_NEW) {
     ctx->last_error = JLOG_ERR_ILLEGAL_OPEN;
+    pthread_mutex_unlock(&ctx->write_lock);
     return -1;
   }
   ctx->context_mode = JLOG_APPEND;
@@ -1212,7 +1450,18 @@ int jlog_ctx_open_writer(jlog_ctx *ctx) {
     FASSERT(0, "jlog_ctx_open_writer calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
+  if (__jlog_open_pre_commit(ctx) != 0) {
+    FASSERT(0, "jlog_ctx_open_writer calls jlog_open_pre_commit");
+    SYS_FAIL(JLOG_ERR_PRE_COMMIT_OPEN);
+  }
+
+  if (__jlog_map_pre_commit(ctx) != 0) {
+    FASSERT(0, "jlog_ctx_open_writer calls jlog_map_pre_commit");
+    SYS_FAIL(JLOG_ERR_PRE_COMMIT_OPEN);
+  }
+    
  finish:
+  pthread_mutex_unlock(&ctx->write_lock);
   if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
   ctx->context_mode = JLOG_INVALID;
   return -1;
@@ -1295,6 +1544,7 @@ int jlog_ctx_init(jlog_ctx *ctx) {
 
 int jlog_ctx_close(jlog_ctx *ctx) {
   __jlog_close_writer(ctx);
+  __jlog_close_pre_commit(ctx);
   __jlog_close_indexer(ctx);
   __jlog_close_reader(ctx);
   __jlog_close_metastore(ctx);
@@ -1306,12 +1556,11 @@ int jlog_ctx_close(jlog_ctx *ctx) {
 }
 
 static int __jlog_metastore_atomic_increment(jlog_ctx *ctx) {
-  char file[MAXPATHLEN];
+  char file[MAXPATHLEN] = {0};
 
 #ifdef DEBUG
   fprintf(stderr, "atomic increment on %u\n", ctx->current_log);
 #endif
-  memset(file, 0, sizeof(file));
   FASSERT(ctx != NULL, "__jlog_metastore_atomic_increment");
   if(ctx->data) SYS_FAIL(JLOG_ERR_NOT_SUPPORTED);
   if (!jlog_file_lock(ctx->metastore))
@@ -1342,10 +1591,17 @@ static int __jlog_metastore_atomic_increment(jlog_ctx *ctx) {
   if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
   return -1;
 }
+
 int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *when) {
   struct timeval now;
-  jlog_message_header hdr;
-  off_t current_offset;
+  jlog_message_header_compressed hdr;
+  off_t current_offset = 0;
+  size_t hdr_size = sizeof(jlog_message_header);
+  int i = 0;
+
+  if (IS_COMPRESS_MAGIC(ctx)) {
+    hdr_size = sizeof(jlog_message_header_compressed);
+  } 
 
   ctx->last_error = JLOG_ERR_SUCCESS;
   if(ctx->context_mode != JLOG_APPEND) {
@@ -1353,28 +1609,8 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
     ctx->last_errno = EPERM;
     return -1;
   }
- begin:
-  __jlog_open_writer(ctx);
-  if(!ctx->data) {
-    ctx->last_error = JLOG_ERR_FILE_OPEN;
-    ctx->last_errno = errno;
-    return -1;
-  }
-  if (!jlog_file_lock(ctx->data)) {
-    ctx->last_error = JLOG_ERR_LOCK;
-    ctx->last_errno = errno;
-    return -1;
-  }
 
-  if ((current_offset = jlog_file_size(ctx->data)) == -1)
-    SYS_FAIL(JLOG_ERR_FILE_SEEK);
-  if(ctx->meta->unit_limit <= current_offset) {
-    jlog_file_unlock(ctx->data);
-    __jlog_close_writer(ctx);
-    __jlog_metastore_atomic_increment(ctx);
-    goto begin;
-  }
-
+  /* build the data we want to write outside of any lock */
   hdr.reserved = ctx->meta->hdr_magic;
   if (when) {
     hdr.tv_sec = when->tv_sec;
@@ -1384,29 +1620,125 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
     hdr.tv_sec = now.tv_sec;
     hdr.tv_usec = now.tv_usec;
   }
+
+  /* we store the original message size in the header */
   hdr.mlen = mess->mess_len;
 
   struct iovec v[2];
   v[0].iov_base = (void *) &hdr;
-  v[0].iov_len = sizeof(hdr);
+  v[0].iov_len = hdr_size;
 
-  v[1].iov_base = mess->mess;
-  v[1].iov_len = mess->mess_len;
- 
-  if (!jlog_file_pwritev(ctx->data, v, 2, current_offset)) {
-    FASSERT(0, "jlog_file_pwritev failed in jlog_ctx_write_message");
-    SYS_FAIL(JLOG_ERR_FILE_WRITE);
+  /* create a stack space to compress into which is large enough for most messages to compress into */
+  char compress_space[16384] = {0};
+  v[1].iov_base = compress_space;
+  size_t compressed_len = sizeof(compress_space);
+
+  if (IS_COMPRESS_MAGIC(ctx)) {
+    if (jlog_compress(mess->mess, mess->mess_len, &v[1].iov_base, &compressed_len) != 0) {
+      FASSERT(0, "jlog_compress failed in jlog_ctx_write_message");
+      SYS_FAIL(JLOG_ERR_FILE_WRITE);
+    }
+    hdr.compressed_len = compressed_len;
+    v[1].iov_len = hdr.compressed_len;
+  } else {
+    v[1].iov_base = mess->mess;
+    v[1].iov_len = mess->mess_len;
   }
+
+  size_t total_size = v[0].iov_len + v[1].iov_len;
+
+  /* now grab the file lock and write to pre_commit or file depending */
+  /** 
+   * this needs to be synchronized as concurrent writers can 
+   * overwrite the shared ctx->data pointer as they move through
+   * individual file segments.
+   * 
+   * Thread A-> open, write to existing segment, 
+   * Thread B-> check open (already open)
+   * Thread A-> close and null out ctx->data pointer
+   * Thread B-> wha?!?
+   */
+  pthread_mutex_lock(&ctx->write_lock);
+ begin:
+  __jlog_open_writer(ctx);
+  if(!ctx->data) {
+    ctx->last_error = JLOG_ERR_FILE_OPEN;
+    ctx->last_errno = errno;
+    pthread_mutex_unlock(&ctx->write_lock);
+    return -1;
+  }
+
+  if (!jlog_file_lock(ctx->data)) {
+    ctx->last_error = JLOG_ERR_LOCK;
+    ctx->last_errno = errno;
+    pthread_mutex_unlock(&ctx->write_lock);
+    return -1;
+  }
+
+  if (ctx->pre_commit_buffer_len > 0 && 
+      ctx->pre_commit_pos + total_size > ctx->pre_commit_end) 
+    {
+    if ((current_offset = jlog_file_size(ctx->data)) == -1)
+      SYS_FAIL(JLOG_ERR_FILE_SEEK);
+    if(ctx->meta->unit_limit <= current_offset) {
+      jlog_file_unlock(ctx->data);
+      __jlog_close_writer(ctx);
+      __jlog_metastore_atomic_increment(ctx);
+      if (IS_COMPRESS_MAGIC(ctx) && v[1].iov_base != compress_space) {
+        free(v[1].iov_base);
+      }
+      goto begin;
+    }
+
+    /* we have to flush our pre_commit_buffer out to the real log */
+    if (!jlog_file_pwrite(ctx->data, ctx->pre_commit_buffer, 
+                          ctx->pre_commit_pos - ctx->pre_commit_buffer, 
+                          current_offset)) {
+      FASSERT(0, "jlog_file_pwrite failed in jlog_ctx_write_message");
+      SYS_FAIL(JLOG_ERR_FILE_WRITE);
+    }
+
+    /* rewind the pre_commit_buffer to beginning */
+    ctx->pre_commit_pos = ctx->pre_commit_buffer;
+    /* ensure we save this in the mmapped data */
+    *ctx->pre_commit_pointer = 0;
+  }
+ 
+  if (total_size <= ctx->pre_commit_buffer_len) {
+    /**
+     * Write the iovecs to the pre-commit buffer 
+     * 
+     * This is protected by the file lock on the main data file so needs no special treatment
+     */
+    for (i = 0; i < 2; i++) {
+      memcpy(ctx->pre_commit_pos, v[i].iov_base, v[i].iov_len);
+      ctx->pre_commit_pos += v[i].iov_len;
+      *ctx->pre_commit_pointer += v[i].iov_len;
+    }
+  } else {
+    /* incoming message won't fit in pre_commit buffer, write directly */
+    if (!jlog_file_pwritev(ctx->data, v, 2, current_offset)) {
+      FASSERT(0, "jlog_file_pwritev failed in jlog_ctx_write_message");
+      SYS_FAIL(JLOG_ERR_FILE_WRITE);
+    }
+  }
+
   current_offset += v[0].iov_len + v[1].iov_len;
+  
+  if (IS_COMPRESS_MAGIC(ctx) && v[1].iov_base != compress_space) {
+    free(v[1].iov_base);
+  }
 
   if(ctx->meta->unit_limit <= current_offset) {
     jlog_file_unlock(ctx->data);
     __jlog_close_writer(ctx);
     __jlog_metastore_atomic_increment(ctx);
+    pthread_mutex_unlock(&ctx->write_lock);
     return 0;
   }
  finish:
   jlog_file_unlock(ctx->data);
+  pthread_mutex_unlock(&ctx->write_lock);
   if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
   return -1;
 }
@@ -1659,6 +1991,15 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
   off_t index_len;
   u_int64_t data_off;
   int with_lock = 0;
+  size_t hdr_size = 0;
+  uint32_t *message_disk_len = &m->aligned_header.mlen;
+
+  if (IS_COMPRESS_MAGIC(ctx)) {
+    hdr_size = sizeof(jlog_message_header_compressed);
+    message_disk_len = &m->aligned_header.compressed_len;
+  } else {
+    hdr_size = sizeof(jlog_message_header);
+  }
 
  once_more_with_lock:
 
@@ -1712,7 +2053,7 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
   if(__jlog_mmap_reader(ctx, id->log) != 0)
     SYS_FAIL(JLOG_ERR_FILE_READ);
 
-  if(data_off > ctx->mmap_len - sizeof(jlog_message_header)) {
+  if(data_off > ctx->mmap_len - hdr_size) {
 #ifdef DEBUG
     fprintf(stderr, "read idx off end: %llu\n", data_off);
 #endif
@@ -1720,9 +2061,9 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
   }
 
   memcpy(&m->aligned_header, ((u_int8_t *)ctx->mmap_base) + data_off,
-         sizeof(jlog_message_header));
+         hdr_size);
 
-  if(data_off + sizeof(jlog_message_header) + m->aligned_header.mlen > ctx->mmap_len) {
+  if(data_off + hdr_size + *message_disk_len > ctx->mmap_len) {
 #ifdef DEBUG
     fprintf(stderr, "read idx off end: %llu %llu\n", data_off, ctx->mmap_len);
 #endif
@@ -1730,8 +2071,20 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
   }
 
   m->header = &m->aligned_header;
-  m->mess_len = m->header->mlen;
-  m->mess = (((u_int8_t *)ctx->mmap_base) + data_off + sizeof(jlog_message_header));
+
+  if (IS_COMPRESS_MAGIC(ctx)) {
+    if (ctx->mess_data_size < m->aligned_header.mlen) {
+      ctx->mess_data = realloc(ctx->mess_data, m->aligned_header.mlen * 2);
+      ctx->mess_data_size = m->aligned_header.mlen * 2;
+    }
+    jlog_decompress((((char *)ctx->mmap_base) + data_off + hdr_size),
+                    m->header->compressed_len, ctx->mess_data, ctx->mess_data_size);
+    m->mess_len = m->header->mlen;
+    m->mess = ctx->mess_data;
+  } else {
+    m->mess_len = m->header->mlen;
+    m->mess = (((u_int8_t *)ctx->mmap_base) + data_off + hdr_size);
+  }
 
  finish:
   if(with_lock) jlog_file_unlock(ctx->index);
