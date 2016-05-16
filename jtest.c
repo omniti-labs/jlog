@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include "jlog.h"
+#include "jlog_compress.h"
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -68,12 +69,31 @@ jlog_ctx *ctx;
 
 void usage() {
   fprintf(stderr,
-          "options:\n\tinit\n\tread <count>\n\twrite <len> <count>\n\trepair\n\ttwo_checkpoints <count>");
+          "options:\n"
+          "\tinit <path>\n"
+          "\tinit_compressed <path>\n"
+          "\tread <count>\n"
+          "\twrite <len> <count>\n"
+          "\trepair\n"
+          "\ttwo_checkpoints <count>\n");
 }
 
-void jcreate() {
-  ctx = jlog_new(LOGNAME);
-  jlog_ctx_alter_journal_size(ctx, 1024);
+static void
+print_rate(hrtime_t s, hrtime_t f, uint64_t cnt) {
+  double d;
+  if(cnt) {
+    d = (double)cnt * 1000000000;
+    d /= (double)(f-s);
+    printf("output %0.2f msg/sec\n", d);
+  }
+}
+
+
+void jcreate(const char *path, int compressed) {
+  ctx = jlog_new(path);
+  jlog_ctx_set_use_compression(ctx, compressed);
+  jlog_ctx_alter_journal_size(ctx, 1024000);
+  jlog_ctx_set_pre_commit_buffer_size(ctx, 1024 * 1024);
   if(jlog_ctx_init(ctx) != 0) {
     fprintf(stderr, "jlog_ctx_init failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
   } else {
@@ -162,26 +182,47 @@ void jrepair() {
   jlog_ctx_close(ctx);
 }
 
-void jopenw(char *foo, int count) {
+void jopenw(char *foo, int count, const char *path) {
+  hrtime_t s, f;
   int i;
-  ctx = jlog_new(LOGNAME);
+
+  s = f = gethrtime();
+
+  ctx = jlog_new(path);
+
+  jlog_ctx_set_pre_commit_buffer_size(ctx, 1024 * 1024);
+  jlog_ctx_set_multi_process(ctx, 0);
   if(jlog_ctx_open_writer(ctx) != 0) {
     fprintf(stderr, "jlog_ctx_open_writer failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
     exit(-1);
-  }
-  for(i=0; i<count; i++)
+  } 
+  int cnt = 0;
+  for(i=0; i<count; i++) {
     if(jlog_ctx_write(ctx, foo, strlen(foo)) != 0)
       fprintf(stderr, "jlog_ctx_write_message failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+    
+    cnt++;
+    if (i % 1000 == 0) {
+      f = gethrtime();
+    }
 
+    if(f-s > 1000000000) {
+      print_rate(s, f, cnt);
+      cnt = 0;
+      s = f;
+    }
+  }
+  
   jlog_ctx_close(ctx);
 }
-void jopenr(char *s, int expect) {
+
+void jopenr(char *s, int expect, const char *path) {
   char begins[20], ends[20];
   jlog_id begin, end;
   int count;
   jlog_message message;
 
-  ctx = jlog_new(LOGNAME);
+  ctx = jlog_new(path);
   if(jlog_ctx_open_reader(ctx, s) != 0) {
     fprintf(stderr, "jlog_ctx_open_reader failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
     exit(-1);
@@ -309,8 +350,13 @@ int main(int argc, char **argv) {
   mem_init();
 #endif
   for(i=1; i<argc; i++) {
-    if(!strcmp(argv[i], "init")) {
-      jcreate();
+    if(!strcmp(argv[i], "init") || !strcmp(argv[i], "init_compressed")) {
+      int compress = strcmp(argv[i], "init_compressed") == 0;
+      const char *path = LOGNAME;
+      if (argc == 3) {
+        path = argv[2];
+      }
+      jcreate(path, compress);
       exit(0);
     } else if(!strcmp(argv[i], "write")) {
       int len;
@@ -323,12 +369,22 @@ int main(int argc, char **argv) {
       message[len-1] = '\n';
       message[len] = '\0';
       i++;
-      jopenw(message, atoi(argv[i]));
+      int count = atoi(argv[i++]);
+      const char *path = LOGNAME;
+      if (i < argc) {
+        path = argv[i];
+      }
+      jopenw(message, count, path);
       exit(0);
     } else if(!strcmp(argv[i], "read")) {
       if(i+1 >= argc) { usage(); exit(-1); }
       i++;
-      jopenr(SUBSCRIBER, atoi(argv[i]));
+      int count = atoi(argv[i++]);
+      const char *path = LOGNAME;
+      if (i < argc) {
+        path = argv[i];
+      }
+      jopenr(SUBSCRIBER, count, path);
       exit(0);
     } else if(!strcmp(argv[i], "repair")) {
       i++;

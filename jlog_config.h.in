@@ -43,6 +43,7 @@
 #undef HAVE_ERRNO_H
 #undef HAVE_STRING_H
 #undef HAVE_STDLIB_H
+#undef HAVE_LZ4_H
 #undef HAVE_UNISTD_H
 #undef HAVE_SYS_PARAM_H
 #undef HAVE_SYS_MMAN_H

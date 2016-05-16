@@ -42,6 +42,7 @@
 #define DEFAULT_UNIT_LIMIT (4*1024*1024)
                          /* 4 Megabytes */
 #define DEFAULT_HDR_MAGIC 0x663A7318
+#define DEFAULT_HDR_MAGIC_COMPRESSION 0x15106A00
 #define DEFAULT_SAFETY JLOG_ALMOST_SAFE
 #define INDEX_EXT ".idx"
 #define MAXLOGPATHLEN (MAXPATHLEN - (8+sizeof(INDEX_EXT)))
@@ -65,8 +66,15 @@ struct _jlog_meta_info {
 
 struct _jlog_ctx {
   struct _jlog_meta_info *meta;
+  pthread_mutex_t write_lock;
   int       meta_is_mapped;
+  int       pre_commit_is_mapped;
   uint8_t   multi_process;
+  void      *pre_commit_buffer;
+  void      *pre_commit_pos;
+  void      *pre_commit_end;
+  size_t    pre_commit_buffer_len;
+  uint32_t  *pre_commit_pointer;
   struct _jlog_meta_info pre_init; /* only used before we're opened */
   jlog_mode context_mode;
   char      *path;
@@ -76,6 +84,7 @@ struct _jlog_ctx {
   jlog_file *index;
   jlog_file *checkpoint;
   jlog_file *metastore;
+  jlog_file *pre_commit;
   void     *mmap_base;
   size_t    mmap_len;
   char     *subscriber_name;
@@ -83,6 +92,17 @@ struct _jlog_ctx {
   int       last_errno;
   jlog_error_func error_func;
   void *error_ctx;
+
+  /**
+   * Store the last read message in the case of use_compression == 1.
+   * There is an expectation from jlog user's that they are handed
+   * mmap'd memory directly and that they don't have to free it, so we
+   * have to maintain a block of memory where we can decompress messages
+   * and hand them back.  The contract being that everytime jlog_ctx_read_message
+   * is called, we overwrite this memory with the new message
+   */
+  size_t    mess_data_size;
+  char      *mess_data;
 };
 
 /* macros */
