@@ -74,6 +74,9 @@
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#if HAVE_SYS_UIO_H
+#include <sys/uio.h>
+#endif
 #if HAVE_SYS_TIME_H
 #include <sys/time.h>
 #endif
@@ -387,7 +390,7 @@ static int __jlog_open_metastore(jlog_ctx *ctx)
   file[len++] = IFS_CH;
   memcpy(&file[len], "metastore", 10); /* "metastore" + '\0' */
 
-  ctx->metastore = jlog_file_open(file, O_CREAT, ctx->file_mode);
+  ctx->metastore = jlog_file_open(file, O_CREAT, ctx->file_mode, ctx->multi_process);
 
   if (!ctx->metastore) {
     ctx->last_errno = errno;
@@ -439,7 +442,7 @@ int jlog_pending_readers(jlog_ctx *ctx, u_int32_t log,
 #ifdef DEBUG
       fprintf(stderr, "Checking if %s needs %s...\n", ent->d_name, ctx->path);
 #endif
-      if ((cp = jlog_file_open(file, 0, ctx->file_mode))) {
+      if ((cp = jlog_file_open(file, 0, ctx->file_mode, ctx->multi_process))) {
         if (jlog_file_lock(cp)) {
           (void) jlog_file_pread(cp, &id, sizeof(id), 0);
 #ifdef DEBUG
@@ -736,7 +739,7 @@ static jlog_file *__jlog_open_named_checkpoint(jlog_ctx *ctx, const char *cpname
 {
   char name[MAXPATHLEN];
   compute_checkpoint_filename(ctx, cpname, name);
-  return jlog_file_open(name, flags, ctx->file_mode);
+  return jlog_file_open(name, flags, ctx->file_mode, ctx->multi_process);
 }
 
 static jlog_file *__jlog_open_reader(jlog_ctx *ctx, u_int32_t log) {
@@ -754,7 +757,7 @@ static jlog_file *__jlog_open_reader(jlog_ctx *ctx, u_int32_t log) {
 #ifdef DEBUG
   fprintf(stderr, "opening log file[ro]: '%s'\n", file);
 #endif
-  ctx->data = jlog_file_open(file, 0, ctx->file_mode);
+  ctx->data = jlog_file_open(file, 0, ctx->file_mode, ctx->multi_process);
   ctx->current_log = log;
   return ctx->data;
 }
@@ -783,14 +786,13 @@ static int __jlog_mmap_reader(jlog_ctx *ctx, u_int32_t log) {
 }
 
 static jlog_file *__jlog_open_writer(jlog_ctx *ctx) {
-  char file[MAXPATHLEN];
+  char file[MAXPATHLEN] = {0};
 
   if(ctx->data) {
     /* Still open */
     return ctx->data;
   }
 
-  memset(file, 0, sizeof(file));
   FASSERT(ctx != NULL, "__jlog_open_writer");
   if(!jlog_file_lock(ctx->metastore))
     SYS_FAIL(JLOG_ERR_LOCK);
@@ -805,7 +807,7 @@ static jlog_file *__jlog_open_writer(jlog_ctx *ctx) {
 #ifdef DEBUG
   fprintf(stderr, "opening log file[rw]: '%s'\n", file);
 #endif
-  ctx->data = jlog_file_open(file, O_CREAT, ctx->file_mode);
+  ctx->data = jlog_file_open(file, O_CREAT, ctx->file_mode, ctx->multi_process);
   FASSERT(ctx->data != NULL, "__jlog_open_writer calls jlog_file_open");
   if ( ctx->data == NULL )
     ctx->last_error = JLOG_ERR_FILE_OPEN;
@@ -861,7 +863,7 @@ static jlog_file *__jlog_open_indexer(jlog_ctx *ctx, u_int32_t log) {
 #ifdef DEBUG
   fprintf(stderr, "opening index file: '%s'\n", file);
 #endif
-  ctx->index = jlog_file_open(file, O_CREAT, ctx->file_mode);
+  ctx->index = jlog_file_open(file, O_CREAT, ctx->file_mode, ctx->multi_process);
   ctx->current_log = log;
   return ctx->index;
 }
@@ -1162,6 +1164,12 @@ int jlog_ctx_alter_safety(jlog_ctx *ctx, jlog_safety safety) {
  finish:
   return -1;
 }
+
+int jlog_ctx_set_multi_process(jlog_ctx *ctx, int mp) {
+  ctx->multi_process = mp;
+  return 0;
+}
+
 int jlog_ctx_alter_journal_size(jlog_ctx *ctx, size_t size) {
   if(ctx->meta->unit_limit == size) return 0;
   if(ctx->context_mode == JLOG_APPEND ||
@@ -1246,6 +1254,7 @@ int jlog_ctx_init(jlog_ctx *ctx) {
   struct stat sb;
   int dirmode;
 
+  ctx->multi_process = 1;
   ctx->last_error = JLOG_ERR_SUCCESS;
   if(strlen(ctx->path) > MAXLOGPATHLEN-1) {
     ctx->last_error = JLOG_ERR_CREATE_PATHLEN;
@@ -1316,7 +1325,7 @@ static int __jlog_metastore_atomic_increment(jlog_ctx *ctx) {
     /* We're the first ones to it, so we get to increment it */
     ctx->current_log++;
     STRSETDATAFILE(ctx, file, ctx->current_log);
-    ctx->data = jlog_file_open(file, O_CREAT, ctx->file_mode);
+    ctx->data = jlog_file_open(file, O_CREAT, ctx->file_mode, ctx->multi_process);
     ctx->meta->storage_log = ctx->current_log;
     if(__jlog_save_metastore(ctx, 1)) {
       FASSERT(0,
@@ -1376,16 +1385,19 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
     hdr.tv_usec = now.tv_usec;
   }
   hdr.mlen = mess->mess_len;
-  if (!jlog_file_pwrite(ctx->data, &hdr, sizeof(hdr), current_offset)) {
-    FASSERT(0, "jlog_file_pwrite failed in jlog_ctx_write_message");
+
+  struct iovec v[2];
+  v[0].iov_base = (void *) &hdr;
+  v[0].iov_len = sizeof(hdr);
+
+  v[1].iov_base = mess->mess;
+  v[1].iov_len = mess->mess_len;
+ 
+  if (!jlog_file_pwritev(ctx->data, v, 2, current_offset)) {
+    FASSERT(0, "jlog_file_pwritev failed in jlog_ctx_write_message");
     SYS_FAIL(JLOG_ERR_FILE_WRITE);
   }
-  current_offset += sizeof(hdr);
-  if (!jlog_file_pwrite(ctx->data, mess->mess, mess->mess_len, current_offset)) {
-    FASSERT(0, "jlog_file_pwrite failed in jlog_ctx_write_message");
-    SYS_FAIL(JLOG_ERR_FILE_WRITE);
-  }
-  current_offset += mess->mess_len;
+  current_offset += v[0].iov_len + v[1].iov_len;
 
   if(ctx->meta->unit_limit <= current_offset) {
     jlog_file_unlock(ctx->data);
@@ -1398,6 +1410,7 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
   if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
   return -1;
 }
+
 int jlog_ctx_read_checkpoint(jlog_ctx *ctx, const jlog_id *chkpt) {
   ctx->last_error = JLOG_ERR_SUCCESS;
   

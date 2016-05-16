@@ -37,6 +37,11 @@
 extern "C" {
 #endif
 
+#include "jlog_config.h"
+#if HAVE_SYS_UIO_H
+#include <sys/uio.h>
+#endif
+
 typedef struct _jlog_file jlog_file;
 
 /**
@@ -48,7 +53,7 @@ typedef struct _jlog_file jlog_file;
  * @return pointer to jlog_file on success, NULL on failure
  * @internal
  */
-jlog_file *jlog_file_open(const char *path, int flags, int mode);
+jlog_file *jlog_file_open(const char *path, int flags, int mode, int multi_process);
 
 /**
  * closes a jlog_file
@@ -84,6 +89,13 @@ int jlog_file_pread(jlog_file *f, void *buf, size_t nbyte, off_t offset);
  * @internal
  */
 int jlog_file_pwrite(jlog_file *f, const void *buf, size_t nbyte, off_t offset);
+
+/**
+ * pwritevs to a jlog_file, retries EINTR
+ * @return 1 if the write was fully satisfied, 0 otherwise
+ * @internal
+ */
+int jlog_file_pwritev(jlog_file *f, const struct iovec *vec, int iov_count, off_t offset);
 
 /**
  * calls fdatasync (if avalable) or fsync on the underlying filehandle

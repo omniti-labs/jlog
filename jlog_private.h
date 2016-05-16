@@ -66,6 +66,7 @@ struct _jlog_meta_info {
 struct _jlog_ctx {
   struct _jlog_meta_info *meta;
   int       meta_is_mapped;
+  uint8_t   multi_process;
   struct _jlog_meta_info pre_init; /* only used before we're opened */
   jlog_mode context_mode;
   char      *path;
