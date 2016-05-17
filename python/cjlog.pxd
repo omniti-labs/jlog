@@ -45,6 +45,7 @@ cdef extern from "jlog.h":
     JLOG_ERR_CREATE_EXISTS,
     JLOG_ERR_CREATE_MKDIR,
     JLOG_ERR_CREATE_META,
+    JLOG_ERR_CREATE_PRE_COMMIT,
     JLOG_ERR_LOCK,
     JLOG_ERR_IDX_OPEN,
     JLOG_ERR_IDX_SEEK,
@@ -57,6 +58,7 @@ cdef extern from "jlog.h":
     JLOG_ERR_FILE_READ,
     JLOG_ERR_FILE_WRITE,
     JLOG_ERR_META_OPEN,
+    JLOG_ERR_PRE_COMMIT_OPEN,
     JLOG_ERR_ILLEGAL_WRITE,
     JLOG_ERR_ILLEGAL_CHECKPOINT,
     JLOG_ERR_INVALID_SUBSCRIBER,
@@ -65,6 +67,11 @@ cdef extern from "jlog.h":
     JLOG_ERR_CHECKPOINT,
     JLOG_ERR_NOT_SUPPORTED,
     JLOG_ERR_CLOSE_LOGID
+
+  ctypedef enum jlog_compression_provider_choice:
+    JLOG_COMPRESSION_NULL = 0,
+    JLOG_COMPRESSION_LZ4 = 0x01
+
 
   ctypedef void (*jlog_error_func) (void *ctx, char *msg, ...)
 
@@ -86,6 +93,11 @@ cdef extern from "jlog.h":
   int jlog_ctx_alter_mode(jlog_ctx *ctx, int mode)
   int jlog_ctx_alter_journal_size(jlog_ctx *ctx, long size)
   int jlog_ctx_alter_safety(jlog_ctx *ctx, jlog_safety safety)
+  int jlog_ctx_set_multi_process(jlog_ctx *ctx, int mproc);
+  int jlog_ctx_set_use_compression(jlog_ctx *ctx, int use);
+  int jlog_ctx_set_compression_provider(jlog_ctx *ctx, jlog_compression_provider_choice provider);
+  int jlog_ctx_set_pre_commit_buffer_size(jlog_ctx *ctx, long s);
+  int jlog_ctx_flush_pre_commit_buffer(jlog_ctx *ctx);
   int jlog_ctx_add_subscriber(jlog_ctx *ctx, char *subscriber, jlog_position whence)
   int jlog_ctx_remove_subscriber(jlog_ctx *ctx, char *subscriber)
 

@@ -129,7 +129,6 @@ public class jlogTest {
     void test_repair(String s) throws Exception {
         log("Testing " + s);
         jlog ctx = new jlog(jlogpath);
-        ctx.init();
         addsomefiles();
         int res = ctx.repair(0);
         String sres = (res == 0) ? "failed" : "succeeded";
@@ -155,6 +154,8 @@ public class jlogTest {
             write_payloads(pcnt);
             read_check("witness", pcnt, true);
             read_check("testing", pcnt, false);
+            /* reinitialize for the repair check */
+            initialize();
             test_repair("repair");
         } catch(Exception catchall) {
             catchall.printStackTrace();
