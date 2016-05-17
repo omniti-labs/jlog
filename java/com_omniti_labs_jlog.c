@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "com_omniti_labs_jlog.h"
 #include "jlog.h"
 
@@ -223,6 +225,7 @@ jobject Java_com_omniti_labs_jlog_get_1error
     case JLOG_ERR_CREATE_EXISTS: mapenum(JLOG_ERR_CREATE_EXISTS); break;
     case JLOG_ERR_CREATE_MKDIR: mapenum(JLOG_ERR_CREATE_MKDIR); break;
     case JLOG_ERR_CREATE_META: mapenum(JLOG_ERR_CREATE_META); break;
+    case JLOG_ERR_CREATE_PRE_COMMIT: mapenum(JLOG_ERR_CREATE_PRE_COMMIT); break;
     case JLOG_ERR_LOCK: mapenum(JLOG_ERR_LOCK); break;
     case JLOG_ERR_IDX_OPEN: mapenum(JLOG_ERR_IDX_OPEN); break;
     case JLOG_ERR_IDX_SEEK: mapenum(JLOG_ERR_IDX_SEEK); break;
@@ -235,6 +238,7 @@ jobject Java_com_omniti_labs_jlog_get_1error
     case JLOG_ERR_FILE_READ: mapenum(JLOG_ERR_FILE_READ); break;
     case JLOG_ERR_FILE_WRITE: mapenum(JLOG_ERR_FILE_WRITE); break;
     case JLOG_ERR_META_OPEN: mapenum(JLOG_ERR_META_OPEN); break;
+    case JLOG_ERR_PRE_COMMIT_OPEN: mapenum(JLOG_ERR_PRE_COMMIT_OPEN); break;
     case JLOG_ERR_ILLEGAL_WRITE: mapenum(JLOG_ERR_ILLEGAL_WRITE); break;
     case JLOG_ERR_ILLEGAL_CHECKPOINT: mapenum(JLOG_ERR_ILLEGAL_CHECKPOINT); break;
     case JLOG_ERR_INVALID_SUBSCRIBER: mapenum(JLOG_ERR_INVALID_SUBSCRIBER); break;
@@ -380,6 +384,72 @@ void Java_com_omniti_labs_jlog_alter_1safety
   jint value = (*jenv)->CallIntMethod(jenv, jsafety, getOrdinalMethod);
   FETCH_CTX(jenv,self,ctx);
   jlog_ctx_alter_safety(ctx,value);
+}
+
+/*
+ * Class:     com_omniti_labs_jlog
+ * Method:    set_multi_process
+ * Signature: (Z)V
+ */
+void Java_com_omniti_labs_jlog_set_1multi_1process
+  (JNIEnv *jenv, jobject self, jboolean mp) {
+  jlog_ctx *ctx;
+  FETCH_CTX(jenv,self,ctx);
+  jlog_ctx_set_multi_process(ctx, (uint8_t)mp);
+}
+
+/*
+ * Class:     com_omniti_labs_jlog
+ * Method:    set_use_compression
+ * Signature: (Z)V
+ */
+void Java_com_omniti_labs_jlog_set_1use_1compression
+  (JNIEnv *jenv, jobject self, jboolean uc) {
+  jlog_ctx *ctx;
+  FETCH_CTX(jenv,self,ctx);
+  jlog_ctx_set_use_compression(ctx, (uint8_t)uc);
+}
+
+/*
+ * Class:     com_omniti_labs_jlog
+ * Method:    set_compression_provider
+ * Signature: (Lcom/omniti/labs/jlog/jlog_compression_provider_choice;)V
+ */
+void Java_com_omniti_labs_jlog_set_1compression_1provider
+  (JNIEnv *jenv, jobject self, jobject jcomp_provider) {
+  jlog_ctx *ctx;
+  jclass enumClass = (*jenv)->FindClass(jenv, "com/omniti/labs/jlog$jlog_compression_provider_choice");
+  jmethodID getOrdinalMethod = (*jenv)->GetMethodID(jenv, enumClass, "ordinal", "()I");
+  jint value = (*jenv)->CallIntMethod(jenv, jcomp_provider, getOrdinalMethod);
+  FETCH_CTX(jenv,self,ctx);
+  jlog_ctx_set_compression_provider(ctx,value);
+}
+
+/*
+ * Class:     com_omniti_labs_jlog
+ * Method:    set_pre_commit_buffer_size
+ * Signature: (J)V
+ */
+void Java_com_omniti_labs_jlog_set_1pre_1commit_1buffer_1size
+  (JNIEnv *jenv, jobject self, jlong size) {
+  jlog_ctx *ctx;
+  FETCH_CTX(jenv,self,ctx);
+  jlog_ctx_alter_journal_size(ctx, size);
+}
+
+/*
+ * Class:     com_omniti_labs_jlog
+ * Method:    flush_pre_commit_buffer
+ * Signature: ()V
+ */
+void JNICALL Java_com_omniti_labs_jlog_flush_1pre_1commit_1buffer
+  (JNIEnv * jenv, jobject self) {
+  jlog_ctx *ctx;
+  FETCH_CTX(jenv,self,ctx);
+  jlog_ctx_flush_pre_commit_buffer(ctx);
+  if(jlog_ctx_err(ctx) != JLOG_ERR_SUCCESS)
+    THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
+  return ;
 }
 
 /*

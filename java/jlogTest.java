@@ -137,6 +137,7 @@ public class jlogTest {
     }
   
     public jlogTest(String[] called_args) {
+        System.loadLibrary("jlog");
         if(called_args.length > 0) jlogpath = called_args[0];
     }
           

@@ -86,7 +86,7 @@ libjlog.a:	$(AOBJS)
 	$(AR) cr libjlog.a $(AOBJS)
 	$(RANLIB) libjlog.a
 
-java-bits: java/jlog.jar java/libjlog.jnilib java/jlogTest.class
+java-bits: java/jlog.jar java/libjlog.so java/jlogTest.class
 
 #
 # It should be the case that the bridge include file is
@@ -103,10 +103,10 @@ java/jlogTest.class:	java/jlogTest.java java/jlog.jar
 	cd java && $(JAVAC) -cp jlog.jar jlogTest.java
 
 java/com_omniti_labs_jlog.lo:	java/com_omniti_labs_jlog.c
-	$(CC) -I. $(CPPFLAGS) $(CFLAGS) $(SHCFLAGS) -c $< -o $@
+	$(CC) -I. $(CPPFLAGS) $(CFLAGS) $(SHCFLAGS) $(LDFLAGS) -c $< -o $@
 
-java/libjlog.jnilib:	java/com_omniti_labs_jlog.lo $(SOOBJS)
-	$(SHLD) -o $@ java/com_omniti_labs_jlog.lo $(SOOBJS) $(LDFLAGS) $(LIBS)
+java/libjlog.so:	java/com_omniti_labs_jlog.lo $(SOOBJS)
+	$(SHLD) -o $@ java/com_omniti_labs_jlog.lo $(SOOBJS) $(CFLAGS) $(LDFLAGS) $(LIBS)
 
 install:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(bindir)

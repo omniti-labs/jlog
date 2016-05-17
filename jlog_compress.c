@@ -52,7 +52,7 @@ jlog_set_compression_provider(const jlog_compression_provider_choice jcp)
 #ifdef HAVE_LZ4_H      
       provider = &jlog_lz4_compression_provider;
 #else
-      printf(stderr, "lz4 not detected on system, cannot set");
+      fprintf(stderr, "lz4 not detected on system, cannot set");
       return -1;
 #endif
       break;      

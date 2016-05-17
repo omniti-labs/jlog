@@ -36,17 +36,43 @@ import java.util.Date;
 public class jlog {
   public enum jlog_safety { JLOG_UNSAFE, JLOG_ALMOST_SAFE, JLOG_SAFE };
   public enum jlog_position { JLOG_BEGIN, JLOG_END };
-  public enum jlog_err { JLOG_ERR_SUCCESS, JLOG_ERR_ILLEGAL_INIT,
-         JLOG_ERR_ILLEGAL_OPEN, JLOG_ERR_OPEN, JLOG_ERR_NOTDIR,
-         JLOG_ERR_CREATE_PATHLEN, JLOG_ERR_CREATE_EXISTS,
-         JLOG_ERR_CREATE_MKDIR, JLOG_ERR_CREATE_META, JLOG_ERR_LOCK,
-         JLOG_ERR_IDX_OPEN, JLOG_ERR_IDX_SEEK, JLOG_ERR_IDX_CORRUPT,
-         JLOG_ERR_IDX_WRITE, JLOG_ERR_IDX_READ, JLOG_ERR_FILE_OPEN,
-         JLOG_ERR_FILE_SEEK, JLOG_ERR_FILE_CORRUPT, JLOG_ERR_FILE_READ,
-         JLOG_ERR_FILE_WRITE, JLOG_ERR_META_OPEN, JLOG_ERR_ILLEGAL_WRITE,
-         JLOG_ERR_ILLEGAL_CHECKPOINT, JLOG_ERR_INVALID_SUBSCRIBER,
-         JLOG_ERR_ILLEGAL_LOGID, JLOG_ERR_SUBSCRIBER_EXISTS,
-         JLOG_ERR_CHECKPOINT, JLOG_ERR_NOT_SUPPORTED };
+  public enum jlog_err { 
+    JLOG_ERR_SUCCESS, 
+    JLOG_ERR_ILLEGAL_INIT,
+    JLOG_ERR_ILLEGAL_OPEN, 
+    JLOG_ERR_OPEN, 
+    JLOG_ERR_NOTDIR,
+    JLOG_ERR_CREATE_PATHLEN, 
+    JLOG_ERR_CREATE_EXISTS,
+    JLOG_ERR_CREATE_MKDIR, 
+    JLOG_ERR_CREATE_META, 
+    JLOG_ERR_CREATE_PRE_COMMIT,
+    JLOG_ERR_LOCK,
+    JLOG_ERR_IDX_OPEN, 
+    JLOG_ERR_IDX_SEEK, 
+    JLOG_ERR_IDX_CORRUPT,
+    JLOG_ERR_IDX_WRITE, 
+    JLOG_ERR_IDX_READ, 
+    JLOG_ERR_FILE_OPEN,
+    JLOG_ERR_FILE_SEEK, 
+    JLOG_ERR_FILE_CORRUPT, 
+    JLOG_ERR_FILE_READ,
+    JLOG_ERR_FILE_WRITE, 
+    JLOG_ERR_META_OPEN, 
+    JLOG_ERR_PRE_COMMIT_OPEN,
+    JLOG_ERR_ILLEGAL_WRITE,
+    JLOG_ERR_ILLEGAL_CHECKPOINT, 
+    JLOG_ERR_INVALID_SUBSCRIBER,
+    JLOG_ERR_ILLEGAL_LOGID, 
+    JLOG_ERR_SUBSCRIBER_EXISTS,
+    JLOG_ERR_CHECKPOINT, 
+    JLOG_ERR_NOT_SUPPORTED 
+  };
+
+  public enum jlog_compression_provider_choice {
+    JLOG_COMPRESSION_NULL,
+    JLOG_COMPRESSION_LZ4
+  };
 
   public class jlogException extends Exception {
     public jlogException(String a) { super(a); }
@@ -131,6 +157,11 @@ public class jlog {
   private native void alter_mode(int mode);
   private native void alter_journal_size(long size);
   private native void alter_safety(jlog_safety safety);
+  public native void set_multi_process(boolean mp);
+  public native void set_use_compression(boolean mp);
+  public native void set_compression_provider(jlog_compression_provider_choice cp);
+  public native void set_pre_commit_buffer_size(long size);
+  public native void flush_pre_commit_buffer() throws jlogIOException;
   public native void add_subscriber(String sub, jlog_position whence)
     throws jlogSubscriberExistsException, jlogIOException;
   public native void remove_subscriber(String sub)
