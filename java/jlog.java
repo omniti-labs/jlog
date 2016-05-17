@@ -219,7 +219,7 @@ public class jlog {
 
   static {
     try {
-      System.loadLibrary("jnijlog");
+      System.loadLibrary("jlog");
    } catch (Exception e) {
      System.err.println("Cannot load jlog JNI library: " + e);
      System.exit(-1);
