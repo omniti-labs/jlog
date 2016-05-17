@@ -108,7 +108,7 @@ java/com_omniti_labs_jlog.lo:	java/com_omniti_labs_jlog.c
 java/libjlog.so:	java/com_omniti_labs_jlog.lo $(SOOBJS)
 	$(SHLD) -o $@ java/com_omniti_labs_jlog.lo $(SOOBJS) $(CFLAGS) $(LDFLAGS) $(LIBS)
 
-install:
+install: all
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(bindir)
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(libdir)
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(includedir)
