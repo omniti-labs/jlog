@@ -64,7 +64,7 @@ AC_SUBST(JAVA_BITS)
 AC_CACHE_CHECK([for u_int type], ac_cv_have_u_int, [
 	AC_TRY_COMPILE(
 		[ #include <sys/types.h> ], 
-		[ u_int a; a = 1;], 
+		[ u_int a; a = 1; (void)a; ], 
 		[ ac_cv_have_u_int="yes" ],
 		[ ac_cv_have_u_int="no" ]
 	)
@@ -82,7 +82,7 @@ fi
 AC_CACHE_CHECK([for intXX_t types], ac_cv_have_intxx_t, [
 	AC_TRY_COMPILE(
 		[ #include <sys/types.h> ], 
-		[ int8_t a; int16_t b; int32_t c; a = b = c = 1;], 
+		[ int8_t a; int16_t b; int32_t c; a = b = c = 1; (void)a; (void)b; (void)c; ], 
 		[ ac_cv_have_intxx_t="yes" ],
 		[ ac_cv_have_intxx_t="no" ]
 	)
@@ -95,7 +95,7 @@ fi
 AC_CACHE_CHECK([for int64_t type], ac_cv_have_int64_t, [
 	AC_TRY_COMPILE(
 		[ #include <sys/types.h> ], 
-		[ int64_t a; a = 1;], 
+		[ int64_t a; a = 1; (void)a; ], 
 		[ ac_cv_have_int64_t="yes" ],
 		[ ac_cv_have_int64_t="no" ]
 	)
@@ -108,7 +108,7 @@ fi
 AC_CACHE_CHECK([for u_intXX_t types], ac_cv_have_u_intxx_t, [
 	AC_TRY_COMPILE(
 		[ #include <sys/types.h> ], 
-		[ u_int8_t a; u_int16_t b; u_int32_t c; a = b = c = 1;], 
+		[ u_int8_t a; u_int16_t b; u_int32_t c; a = b = c = 1; (void)a; (void)b; (void)c; ], 
 		[ ac_cv_have_u_intxx_t="yes" ],
 		[ ac_cv_have_u_intxx_t="no" ]
 	)
@@ -121,7 +121,7 @@ fi
 AC_CACHE_CHECK([for u_int64_t types], ac_cv_have_u_int64_t, [
 	AC_TRY_COMPILE(
 		[ #include <sys/types.h> ], 
-		[ u_int64_t a; a = 1;], 
+		[ u_int64_t a; a = 1; (void)a; ], 
 		[ ac_cv_have_u_int64_t="yes" ],
 		[ ac_cv_have_u_int64_t="no" ]
 	)
@@ -143,6 +143,8 @@ then
 			int8_t a; int16_t b; int32_t c;
 			u_int8_t e; u_int16_t f; u_int32_t g;
 			a = b = c = e = f = g = 1;
+			(void)a; (void)b; (void)c;
+			(void)e; (void)f; (void)g;
 		], 
 		[
 			AC_DEFINE(HAVE_U_INTXX_T)
@@ -159,7 +161,7 @@ if test -z "$have_u_intxx_t" ; then
 			[
 #include <sys/types.h>
 			], 
-			[ uint8_t a; uint16_t b; uint32_t c; a = b = c = 1; ], 
+			[ uint8_t a; uint16_t b; uint32_t c; a = b = c = 1; (void)a; (void)b; (void)c; ], 
 			[ ac_cv_have_uintxx_t="yes" ],
 			[ ac_cv_have_uintxx_t="no" ]
 		)
@@ -175,7 +177,7 @@ AC_CACHE_CHECK([for socklen_t], ac_cv_have_socklen_t, [
 #include <sys/types.h>
 #include <sys/socket.h>
 		],
-		[socklen_t foo; foo = 1235;],
+		[socklen_t foo; foo = 1235; (void)foo; ],
 		[ ac_cv_have_socklen_t="yes" ],
 		[ ac_cv_have_socklen_t="no" ]
 	)
@@ -189,7 +191,7 @@ AC_CACHE_CHECK([for size_t], ac_cv_have_size_t, [
 		[
 #include <sys/types.h>
 		],
-		[ size_t foo; foo = 1235; ],
+		[ size_t foo; foo = 1235; (void)foo; ],
 		[ ac_cv_have_size_t="yes" ],
 		[ ac_cv_have_size_t="no" ]
 	)
@@ -203,7 +205,7 @@ AC_CACHE_CHECK([for ssize_t], ac_cv_have_ssize_t, [
 		[
 #include <sys/types.h>
 		],
-		[ ssize_t foo; foo = 1235; ],
+		[ ssize_t foo; foo = 1235; (void)foo; ],
 		[ ac_cv_have_ssize_t="yes" ],
 		[ ac_cv_have_ssize_t="no" ]
 	)
