@@ -67,7 +67,6 @@ extern int creat(const char *, int);
 typedef long long unsigned int hrtime_t;
 inline hrtime_t my_gethrtime() {
   struct timespec ts;
-  uint64_t t;
   clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
   return ((ts.tv_sec * 1000000000) + ts.tv_nsec);
 }

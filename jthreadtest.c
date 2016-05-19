@@ -114,7 +114,7 @@ void *reader(void *unused) {
   char subname[32];
   int tcount = 0, fcount = 0;
   int prev_err = 0;
-  int subno = (int)unused;
+  int subno = (int)(uintptr_t)unused;
   snprintf(subname, sizeof(subname), "sub-%02d", subno);
 reader_retry:
   ctx = jlog_new(LOGNAME);
@@ -264,13 +264,13 @@ int main(int argc, char **argv) {
   if(!only_write) {
     for(i=0; i<THRCNT; i++) {
       pthread_join(tid[i], &foo);
-      fprintf(stderr, "[%d] joined, read %d\n", i, (int)foo);
+      fprintf(stderr, "[%d] joined, read %d\n", i, (int)(uintptr_t)foo);
     }
   }
   if(!only_read) {
     for(i=0; i<WTHRCNT; i++) {
       pthread_join(wtid[i], &foo);
-      fprintf(stderr, "[%d] joined, write %d\n", i, (int)foo);
+      fprintf(stderr, "[%d] joined, write %d\n", i, (int)(uintptr_t)foo);
     }
   }
   if(error) fprintf(stderr, "errors occurred\n");

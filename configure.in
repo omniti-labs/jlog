@@ -241,6 +241,7 @@ case $host in
     fi
     ;;
   *linux*)
+    CFLAGS="$CFLAGS -D_BSD_SOURCE -D_SVID_SOURCE"
     RLDFLAG="-Wl,--rpath="
     case `uname -m` in
       *x86_64*)
