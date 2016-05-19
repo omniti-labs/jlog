@@ -43,6 +43,7 @@
 #undef HAVE_ERRNO_H
 #undef HAVE_STRING_H
 #undef HAVE_STDLIB_H
+#undef HAVE_STDINT_H
 #undef HAVE_LZ4_H
 #undef HAVE_UNISTD_H
 #undef HAVE_SYS_PARAM_H
@@ -51,6 +52,7 @@
 #undef HAVE_SYS_TIME_H
 #undef HAVE_SYS_STAT_H
 #undef HAVE_SYS_UIO_H
+#undef HAVE_PWRITEV
 #undef HAVE_INT64_T
 #undef HAVE_INTXX_T
 #undef HAVE_LONG_LONG_INT
@@ -65,6 +67,9 @@
 #endif
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
 #endif
 #ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>

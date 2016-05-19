@@ -30,6 +30,8 @@
  */
 
 
+#include <stdio.h>
+#include "jlog_config.h"
 #include "jlog_compress.h"
 #include "fassert.h"
 

@@ -1634,7 +1634,7 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
   size_t compressed_len = sizeof(compress_space);
 
   if (IS_COMPRESS_MAGIC(ctx)) {
-    if (jlog_compress(mess->mess, mess->mess_len, &v[1].iov_base, &compressed_len) != 0) {
+    if (jlog_compress(mess->mess, mess->mess_len, (char **)&v[1].iov_base, &compressed_len) != 0) {
       FASSERT(0, "jlog_compress failed in jlog_ctx_write_message");
       SYS_FAIL(JLOG_ERR_FILE_WRITE);
     }

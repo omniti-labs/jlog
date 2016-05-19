@@ -62,6 +62,37 @@ extern int creat(const char *, int);
 #define DEFAULT_FILE_MODE 0640
 #endif
 
+#if defined(linux)
+#include <time.h>
+typedef long long unsigned int hrtime_t;
+inline hrtime_t my_gethrtime() {
+  struct timespec ts;
+  uint64_t t;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
+  return ((ts.tv_sec * 1000000000) + ts.tv_nsec);
+}
+#elif defined(__MACH__)
+#include <mach/mach.h>
+#include <mach/mach_time.h>
+
+typedef uint64_t hrtime_t;
+static int initialized = 0;
+static mach_timebase_info_data_t    sTimebaseInfo;
+inline hrtime_t my_gethrtime() {
+  uint64_t t;
+  if(!initialized) {
+    if(sTimebaseInfo.denom == 0)
+      (void) mach_timebase_info(&sTimebaseInfo);
+  }
+  t = mach_absolute_time();
+  return t * sTimebaseInfo.numer / sTimebaseInfo.denom;
+}
+#else
+inline hrtime_t my_gethrtime() {
+  return gethrtime();
+}
+#endif
+
 #define SUBSCRIBER "voyeur"
 #define CHECKPOINT_SUBSCRIBER "voyeur-check"
 #define LOGNAME    "/tmp/jtest.foo"
@@ -186,7 +217,7 @@ void jopenw(char *foo, int count, const char *path) {
   hrtime_t s, f;
   int i;
 
-  s = f = gethrtime();
+  s = f = my_gethrtime();
 
   ctx = jlog_new(path);
 
@@ -203,7 +234,7 @@ void jopenw(char *foo, int count, const char *path) {
     
     cnt++;
     if (i % 1000 == 0) {
-      f = gethrtime();
+      f = my_gethrtime();
     }
 
     if(f-s > 1000000000) {
