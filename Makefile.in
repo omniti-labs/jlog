@@ -86,7 +86,7 @@ libjlog.a:	$(AOBJS)
 	$(AR) cr libjlog.a $(AOBJS)
 	$(RANLIB) libjlog.a
 
-java-bits: java/jlog.jar java/libjlog.so java/jlogTest.class
+java-bits: java/jlog.jar java/libjnijlog.so java/jlogTest.class
 
 #
 # It should be the case that the bridge include file is
@@ -105,7 +105,7 @@ java/jlogTest.class:	java/jlogTest.java java/jlog.jar
 java/com_omniti_labs_jlog.lo:	java/com_omniti_labs_jlog.c
 	$(CC) -I. $(CPPFLAGS) $(CFLAGS) $(SHCFLAGS) $(LDFLAGS) -c $< -o $@
 
-java/libjlog.so:	java/com_omniti_labs_jlog.lo $(SOOBJS)
+java/libjnijlog.so:	java/com_omniti_labs_jlog.lo $(SOOBJS)
 	$(SHLD) -o $@ java/com_omniti_labs_jlog.lo $(SOOBJS) $(CFLAGS) $(LDFLAGS) $(LIBS)
 
 install: all
@@ -128,8 +128,7 @@ install: all
 java-bits-install:
 	$(srcdir)/mkinstalldirs $(DESTDIR)$(libdir)/java
 	$(INSTALL) -m 0644 java/jlog.jar $(DESTDIR)$(libdir)/java/jlog.jar
-	$(INSTALL) -m 0755 java/libjlog.jnilib $(DESTDIR)$(libdir)/java/libjlog.jnilib
-	$(LN_S) -f libjlog.jnilib $(DESTDIR)$(libdir)/java/libjnijlog.so
+	$(INSTALL) -m 0755 java/libjnijlog.so $(DESTDIR)$(libdir)/java/libjnijlog.so
 
 install-perl:
 	cd perl ; make install DESTDIR=$(DESTDIR) INSTALLDIRS=vendor
