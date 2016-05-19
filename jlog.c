@@ -1543,6 +1543,7 @@ int jlog_ctx_init(jlog_ctx *ctx) {
 }
 
 int jlog_ctx_close(jlog_ctx *ctx) {
+  jlog_ctx_flush_pre_commit_buffer(ctx);
   __jlog_close_writer(ctx);
   __jlog_close_pre_commit(ctx);
   __jlog_close_indexer(ctx);
