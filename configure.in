@@ -46,6 +46,7 @@ int main(void){sem_t s;return (0 != sem_init(&s,0,0));}
 
 AC_CHECK_LIB(lz4, LZ4_compress_default, , )
 AC_FUNC_STRFTIME
+AC_CHECK_FUNC(pwritev, [AC_DEFINE(HAVE_PWRITEV)], )
 
 # Checks for header files.
 AC_CHECK_HEADERS(sys/file.h sys/types.h sys/uio.h dirent.h sys/param.h libgen.h \
@@ -70,7 +71,7 @@ AC_CACHE_CHECK([for u_int type], ac_cv_have_u_int, [
 ])
 
 if test "x$GCC" = "xyes" ; then
-    CFLAGS="$CFLAGS -Wall -Wno-int-to-pointer-cast"
+    CFLAGS="$CFLAGS -Wall -Wno-int-to-pointer-cast -Werror"
 fi
 
 if test "x$ac_cv_have_u_int" = "xyes" ; then

@@ -215,7 +215,12 @@ int jlog_file_pwritev(jlog_file *f, const struct iovec *vecs, int iov_count, off
 {
   ssize_t rv = 0;
   while (1) {
+#ifdef HAVE_PWRITEV
     rv = pwritev(f->fd, vecs, iov_count, offset);
+#else
+    if(lseek(f->fd, offset, SEEK_SET) < 0) return 0;
+    rv = writev(f->fd, vecs, iov_count);
+#endif
     if (rv == -1 && errno == EINTR) continue;
     if (rv <= 0) return 0;
     break;
