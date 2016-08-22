@@ -421,7 +421,8 @@ static int __jlog_open_metastore(jlog_ctx *ctx)
   return 0;
 }
 
-static int __jlog_open_pre_commit(jlog_ctx *ctx)
+static char *
+__jlog_pre_commit_file_name(jlog_ctx *ctx)
 {
   char file[MAXPATHLEN] = {0};
   int len = 0;
@@ -436,11 +437,24 @@ static int __jlog_open_pre_commit(jlog_ctx *ctx)
 #endif
     FASSERT(0, "__jlog_open_pre_commit: filename too long");
     ctx->last_error = JLOG_ERR_CREATE_PRE_COMMIT;
-    return -1;
+    return NULL;
   }
   memcpy(file, ctx->path, len);
   file[len++] = IFS_CH;
   memcpy(&file[len], "pre_commit", 11); /* "pre_commit" + '\0' */
+
+  return strdup(file);
+}
+
+static int __jlog_open_pre_commit(jlog_ctx *ctx)
+{
+#ifdef DEBUG
+  fprintf(stderr, "__jlog_open_pre_commit\n");
+#endif
+  char *file = __jlog_pre_commit_file_name(ctx);
+  if (file == NULL) {
+    return -1;
+  }
 
   ctx->pre_commit = jlog_file_open(file, O_CREAT, ctx->file_mode, ctx->multi_process);
 
@@ -448,9 +462,10 @@ static int __jlog_open_pre_commit(jlog_ctx *ctx)
     ctx->last_errno = errno;
     FASSERT(0, "__jlog_open_pre_commit: file create failed");
     ctx->last_error = JLOG_ERR_CREATE_PRE_COMMIT;
+    free(file);
     return -1;
   }
-
+  free(file);
   return 0;
 }
 
@@ -704,8 +719,8 @@ static int __jlog_map_pre_commit(jlog_ctx *ctx)
   if (pre_commit_size == 0) {
     /* fill the pre_commit file with zero'd memory to hold incoming messages for block writes */
     /* add space for the offset in the file at the front of the buffer */
-    char *space = calloc(1, ctx->pre_commit_buffer_len + sizeof(uint32_t));
-    if (!jlog_file_pwrite(ctx->pre_commit, space, ctx->pre_commit_buffer_len + sizeof(uint32_t), 0)) {
+    char *space = calloc(1, ctx->desired_pre_commit_buffer_len + sizeof(uint32_t));
+    if (!jlog_file_pwrite(ctx->pre_commit, space, ctx->desired_pre_commit_buffer_len + sizeof(uint32_t), 0)) {
       jlog_file_unlock(ctx->pre_commit);
       FASSERT(0, "jlog_file_pwrite failed");
       ctx->last_error = JLOG_ERR_FILE_WRITE;
@@ -1207,7 +1222,8 @@ jlog_ctx *jlog_new(const char *path) {
   ctx->file_mode = DEFAULT_FILE_MODE;
   ctx->context_mode = JLOG_NEW;
   ctx->path = strdup(path);
-  ctx->pre_commit_buffer_len = PRE_COMMIT_BUFFER_SIZE_DEFAULT;
+  ctx->desired_pre_commit_buffer_len = PRE_COMMIT_BUFFER_SIZE_DEFAULT;
+  ctx->pre_commit_buffer_size_specified = 0;
   ctx->multi_process = 1;
   pthread_mutex_init(&ctx->write_lock, NULL);
   //  fassertxsetpath(path);
@@ -1331,7 +1347,8 @@ int jlog_ctx_set_compression_provider(jlog_ctx *ctx, jlog_compression_provider_c
 }
 
 int jlog_ctx_set_pre_commit_buffer_size(jlog_ctx *ctx, size_t s) {
-  ctx->pre_commit_buffer_len = s;
+  ctx->desired_pre_commit_buffer_len = s;
+  ctx->pre_commit_buffer_size_specified = 1;
   return 0;
 }
 
@@ -1458,6 +1475,33 @@ int jlog_ctx_open_writer(jlog_ctx *ctx) {
   if (__jlog_map_pre_commit(ctx) != 0) {
     FASSERT(0, "jlog_ctx_open_writer calls jlog_map_pre_commit");
     SYS_FAIL(JLOG_ERR_PRE_COMMIT_OPEN);
+  }
+
+  if (ctx->pre_commit_buffer_size_specified && ctx->pre_commit_buffer_len != ctx->desired_pre_commit_buffer_len) {
+   
+    jlog_ctx_flush_pre_commit_buffer(ctx);
+
+    /* unmap it */
+    __jlog_close_pre_commit(ctx);
+    
+    /* unlink the file */
+    char *fn = __jlog_pre_commit_file_name(ctx);
+    if (unlink(fn) != 0) {
+      FASSERT(0, "jlog_ctx_open_writer cannot unlink old pre_commit file");
+      SYS_FAIL(JLOG_ERR_PRE_COMMIT_OPEN);
+    } 
+    free(fn);
+
+    /* recreate on new size */
+   if (__jlog_open_pre_commit(ctx) != 0) {
+     FASSERT(0, "jlog_ctx_open_writer calls jlog_open_pre_commit");
+     SYS_FAIL(JLOG_ERR_PRE_COMMIT_OPEN);
+   }
+
+   if (__jlog_map_pre_commit(ctx) != 0) {
+     FASSERT(0, "jlog_ctx_open_writer calls jlog_map_pre_commit");
+     SYS_FAIL(JLOG_ERR_PRE_COMMIT_OPEN);
+   }
   }
     
  finish:

@@ -489,14 +489,13 @@ void Java_com_omniti_labs_jlog_remove_1subscriber
   char *subscriber = jstring_to_cstring(jenv, sub);
   FETCH_CTX(jenv,self,ctx);
   rv = jlog_ctx_remove_subscriber(ctx, subscriber);
-  free(subscriber);
-  if(rv != 0) {
+  if(rv != 1) {
     if(jlog_ctx_err(ctx) == JLOG_ERR_INVALID_SUBSCRIBER)
       THROW(jenv, "com/omniti/labs/jlog$jlogInvalidSubscriberException", "invalid subscriber");
-    else
-      THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
-    return;
+     else
+       THROW(jenv,"com/omniti/labs/jlog$jlogIOException",jlog_ctx_err_string(ctx));
   }
+  free(subscriber);
 }
 
 /*
