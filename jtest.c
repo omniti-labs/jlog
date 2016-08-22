@@ -96,6 +96,7 @@ inline hrtime_t my_gethrtime() {
 #define CHECKPOINT_SUBSCRIBER "voyeur-check"
 #define LOGNAME    "/tmp/jtest.foo"
 jlog_ctx *ctx;
+static size_t default_pre_commit_size = 1024*128;
 
 void usage() {
   fprintf(stderr,
@@ -105,7 +106,8 @@ void usage() {
           "\tread <count>\n"
           "\twrite <len> <count>\n"
           "\trepair\n"
-          "\ttwo_checkpoints <count>\n");
+          "\ttwo_checkpoints <count>\n"
+          "\tresize_pre_commit <path> <new_size>\n");
 }
 
 static void
@@ -123,7 +125,6 @@ void jcreate(const char *path, int compressed) {
   ctx = jlog_new(path);
   jlog_ctx_set_use_compression(ctx, compressed);
   jlog_ctx_alter_journal_size(ctx, 1024000);
-  jlog_ctx_set_pre_commit_buffer_size(ctx, 1024 * 1024);
   if(jlog_ctx_init(ctx) != 0) {
     fprintf(stderr, "jlog_ctx_init failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
   } else {
@@ -131,6 +132,15 @@ void jcreate(const char *path, int compressed) {
   }
   jlog_ctx_close(ctx);
 }
+
+void jresize_pre_commit(const char *path, size_t pre_commit_size) {
+  ctx = jlog_new(path);
+  jlog_ctx_set_pre_commit_buffer_size(ctx, pre_commit_size);
+  jlog_ctx_open_writer(ctx);
+
+  jlog_ctx_close(ctx);
+}
+
 
 /*
   In an effort to test all functionality of the repair function, we add
@@ -220,7 +230,6 @@ void jopenw(char *foo, int count, const char *path) {
 
   ctx = jlog_new(path);
 
-  jlog_ctx_set_pre_commit_buffer_size(ctx, 1024 * 1024);
   jlog_ctx_set_multi_process(ctx, 0);
   if(jlog_ctx_open_writer(ctx) != 0) {
     fprintf(stderr, "jlog_ctx_open_writer failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
@@ -383,7 +392,7 @@ int main(int argc, char **argv) {
     if(!strcmp(argv[i], "init") || !strcmp(argv[i], "init_compressed")) {
       int compress = strcmp(argv[i], "init_compressed") == 0;
       const char *path = LOGNAME;
-      if (argc == 3) {
+      if (argc >= 3) {
         path = argv[2];
       }
       jcreate(path, compress);
@@ -423,6 +432,19 @@ int main(int argc, char **argv) {
     } else if (!strcmp(argv[i], "two_checkpoints")) {
       i++;
       jopenr_two_checks(SUBSCRIBER, CHECKPOINT_SUBSCRIBER, atoi(argv[i]));
+      exit(0);
+    } else if (!strcmp(argv[i], "resize_pre_commit")) {
+      i++;
+      const char *path = LOGNAME;
+      size_t new_size = default_pre_commit_size;
+      if (i < argc) {
+        path = argv[i++];
+      }
+      if (i < argc) {
+        new_size = atoi(argv[i]);
+      }
+
+      jresize_pre_commit(path, new_size);
       exit(0);
     }
 

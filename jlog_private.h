@@ -70,10 +70,12 @@ struct _jlog_ctx {
   int       meta_is_mapped;
   int       pre_commit_is_mapped;
   uint8_t   multi_process;
+  uint8_t   pre_commit_buffer_size_specified;
   void      *pre_commit_buffer;
   void      *pre_commit_pos;
   void      *pre_commit_end;
   size_t    pre_commit_buffer_len;
+  size_t    desired_pre_commit_buffer_len;
   uint32_t  *pre_commit_pointer;
   struct _jlog_meta_info pre_init; /* only used before we're opened */
   jlog_mode context_mode;
