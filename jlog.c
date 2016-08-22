@@ -1487,7 +1487,7 @@ int jlog_ctx_open_writer(jlog_ctx *ctx) {
     /* unlink the file */
     char *fn = __jlog_pre_commit_file_name(ctx);
     if (unlink(fn) != 0) {
-      FASSERT(0, "jlog_ctx_open_writer cannot unlink old pre_commit file: %d", errno);
+      FASSERT(0, "jlog_ctx_open_writer cannot unlink old pre_commit file");
       SYS_FAIL(JLOG_ERR_PRE_COMMIT_OPEN);
     } 
     free(fn);
