@@ -1478,8 +1478,7 @@ int jlog_ctx_open_writer(jlog_ctx *ctx) {
   }
 
   if (ctx->pre_commit_buffer_size_specified && ctx->pre_commit_buffer_len != ctx->desired_pre_commit_buffer_len) {
-
-    
+   
     jlog_ctx_flush_pre_commit_buffer(ctx);
 
     /* unmap it */
@@ -1487,7 +1486,10 @@ int jlog_ctx_open_writer(jlog_ctx *ctx) {
     
     /* unlink the file */
     char *fn = __jlog_pre_commit_file_name(ctx);
-    unlink(fn);
+    if (unlink(fn) != 0) {
+      FASSERT(0, "jlog_ctx_open_writer cannot unlink old pre_commit file: %d", errno);
+      SYS_FAIL(JLOG_ERR_PRE_COMMIT_OPEN);
+    } 
     free(fn);
 
     /* recreate on new size */

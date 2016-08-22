@@ -490,7 +490,6 @@ void Java_com_omniti_labs_jlog_remove_1subscriber
   FETCH_CTX(jenv,self,ctx);
   rv = jlog_ctx_remove_subscriber(ctx, subscriber);
   if(rv != 1) {
-    fprintf(stderr, "remove_subscriber failed: %s, %d\n", subscriber, rv);
     if(jlog_ctx_err(ctx) == JLOG_ERR_INVALID_SUBSCRIBER)
       THROW(jenv, "com/omniti/labs/jlog$jlogInvalidSubscriberException", "invalid subscriber");
      else
