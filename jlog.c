@@ -1352,7 +1352,8 @@ int jlog_ctx_set_pre_commit_buffer_size(jlog_ctx *ctx, size_t s) {
   return 0;
 }
 
-int jlog_ctx_flush_pre_commit_buffer(jlog_ctx *ctx) 
+static int 
+_jlog_ctx_flush_pre_commit_buffer_no_lock(jlog_ctx *ctx)
 {
   off_t current_offset = 0;
 
@@ -1367,20 +1368,17 @@ int jlog_ctx_flush_pre_commit_buffer(jlog_ctx *ctx)
     ctx->last_errno = EPERM;
     return -1;
   }
-  pthread_mutex_lock(&ctx->write_lock);
  begin:
   __jlog_open_writer(ctx);
   if(!ctx->data) {
     ctx->last_error = JLOG_ERR_FILE_OPEN;
     ctx->last_errno = errno;
-    pthread_mutex_unlock(&ctx->write_lock);
     return -1;
   }
 
   if (!jlog_file_lock(ctx->data)) {
     ctx->last_error = JLOG_ERR_LOCK;
     ctx->last_errno = errno;
-    pthread_mutex_unlock(&ctx->write_lock);
     return -1;
   }
 
@@ -1412,16 +1410,22 @@ int jlog_ctx_flush_pre_commit_buffer(jlog_ctx *ctx)
     jlog_file_unlock(ctx->data);
     __jlog_close_writer(ctx);
     __jlog_metastore_atomic_increment(ctx);
-    pthread_mutex_unlock(&ctx->write_lock);
     return 0;
   }
  finish:
   jlog_file_unlock(ctx->data);
-  pthread_mutex_unlock(&ctx->write_lock);
   if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
   return -1;
 }
 
+int jlog_ctx_flush_pre_commit_buffer(jlog_ctx *ctx) 
+{
+  int rv;
+  pthread_mutex_lock(&ctx->write_lock);
+  rv = _jlog_ctx_flush_pre_commit_buffer_no_lock(ctx);
+  pthread_mutex_unlock(&ctx->write_lock);
+  return rv;
+}
 
 int jlog_ctx_alter_journal_size(jlog_ctx *ctx, size_t size) {
   if(ctx->meta->unit_limit == size) return 0;
@@ -1479,7 +1483,7 @@ int jlog_ctx_open_writer(jlog_ctx *ctx) {
 
   if (ctx->pre_commit_buffer_size_specified && ctx->pre_commit_buffer_len != ctx->desired_pre_commit_buffer_len) {
    
-    jlog_ctx_flush_pre_commit_buffer(ctx);
+    _jlog_ctx_flush_pre_commit_buffer_no_lock(ctx);
 
     /* unmap it */
     __jlog_close_pre_commit(ctx);
