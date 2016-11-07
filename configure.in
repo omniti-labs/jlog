@@ -47,6 +47,7 @@ int main(void){sem_t s;return (0 != sem_init(&s,0,0));}
 AC_CHECK_LIB(lz4, LZ4_compress_default, , )
 AC_FUNC_STRFTIME
 AC_CHECK_FUNC(pwritev, [AC_DEFINE(HAVE_PWRITEV)], )
+AC_CHECK_FUNC(futimesat, [AC_DEFINE(HAVE_FUTIMESAT)], )
 
 # Checks for header files.
 AC_CHECK_HEADERS(sys/file.h sys/types.h sys/uio.h dirent.h sys/param.h libgen.h \

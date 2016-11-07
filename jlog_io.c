@@ -30,6 +30,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* we actually want non-posix, non-xopen stuff from time.h (futimesat)
+ * to work around ZFS bug about mysnc and mmap writes not changing file
+ * modification time, so exclude this from the XOPEN define below on purpose
+ */
+#include <sys/time.h>
+
 /*
  * We want the single unix spec, so this define is needed on
  * the identity crisis that is Linux. pread()/pwrite()
@@ -46,6 +52,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
 
 static pthread_mutex_t jlog_files_lock = PTHREAD_MUTEX_INITIALIZER;
 static jlog_hash_table jlog_files = JLOG_HASH_EMPTY;
@@ -239,6 +246,19 @@ int jlog_file_sync(jlog_file *f)
 #endif
   if (rv == 0) return 1;
   return 0;
+}
+
+int jlog_file_touch(jlog_file *f)
+{
+
+#ifdef HAVE_FUTIMESAT
+  int rv;
+  rv = futimesat(f->fd, NULL, NULL);
+  return rv;
+#else
+  /* no support, fail */
+  return 0;
+#endif
 }
 
 int jlog_file_map_rdwr(jlog_file *f, void **base, size_t *len)

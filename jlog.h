@@ -159,6 +159,7 @@ JLOG_API(int)       jlog_ctx_alter_mode(jlog_ctx *ctx, int mode);
 JLOG_API(int)       jlog_ctx_alter_journal_size(jlog_ctx *ctx, size_t size);
 JLOG_API(int)       jlog_ctx_repair(jlog_ctx *ctx, int aggressive);
 JLOG_API(int)       jlog_ctx_alter_safety(jlog_ctx *ctx, jlog_safety safety);
+JLOG_API(int)       jlog_ctx_touch_mmapped_files(jlog_ctx *ctx, int touch);
 
 /**
  * Control whether this jlog process should use multi-process safe file locks when performing 

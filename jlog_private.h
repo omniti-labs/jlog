@@ -69,6 +69,7 @@ struct _jlog_ctx {
   pthread_mutex_t write_lock;
   int       meta_is_mapped;
   int       pre_commit_is_mapped;
+  int       touch_mmaps;
   uint8_t   multi_process;
   uint8_t   pre_commit_buffer_size_specified;
   void      *pre_commit_buffer;

@@ -60,6 +60,7 @@
 #undef HAVE_U_INT
 #undef HAVE_U_INT64_T
 #undef HAVE_U_INTXX_T
+#undef HAVE_FUTIMESAT
 #define IFS_CH '/'
 
 #ifdef HAVE_STRING_H
@@ -82,6 +83,9 @@
 #endif
 #if HAVE_LIBGEN_H
 #include <libgen.h>
+#endif
+#if HAVE_FUTIMESAT
+#include <sys/time.h>
 #endif
 
 

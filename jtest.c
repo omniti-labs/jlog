@@ -125,6 +125,7 @@ void jcreate(const char *path, int compressed) {
   ctx = jlog_new(path);
   jlog_ctx_set_use_compression(ctx, compressed);
   jlog_ctx_alter_journal_size(ctx, 1024000);
+  jlog_ctx_touch_mmapped_files(ctx, 1);
   if(jlog_ctx_init(ctx) != 0) {
     fprintf(stderr, "jlog_ctx_init failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
   } else {
@@ -135,6 +136,7 @@ void jcreate(const char *path, int compressed) {
 
 void jresize_pre_commit(const char *path, size_t pre_commit_size) {
   ctx = jlog_new(path);
+  jlog_ctx_touch_mmapped_files(ctx, 1);
   jlog_ctx_set_pre_commit_buffer_size(ctx, pre_commit_size);
   jlog_ctx_open_writer(ctx);
 
@@ -229,7 +231,7 @@ void jopenw(char *foo, int count, const char *path) {
   s = f = my_gethrtime();
 
   ctx = jlog_new(path);
-
+  jlog_ctx_touch_mmapped_files(ctx, 1);
   jlog_ctx_set_multi_process(ctx, 0);
   if(jlog_ctx_open_writer(ctx) != 0) {
     fprintf(stderr, "jlog_ctx_open_writer failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
@@ -262,6 +264,8 @@ void jopenr(char *s, int expect, const char *path) {
   jlog_message message;
 
   ctx = jlog_new(path);
+  jlog_ctx_touch_mmapped_files(ctx, 1);
+
   if(jlog_ctx_open_reader(ctx, s) != 0) {
     fprintf(stderr, "jlog_ctx_open_reader failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
     exit(-1);
