@@ -966,6 +966,7 @@ static jlog_file *__jlog_open_writer(jlog_ctx *ctx) {
 
 static int __jlog_close_writer(jlog_ctx *ctx) {
   if (ctx->data) {
+    jlog_file_sync(ctx->data);
     jlog_file_close(ctx->data);
     ctx->data = NULL;
   }
@@ -1028,7 +1029,7 @@ ___jlog_resync_index(jlog_ctx *ctx, u_int32_t log, jlog_id *last, int *closed)
   u_int64_t indices[BUFFERED_INDICES];
   jlog_message_header_compressed logmhdr;
   uint32_t *message_disk_len = &logmhdr.mlen;
-  off_t index_off, data_off, data_len;
+  off_t index_off, data_off, data_len, recheck_data_len;
   size_t hdr_size = sizeof(jlog_message_header);
   u_int64_t index;
   int i, second_try = 0;
@@ -1162,12 +1163,35 @@ restart:
     last->marker = index_off / sizeof(u_int64_t);
   }
   if(log < ctx->meta->storage_log) {
+
+    /* 
+     * the writer may have moved on and incremented the storage_log
+     * while we were building this index.  This doesn't mean 
+     * that this index file is complete because the writer
+     * probably wrote out data to the data file before incrementing
+     * the storage_log.  
+     * 
+     * We need to recheck the data file length
+     * and ensure it's not larger than when we checked it earlier
+     * only if the data_len has not changed can we consider this index closed.
+     * 
+     * If the data file length has changed, simply RESTART and rebuild this index file
+     */
+    if ((recheck_data_len = jlog_file_size(ctx->data)) == -1) {
+      SYS_FAIL(JLOG_ERR_FILE_SEEK);
+    }
+
+    if (recheck_data_len != data_len) {
+      RESTART;
+    }
+
     if (data_off != data_len) {
 #ifdef DEBUG
       fprintf(stderr, "closing index, but %llu != %llu\n", data_off, data_len);
 #endif
       SYS_FAIL(JLOG_ERR_FILE_CORRUPT);
     }
+
     /* Special case: if we are closing, we next write a '0'
      * we can't write the closing marker if the data segment had no records
      * in it, since it will be confused with an index to offset 0 by the
@@ -1729,6 +1753,7 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
     {
     if ((current_offset = jlog_file_size(ctx->data)) == -1)
       SYS_FAIL(JLOG_ERR_FILE_SEEK);
+
     if(ctx->meta->unit_limit <= current_offset) {
       jlog_file_unlock(ctx->data);
       __jlog_close_writer(ctx);
