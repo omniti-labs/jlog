@@ -105,6 +105,13 @@ int jlog_file_pwritev(jlog_file *f, const struct iovec *vec, int iov_count, off_
 int jlog_file_sync(jlog_file *f);
 
 /**
+ * call futimes to change modification time of the file
+ * return 1 on success, 0 on failure
+ * @internal
+ */
+int jlog_file_touch(jlog_file *f);
+
+/**
  * maps the entirety of a jlog_file into memory for reading and writing
  * @param[in] f the jlog_file on which you are operating
  * @param[out] base is set to the base of the mapped region

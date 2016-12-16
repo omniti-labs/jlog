@@ -623,6 +623,10 @@ static int __jlog_save_metastore(jlog_ctx *ctx, int ilocked)
     if(ctx->meta->safety == JLOG_SAFE) flags |= MS_SYNC;
     rv = msync((void *)(ctx->meta), sizeof(*ctx->meta), flags);
     FASSERT(rv >= 0, "jlog_save_metastore");
+    if (ctx->touch_mmaps) {
+      rv = jlog_file_touch(ctx->metastore);
+      FASSERT(rv >= 0, "jlog_save_metastore, touch");      
+    }
     if (!ilocked) jlog_file_unlock(ctx->metastore);
     if ( rv < 0 )
       ctx->last_error = JLOG_ERR_FILE_WRITE;
@@ -1346,6 +1350,12 @@ int jlog_ctx_alter_safety(jlog_ctx *ctx, jlog_safety safety) {
   return -1;
 }
 
+int jlog_ctx_touch_mmapped_files(jlog_ctx *ctx, int touch)
+{
+  ctx->touch_mmaps = touch;
+  return 0;
+}
+
 int jlog_ctx_set_multi_process(jlog_ctx *ctx, uint8_t mp) {
   ctx->multi_process = mp;
   return 0;
@@ -1429,6 +1439,11 @@ _jlog_ctx_flush_pre_commit_buffer_no_lock(jlog_ctx *ctx)
   ctx->pre_commit_pos = ctx->pre_commit_buffer;
   /* ensure we save this in the mmapped data */
   *ctx->pre_commit_pointer = 0;
+
+  if (ctx->touch_mmaps) {
+    int rv = jlog_file_touch(ctx->pre_commit);
+    FASSERT(rv >= 0, "jlog_flush_pre_commit_buffer_no_lock, touch");      
+  }
 
   if(ctx->meta->unit_limit <= current_offset) {
     jlog_file_unlock(ctx->data);
@@ -1776,6 +1791,11 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
     ctx->pre_commit_pos = ctx->pre_commit_buffer;
     /* ensure we save this in the mmapped data */
     *ctx->pre_commit_pointer = 0;
+
+    if (ctx->touch_mmaps) {
+      int rv = jlog_file_touch(ctx->pre_commit);
+      FASSERT(rv >= 0, "jlog_ctx_write_message, pre_commit, touch");      
+    }
   }
  
   if (total_size <= ctx->pre_commit_buffer_len) {
