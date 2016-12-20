@@ -65,7 +65,7 @@ extern int creat(const char *, int);
 #if defined(linux)
 #include <time.h>
 typedef long long unsigned int hrtime_t;
-inline hrtime_t my_gethrtime() {
+static inline hrtime_t my_gethrtime() {
   struct timespec ts;
   clock_gettime(CLOCK_MONOTONIC_RAW, &ts);
   return ((ts.tv_sec * 1000000000) + ts.tv_nsec);
@@ -77,7 +77,7 @@ inline hrtime_t my_gethrtime() {
 typedef uint64_t hrtime_t;
 static int initialized = 0;
 static mach_timebase_info_data_t    sTimebaseInfo;
-inline hrtime_t my_gethrtime() {
+static inline hrtime_t my_gethrtime() {
   uint64_t t;
   if(!initialized) {
     if(sTimebaseInfo.denom == 0)
@@ -87,7 +87,7 @@ inline hrtime_t my_gethrtime() {
   return t * sTimebaseInfo.numer / sTimebaseInfo.denom;
 }
 #else
-inline hrtime_t my_gethrtime() {
+static inline hrtime_t my_gethrtime() {
   return gethrtime();
 }
 #endif
