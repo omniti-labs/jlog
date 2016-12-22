@@ -172,7 +172,7 @@ static void addonefile(const char *logname, const char *nam, int idx) {
   (void)snprintf(ag, leen-1, "%s%c%s", logname, IFS_CH, nam);
   int fd = creat(ag, DEFAULT_FILE_MODE);
   if ( fd >= 0 ) {
-    (void)write(fd, &streeng[7*idx], 7);
+    if(write(fd, &streeng[7*idx], 7) != 7) exit(1);
     (void)close(fd);
   }
   free((void *)ag);
@@ -187,7 +187,7 @@ static void corruptmetastore(const char *logname) {
   int fd = open(ag, 02);
   if ( fd < 0 )
     return;
-  (void)write(fd, &streeng[0], 7);
+  if(write(fd, &streeng[0], 7) != 7) exit(1);
   (void)close(fd);
 }
 
