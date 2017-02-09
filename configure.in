@@ -263,7 +263,6 @@ case $host in
     SHLD="$CC -dynamiclib -single_module -undefined dynamic_lookup"
     ;;
   *freebsd*)
-    CFLAGS="$CFLAGS -D__BSD_VISIBLE"
     SHCFLAGS="$CFLAGS -fPIC -pthread"
     SHLD="$CC -shared -rdynamic"
     ;;
