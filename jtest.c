@@ -86,7 +86,17 @@ inline hrtime_t my_gethrtime() {
   t = mach_absolute_time();
   return t * sTimebaseInfo.numer / sTimebaseInfo.denom;
 }
-#else
+#elif defined(BSD)
+#include <time.h>
+#define NANOSEC	1000000000
+
+typedef uint64_t hrtime_t;
+inline hrtime_t my_gethrtime() {
+  struct timespec ts;
+  clock_gettime(CLOCK_UPTIME,&ts);
+  return (((u_int64_t) ts.tv_sec) * NANOSEC + ts.tv_nsec);
+}
+#else // illumos/Solaris
 inline hrtime_t my_gethrtime() {
   return gethrtime();
 }

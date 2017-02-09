@@ -248,14 +248,14 @@ int main(int argc, char **argv) {
   if(!only_write) {
     for(i=0; i<THRCNT; i++) {
       pthread_create(&tid[i], NULL, reader, (void *)(uintptr_t)i);
-      fprintf(stderr, "[%d] started reader\n", (int)tid[i]);
+      fprintf(stderr, "[%d] started reader\n", (int)(uintptr_t)tid[i]);
     }
   }
   if(!only_read) {
     fprintf(stderr, "starting writers..\n");
     for(i=0; i<WTHRCNT; i++) {
       pthread_create(&wtid[i], NULL, writer, (void *)(uintptr_t)i);
-      fprintf(stderr, "[%d] started writer\n", (int)wtid[i]);
+      fprintf(stderr, "[%d] started writer\n", (int)(uintptr_t)wtid[i]);
     }
   } else {
     sleep(5);
