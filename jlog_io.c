@@ -46,6 +46,10 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#ifdef HAVE_SYS_UIO_H
+#include <sys/uio.h>
+#endif
+
 
 static pthread_mutex_t jlog_files_lock = PTHREAD_MUTEX_INITIALIZER;
 static jlog_hash_table jlog_files = JLOG_HASH_EMPTY;
