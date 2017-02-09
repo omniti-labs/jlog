@@ -48,7 +48,7 @@ AOBJS= \
 SOOBJS= \
 	jlog.lo jlog_hash.lo jlog_io.lo jlog_compress.lo
 
-all:	libjlog.$(DOTSO) libjlog.a jlogctl jlogtail test
+all:	libjlog.$(DOTSO) libjlog.a jlogctl jlogtail
 
 .c.o:
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
