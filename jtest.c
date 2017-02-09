@@ -62,7 +62,7 @@ extern int creat(const char *, int);
 #define DEFAULT_FILE_MODE 0640
 #endif
 
-#if defined(linux)
+#if defined(linux) || defined(__linux) || defined(__linux__)
 #include <time.h>
 typedef long long unsigned int hrtime_t;
 inline hrtime_t my_gethrtime() {
