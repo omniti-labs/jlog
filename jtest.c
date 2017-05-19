@@ -114,6 +114,7 @@ void usage() {
           "\tinit <path>\n"
           "\tinit_compressed <path>\n"
           "\tread <count>\n"
+          "\tbulk_read <count>\n"
           "\twrite <len> <count>\n"
           "\trepair\n"
           "\ttwo_checkpoints <count>\n"
@@ -308,6 +309,49 @@ void jopenr(char *s, int expect, const char *path) {
   jlog_ctx_close(ctx);
 }
 
+void jopenr_bulk_read(char *s, int expect, const char *path) {
+  char begins[20], ends[20];
+  jlog_id begin, end;
+  int count;
+  jlog_message *messages;
+
+  ctx = jlog_new(path);
+  if(jlog_ctx_open_reader(ctx, s) != 0) {
+    fprintf(stderr, "jlog_ctx_open_reader failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+    exit(-1);
+  }
+  while(expect > 0) {
+    if((count = jlog_ctx_read_interval(ctx, &begin, &end)) == -1) {
+      fprintf(stderr, "jlog_ctx_read_interval failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+      exit(-1);
+    }
+    jlog_snprint_logid(begins, sizeof(begins), &begin);
+    jlog_snprint_logid(ends, sizeof(ends), &end);
+    if(count > 0) {
+      int i;
+      count = MIN(count, expect);
+      messages = calloc(count, sizeof(jlog_message));
+      if(jlog_ctx_bulk_read_messages(ctx, &begin, count, messages) != 0) {
+        fprintf(stderr, "read failed: %d\n", jlog_ctx_err(ctx));
+      } else {
+        for(i=0; i<count; i++, JLOG_ID_ADVANCE(&begin)) {
+          expect--;
+          jlog_message *message = &messages[i];
+          jlog_snprint_logid(begins, sizeof(begins), &begin);
+          fprintf(stderr, "[%7d] bulk_read: [%s] - %d\n\t'%.*s'\n", expect, begins,
+                  message->mess_len, message->mess_len, (char *)message->mess);
+          end = begin;
+        }
+      }
+      if(jlog_ctx_read_checkpoint(ctx, &end) != 0) {
+        fprintf(stderr, "checkpoint failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+      } else {
+        fprintf(stderr, "\tcheckpointed...\n");
+      }
+    }
+  }
+  jlog_ctx_close(ctx);
+}
 
 void jopenr_two_checks(const char *sub, const char *check_sub, int expect) {
   char begins[20], ends[20];
@@ -434,6 +478,16 @@ int main(int argc, char **argv) {
         path = argv[i];
       }
       jopenr(SUBSCRIBER, count, path);
+      exit(0);
+    } else if(!strcmp(argv[i], "bulk_read")) {
+      if(i+1 >= argc) { usage(); exit(-1); }
+      i++;
+      int count = atoi(argv[i++]);
+      const char *path = LOGNAME;
+      if (i < argc) {
+        path = argv[i];
+      }
+      jopenr_bulk_read(SUBSCRIBER, count, path);
       exit(0);
     } else if(!strcmp(argv[i], "repair")) {
       i++;
