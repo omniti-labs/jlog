@@ -2179,6 +2179,139 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
   }
   return -1;
 }
+int jlog_ctx_bulk_read_messages(jlog_ctx *ctx, const jlog_id *id, const int count, jlog_message *m) {
+  off_t index_len;
+  u_int64_t data_off;
+  int with_lock = 0;
+  size_t hdr_size = 0;
+  uint32_t *message_disk_len;
+  int i;
+
+  if (count <= 0) {
+    return 0;
+  }
+
+ once_more_with_lock:
+
+  data_off = 0;
+
+  ctx->last_error = JLOG_ERR_SUCCESS;
+  if (ctx->context_mode != JLOG_READ)
+    SYS_FAIL(JLOG_ERR_ILLEGAL_WRITE);
+  if (id->marker < 1) {
+    SYS_FAIL(JLOG_ERR_ILLEGAL_LOGID);
+  }
+
+  __jlog_open_reader(ctx, id->log);
+  if(!ctx->data)
+    SYS_FAIL(JLOG_ERR_FILE_OPEN);
+  __jlog_open_indexer(ctx, id->log);
+  if(!ctx->index)
+    SYS_FAIL(JLOG_ERR_IDX_OPEN);
+
+  if(with_lock) {
+    if (!jlog_file_lock(ctx->index)) {
+      with_lock = 0;
+      SYS_FAIL(JLOG_ERR_LOCK);
+    }
+  }
+
+  if ((index_len = jlog_file_size(ctx->index)) == -1)
+    SYS_FAIL(JLOG_ERR_IDX_SEEK);
+  if (index_len % sizeof(u_int64_t))
+    SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
+  if (id->marker * sizeof(u_int64_t) > index_len) {
+    SYS_FAIL(JLOG_ERR_ILLEGAL_LOGID);
+  }
+
+  if (!jlog_file_pread(ctx->index, &data_off, sizeof(u_int64_t),
+                       (id->marker - 1) * sizeof(u_int64_t)))
+  {
+    SYS_FAIL(JLOG_ERR_IDX_READ);
+  }
+
+  if (data_off == 0 && id->marker != 1) {
+    if (id->marker * sizeof(u_int64_t) == index_len) {
+      /* close tag; not a real offset */
+      ctx->last_error = JLOG_ERR_CLOSE_LOGID;
+      ctx->last_errno = 0;
+      if(with_lock) jlog_file_unlock(ctx->index);
+      return -1;
+    } else {
+      /* an offset of 0 in the middle of an index means curruption */
+      SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
+    }
+  }
+
+  if(__jlog_mmap_reader(ctx, id->log) != 0)
+    SYS_FAIL(JLOG_ERR_FILE_READ);
+
+  for (i=0; i < count; i++) {
+    jlog_message *msg = &m[i];
+    message_disk_len = &msg->aligned_header.mlen;
+
+    if (IS_COMPRESS_MAGIC(ctx)) {
+      hdr_size = sizeof(jlog_message_header_compressed);
+      message_disk_len = &msg->aligned_header.compressed_len;
+    } else {
+      hdr_size = sizeof(jlog_message_header);
+    }
+
+    if(data_off > ctx->mmap_len - hdr_size) {
+#ifdef DEBUG
+      fprintf(stderr, "read idx off end: %llu\n", data_off);
+#endif
+      SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
+    }
+
+    memcpy(&msg->aligned_header, ((u_int8_t *)ctx->mmap_base) + data_off,
+           hdr_size);
+
+    if(data_off + hdr_size + *message_disk_len > ctx->mmap_len) {
+#ifdef DEBUG
+      fprintf(stderr, "read idx off end: %llu %llu\n", data_off, ctx->mmap_len);
+#endif
+      SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
+    }
+
+    msg->header = &msg->aligned_header;
+
+    if (IS_COMPRESS_MAGIC(ctx)) {
+      if (ctx->mess_data_size < msg->aligned_header.mlen) {
+        ctx->mess_data = realloc(ctx->mess_data, msg->aligned_header.mlen * 2);
+        ctx->mess_data_size = msg->aligned_header.mlen * 2;
+      }
+      jlog_decompress((((char *)ctx->mmap_base) + data_off + hdr_size),
+                      msg->header->compressed_len, ctx->mess_data, ctx->mess_data_size);
+      msg->mess_len = msg->header->mlen;
+      msg->mess = ctx->mess_data;
+      data_off += msg->header->compressed_len;
+    } else {
+      msg->mess_len = msg->header->mlen;
+      msg->mess = (((u_int8_t *)ctx->mmap_base) + data_off + hdr_size);
+      data_off += msg->mess_len;
+    }
+    data_off += hdr_size;
+  }
+ finish:
+  if(with_lock) jlog_file_unlock(ctx->index);
+  if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
+  if(!with_lock) {
+    if (ctx->last_error == JLOG_ERR_IDX_CORRUPT) {
+      if (jlog_file_lock(ctx->index)) {
+        jlog_file_truncate(ctx->index, 0);
+        jlog_file_unlock(ctx->index);
+      }
+    }
+    ___jlog_resync_index(ctx, id->log, NULL, NULL);
+    with_lock = 1;
+#ifdef DEBUG
+    fprintf(stderr, "read retrying with lock\n");
+#endif
+    goto once_more_with_lock;
+  }
+  return -1;
+}
 int jlog_ctx_read_interval(jlog_ctx *ctx, jlog_id *start, jlog_id *finish) {
   jlog_id chkpt;
   int count = 0;
