@@ -31,6 +31,7 @@
  */
 
 #include <stdio.h>
+#include <getopt.h>
 #include "jlog.h"
 #include "jlog_compress.h"
 
@@ -111,14 +112,14 @@ static size_t default_pre_commit_size = 1024*128;
 void usage() {
   fprintf(stderr,
           "options:\n"
-          "\tinit <path>\n"
-          "\tinit_compressed <path>\n"
-          "\tread <count>\n"
-          "\tbulk_read <count>\n"
-          "\twrite <len> <count>\n"
-          "\trepair\n"
-          "\ttwo_checkpoints <count>\n"
-          "\tresize_pre_commit <path> <new_size>\n");
+          "\tinit [-p <path>] [-s <subscriber>] [-j <journalsize>]\n"
+          "\tinit_compressed [-p <path>] [-s <subscriber>] [-j <journalsize>]\n"
+          "\tread [-p <path>] [-n <count>] [-s <subscriber>]\n"
+          "\tbulk_read [-p <path>] [-n <count>] [-s <subscriber>]\n"
+          "\twrite [-p <path>] [-l <len>] [-n <count>]\n"
+          "\trepair [-p <path>]\n"
+          "\ttwo_checkpoints [-p <path>] [-n <count>] [-s <subscriber>]\n"
+          "\tresize_pre_commit [-p <path>] [-l <new_size>]\n");
 }
 
 static void
@@ -132,14 +133,14 @@ print_rate(hrtime_t s, hrtime_t f, uint64_t cnt) {
 }
 
 
-void jcreate(const char *path, int compressed) {
+void jcreate(const char *path, const char *subscriber, int compressed, int jsize) {
   ctx = jlog_new(path);
   jlog_ctx_set_use_compression(ctx, compressed);
-  jlog_ctx_alter_journal_size(ctx, 1024000);
+  jlog_ctx_alter_journal_size(ctx, jsize);
   if(jlog_ctx_init(ctx) != 0) {
     fprintf(stderr, "jlog_ctx_init failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
   } else {
-    jlog_ctx_add_subscriber(ctx, SUBSCRIBER, JLOG_BEGIN);
+    jlog_ctx_add_subscriber(ctx, subscriber, JLOG_BEGIN);
   }
   jlog_ctx_close(ctx);
 }
@@ -209,12 +210,12 @@ static void addsomefiles(const char *logname) {
   corruptmetastore(logname);
 }
 
-void jrepair() {
-  ctx = jlog_new(LOGNAME);
+void jrepair(const char *path) {
+  ctx = jlog_new(path);
   if(jlog_ctx_init(ctx) != 0) {
     fprintf(stderr, "jlog_ctx_init failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
   } else {
-    addsomefiles(LOGNAME);
+    addsomefiles(path);
     int b = jlog_ctx_repair(ctx, 0);
     if ( b != 1 ) {
       (void)fprintf(stderr, "jlog_ctx_repair(0) failed: %d %s\n",
@@ -266,7 +267,7 @@ void jopenw(char *foo, int count, const char *path) {
   jlog_ctx_close(ctx);
 }
 
-void jopenr(char *s, int expect, const char *path) {
+void jopenr(const char *s, int expect, const char *path) {
   char begins[20], ends[20];
   jlog_id begin, end;
   int count;
@@ -309,7 +310,7 @@ void jopenr(char *s, int expect, const char *path) {
   jlog_ctx_close(ctx);
 }
 
-void jopenr_bulk_read(char *s, int expect, const char *path) {
+void jopenr_bulk_read(const char *s, int expect, const char *path) {
   char begins[20], ends[20];
   jlog_id begin, end;
   int count;
@@ -333,6 +334,7 @@ void jopenr_bulk_read(char *s, int expect, const char *path) {
       messages = calloc(count, sizeof(jlog_message));
       if(jlog_ctx_bulk_read_messages(ctx, &begin, count, messages) != 0) {
         fprintf(stderr, "read failed: %d\n", jlog_ctx_err(ctx));
+        exit(-1);
       } else {
         for(i=0; i<count; i++, JLOG_ID_ADVANCE(&begin)) {
           expect--;
@@ -353,13 +355,13 @@ void jopenr_bulk_read(char *s, int expect, const char *path) {
   jlog_ctx_close(ctx);
 }
 
-void jopenr_two_checks(const char *sub, const char *check_sub, int expect) {
+void jopenr_two_checks(const char *sub, const char *check_sub, int expect, const char *path) {
   char begins[20], ends[20];
   jlog_id begin, end, checkpoint;
   int count, pass = 0, orig_expect = expect;
   jlog_message message;
 
-  ctx = jlog_new(LOGNAME);
+  ctx = jlog_new(path);
   if(jlog_ctx_open_reader(ctx, sub) != 0) {
     fprintf(stderr, "jlog_ctx_open_reader failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
     exit(-1);
@@ -438,84 +440,69 @@ void jopenr_two_checks(const char *sub, const char *check_sub, int expect) {
 
 
 int main(int argc, char **argv) {
-  int i;
+  int i, len = -1, count = -1;
+  int jsize = 1024000;
+  const char *path = LOGNAME;
+  const char *subscriber = SUBSCRIBER;
+  const char *command;
+  if(argc < 2) {
+    usage();
+    exit(-1);
+  }
+  command = argv[1];
+  while(-1 != (i = getopt(argc-1, argv+1, "p:n:l:s:j:"))) {
+    switch(i) {
+    case 'p': path = optarg; break;
+    case 's': subscriber = optarg; break;
+    case 'l': len = atoi(optarg); break;
+    case 'n': count = atoi(optarg); break;
+    case 'j': jsize = atoi(optarg); break;
+    default: usage(); exit(-1);
+    }
+  }
 #if _WIN32
   mem_init();
 #endif
-  for(i=1; i<argc; i++) {
-    if(!strcmp(argv[i], "init") || !strcmp(argv[i], "init_compressed")) {
-      int compress = strcmp(argv[i], "init_compressed") == 0;
-      const char *path = LOGNAME;
-      if (argc >= 3) {
-        path = argv[2];
-      }
-      jcreate(path, compress);
-      exit(0);
-    } else if(!strcmp(argv[i], "write")) {
-      int len;
-      char *message;
-      if(i+2 >= argc) { usage(); exit(-1); }
-      i++;
-      len = atoi(argv[i]);
-      message = malloc(len+1);
-      memset(message, 'X', len-1);
-      message[len-1] = '\n';
-      message[len] = '\0';
-      i++;
-      int count = atoi(argv[i++]);
-      const char *path = LOGNAME;
-      if (i < argc) {
-        path = argv[i];
-      }
-      jopenw(message, count, path);
-      exit(0);
-    } else if(!strcmp(argv[i], "read")) {
-      if(i+1 >= argc) { usage(); exit(-1); }
-      i++;
-      int count = atoi(argv[i++]);
-      const char *path = LOGNAME;
-      if (i < argc) {
-        path = argv[i];
-      }
-      jopenr(SUBSCRIBER, count, path);
-      exit(0);
-    } else if(!strcmp(argv[i], "bulk_read")) {
-      if(i+1 >= argc) { usage(); exit(-1); }
-      i++;
-      int count = atoi(argv[i++]);
-      const char *path = LOGNAME;
-      if (i < argc) {
-        path = argv[i];
-      }
-      jopenr_bulk_read(SUBSCRIBER, count, path);
-      exit(0);
-    } else if(!strcmp(argv[i], "repair")) {
-      i++;
-      jrepair();
-      exit(0);
-    } else if (!strcmp(argv[i], "two_checkpoints")) {
-      i++;
-      jopenr_two_checks(SUBSCRIBER, CHECKPOINT_SUBSCRIBER, atoi(argv[i]));
-      exit(0);
-    } else if (!strcmp(argv[i], "resize_pre_commit")) {
-      i++;
-      const char *path = LOGNAME;
-      size_t new_size = default_pre_commit_size;
-      if (i < argc) {
-        path = argv[i++];
-      }
-      if (i < argc) {
-        new_size = atoi(argv[i]);
-      }
+  if(!strcmp(command, "init") || !strcmp(command, "init_compressed")) {
+    int compress = strcmp(command, "init_compressed") == 0;
+    jcreate(path, subscriber, compress, jsize);
+    exit(0);
+  } else if(!strcmp(command, "write")) {
+    char *message;
+    if(len < 0) len = 100;
+    if(count < 0) count = 1;
+    message = malloc(len+1);
+    memset(message, 'X', len-1);
+    message[len-1] = '\n';
+    message[len] = '\0';
+    jopenw(message, count, path);
+    exit(0);
+  } else if(!strcmp(command, "read")) {
+    if(count < 0) count = 1;
+    jopenr(subscriber, count, path);
+    exit(0);
+  } else if(!strcmp(command, "bulk_read")) {
+    if(count < 0) count = 1;
+    jopenr_bulk_read(subscriber, count, path);
+    exit(0);
+  } else if(!strcmp(command, "repair")) {
+    jrepair(path);
+    exit(0);
+  } else if (!strcmp(command, "two_checkpoints")) {
+    if(count < 0) count = 1;
+    jopenr_two_checks(subscriber, CHECKPOINT_SUBSCRIBER, count, path);
+    exit(0);
+  } else if (!strcmp(command, "resize_pre_commit")) {
+    i++;
+    size_t new_size = default_pre_commit_size;
+    if(len >= 0) new_size = len;
+    jresize_pre_commit(path, new_size);
+    exit(0);
+  }
 
-      jresize_pre_commit(path, new_size);
-      exit(0);
-    }
-
-    else {
-      fprintf(stderr, "command '%s' not understood\n", argv[i]);
-      usage();
-    }
+  else {
+    fprintf(stderr, "command '%s' not understood\n", command);
+    usage();
   }
   return 0;
 }
