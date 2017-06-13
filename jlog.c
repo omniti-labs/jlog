@@ -96,9 +96,35 @@
 #if HAVE_SYS_MMAN_H
 #include <sys/mman.h>
 #endif
+#include <limits.h>
 
 #include "fassert.h"
 #include <pthread.h>
+#if HAVE_ALLOCA_H
+#include <alloca.h>
+#endif
+
+#if defined(__sun) && !defined(HAVE_POSIX_READDIR_R)
+#define portable_readdir_r(a,b,c) (((*(c)) = readdir_r(a,b)) == NULL)
+#else
+#define portable_readdir_r readdir_r
+#endif
+
+#ifdef _PC_NAME_MAX
+#define ALLOCA_DIRENT(de,path) \
+  do { int size; \
+    size = pathconf(path, _PC_NAME_MAX); \
+    if(size < 0) size = PATH_MAX + 128; \
+    if(PATH_MAX + 128 < size) size = PATH_MAX + 128; \
+    de = alloca(size); \
+  } while(0)
+#else
+#define ALLOCA_DIRENT(de,path) \
+  do {
+  int size = PATH_MAX + 128; \
+  de = alloca(size); \
+  } while(0)
+#endif
 
 #define BUFFERED_INDICES 1024
 #define PRE_COMMIT_BUFFER_SIZE_DEFAULT 0
@@ -478,7 +504,7 @@ int jlog_pending_readers(jlog_ctx *ctx, u_int32_t log,
                          u_int32_t *earliest_out) {
   int readers;
   DIR *dir;
-  struct dirent *ent;
+  struct dirent *ent, *ent_store;
   char file[MAXPATHLEN];
   int len, seen = 0;
   u_int32_t earliest = 0;
@@ -499,7 +525,9 @@ int jlog_pending_readers(jlog_ctx *ctx, u_int32_t log,
   file[len++] = IFS_CH;
   file[len] = '\0';
 
-  while ((ent = readdir(dir))) {
+  ALLOCA_DIRENT(ent_store, ctx->path);
+
+  while (portable_readdir_r(dir, ent_store, &ent) == 0 && ent != NULL) {
     if (ent->d_name[0] == 'c' && ent->d_name[1] == 'p' && ent->d_name[2] == '.') {
       jlog_file *cp;
       int dlen;
@@ -557,7 +585,7 @@ int jlog_ctx_list_subscribers_dispose(jlog_ctx *ctx, char **subs) {
 int jlog_ctx_list_subscribers(jlog_ctx *ctx, char ***subs) {
   struct _jlog_subs js = { NULL, 0, 0 };
   DIR *dir;
-  struct dirent *ent;
+  struct dirent *ent, *ent_store;
   unsigned char file[MAXPATHLEN];
   char *p;
   int len;
@@ -568,7 +596,10 @@ int jlog_ctx_list_subscribers(jlog_ctx *ctx, char ***subs) {
 
   dir = opendir(ctx->path);
   if (!dir) return -1;
-  while ((ent = readdir(dir))) {
+
+  ALLOCA_DIRENT(ent_store, ctx->path);
+
+  while (portable_readdir_r(dir, ent_store, &ent) == 0 && ent != NULL) {
     if (ent->d_name[0] == 'c' && ent->d_name[1] == 'p' && ent->d_name[2] == '.') {
 
       for (len = 0, p = ent->d_name + 3; *p;) {
@@ -1261,7 +1292,7 @@ void jlog_set_error_func(jlog_ctx *ctx, jlog_error_func Func, void *ptr) {
 
 size_t jlog_raw_size(jlog_ctx *ctx) {
   DIR *d;
-  struct dirent *de;
+  struct dirent *de, *ent_store;
   size_t totalsize = 0;
   int ferr, len;
   char filename[MAXPATHLEN] = {0};
@@ -1271,7 +1302,10 @@ size_t jlog_raw_size(jlog_ctx *ctx) {
   len = strlen(ctx->path);
   memcpy(filename, ctx->path, len);
   filename[len++] = IFS_CH;
-  while((de = readdir(d)) != NULL) {
+
+  ALLOCA_DIRENT(ent_store, ctx->path);
+
+  while(portable_readdir_r(d, ent_store, &de) == 0 && de != NULL) {
     struct stat sb;
     int dlen;
 
@@ -2369,7 +2403,7 @@ int jlog_ctx_read_interval(jlog_ctx *ctx, jlog_id *start, jlog_id *finish) {
 
 int jlog_ctx_first_log_id(jlog_ctx *ctx, jlog_id *id) {
   DIR *d;
-  struct dirent *de;
+  struct dirent *de, *ent_store;
   ctx->last_error = JLOG_ERR_SUCCESS;
   u_int32_t log;
   int found = 0;
@@ -2379,7 +2413,9 @@ int jlog_ctx_first_log_id(jlog_ctx *ctx, jlog_id *id) {
   d = opendir(ctx->path);
   if (!d) return -1;
 
-  while ((de = readdir(d))) {
+  ALLOCA_DIRENT(ent_store, ctx->path);
+
+  while(portable_readdir_r(d, ent_store, &de) == 0 && de != NULL) {
     int i;
     char *cp = de->d_name;
     if(strlen(cp) != 8) continue;
@@ -2453,7 +2489,7 @@ int jlog_clean(const char *file) {
   u_int32_t earliest = 0;
   jlog_ctx *log;
   DIR *dir;
-  struct dirent *de;
+  struct dirent *de, *ent_store;
 
   log = jlog_new(file);
   jlog_ctx_open_writer(log);
@@ -2463,8 +2499,10 @@ int jlog_clean(const char *file) {
   earliest = 0;
   if(jlog_pending_readers(log, 0, &earliest) < 0) goto out;
 
+  ALLOCA_DIRENT(ent_store, file);
+
   rv = 0;
-  while((de = readdir(dir)) != NULL) {
+  while(portable_readdir_r(dir, ent_store, &de) == 0 && de != NULL) {
     u_int32_t logid;
     if(is_datafile(de->d_name, &logid) && logid < earliest) {
       char fullfile[MAXPATHLEN];
@@ -2515,11 +2553,11 @@ int jlog_clean(const char *file) {
 
 // find the earliest and latest hex files in the directory
 
-static int findel(DIR *dir, unsigned int *earp, unsigned int *latp) {
+static int findel(const char *file, DIR *dir, unsigned int *earp, unsigned int *latp) {
   unsigned int maxx = 0;
   unsigned int minn = 0;
   unsigned int hexx = 0;
-  struct dirent *ent;
+  struct dirent *ent, *ent_store;
   int havemaxx = 0;
   int haveminn = 0;
   int nent = 0;
@@ -2527,7 +2565,8 @@ static int findel(DIR *dir, unsigned int *earp, unsigned int *latp) {
   if ( dir == NULL )
     return 0;
   (void)rewinddir(dir);
-  while ( (ent = readdir(dir)) != NULL ) {
+  ALLOCA_DIRENT(ent_store, file);
+  while(portable_readdir_r(dir, ent_store, &ent) == 0 && ent != NULL) {
     if ( ent->d_name[0] != '\0' ) {
       nent++;
       if ( strlen(ent->d_name) == 8 &&
@@ -2677,14 +2716,15 @@ static int repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   FASSERT(dir != NULL, "invalid directory");
   if ( dir == NULL )
     return 0;
-  struct dirent *ent = NULL;
+  struct dirent *ent = NULL, *ent_store;
   char *ag = NULL;
   int   fd = -1;
 
   (void)rewinddir(dir);
   size_t twoI = 2*sizeof(unsigned int);
   int sta = 0;
-  while ( (ent = readdir(dir)) != NULL ) {
+  ALLOCA_DIRENT(ent_store, pth);
+  while(portable_readdir_r(dir, ent_store, &ent) == 0 && ent != NULL) {
     if ( ent->d_name[0] != '\0' ) {
       if ( strncmp(ent->d_name, "cp.", 3) == 0 ) {
         char n[3];
@@ -2906,10 +2946,11 @@ static void try_to_save_fasserts(const char *pth, DIR *dir) {
   char *parent = makeparentname(pth, fnlen, &off2fn);
   if ( parent == NULL )
     return;
-  struct dirent *ent;
+  struct dirent *ent, *ent_store;
   (void)rewinddir(dir);
   int ntomove = 0;
-  while ( (ent = readdir(dir)) != NULL ) {
+  ALLOCA_DIRENT(ent_store, pth);
+  while(portable_readdir_r(dir, ent_store, &ent) == 0 && ent != NULL) {
     if ( ent->d_name[0] != '\0' ) {
       if ( strncmp("fassert", ent->d_name, flen) == 0 ) {
         // if we attempt to do a rename() during a directory traversal
@@ -2941,9 +2982,10 @@ static int rmcontents_and_dir(const char *pth, DIR *dir) {
     return 0;
   int ntodelete = 0;
   if ( dir != NULL ) {
-    struct dirent *ent = NULL;
+    struct dirent *ent = NULL, *ent_store;
     (void)rewinddir(dir);
-    while ( (ent = readdir(dir)) != NULL ) {
+    ALLOCA_DIRENT(ent_store, pth);
+    while(portable_readdir_r(dir, ent_store, &ent) == 0 && ent != NULL) {
       if ( ent->d_name[0] != '\0' ) {
         if ( (strcmp(ent->d_name, ".") != 0) &&
              (strcmp(ent->d_name, "..") != 0) ) {
@@ -2990,7 +3032,7 @@ int jlog_ctx_repair(jlog_ctx *ctx, int aggressive) {
   }
   unsigned int ear = 0;
   unsigned int lat = 0;
-  int b0 = findel(dir, &ear, &lat);
+  int b0 = findel(ctx->path, dir, &ear, &lat);
   FASSERT(b0, "cannot find hex files in jlog directory");
   if ( b0 == 1 ) {
     // step 3: attempt to repair the metastore. It might not need any
