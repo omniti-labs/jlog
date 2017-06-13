@@ -322,6 +322,8 @@ void jopenr_bulk_read(const char *s, int expect, const char *path) {
     exit(-1);
   }
   while(expect > 0) {
+    int retry = 1;
+  retry:
     if((count = jlog_ctx_read_interval(ctx, &begin, &end)) == -1) {
       fprintf(stderr, "jlog_ctx_read_interval failed: %d %s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
       exit(-1);
@@ -333,7 +335,11 @@ void jopenr_bulk_read(const char *s, int expect, const char *path) {
       count = MIN(count, expect);
       messages = calloc(count, sizeof(jlog_message));
       if(jlog_ctx_bulk_read_messages(ctx, &begin, count, messages) != 0) {
-        fprintf(stderr, "read failed: %d\n", jlog_ctx_err(ctx));
+        fprintf(stderr, "read failed: %d/%s\n", jlog_ctx_err(ctx), jlog_ctx_err_string(ctx));
+        if(retry) {
+          retry = 0;
+          goto retry;
+        }
         exit(-1);
       } else {
         for(i=0; i<count; i++, JLOG_ID_ADVANCE(&begin)) {
