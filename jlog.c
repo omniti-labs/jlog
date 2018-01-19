@@ -1042,13 +1042,6 @@ ___jlog_resync_index(jlog_ctx *ctx, u_int32_t log, jlog_id *last, int *closed)
   ctx->last_error = JLOG_ERR_SUCCESS;
   if(closed) *closed = 0;
 
-  __jlog_open_reader(ctx, log);
-  if (!ctx->data) {
-    ctx->last_error = JLOG_ERR_FILE_OPEN;
-    ctx->last_errno = errno;
-    return -1;
-  }
-
 #define RESTART do { \
   if (second_try == 0) { \
     jlog_file_truncate(ctx->index, index_off); \
@@ -1061,6 +1054,12 @@ ___jlog_resync_index(jlog_ctx *ctx, u_int32_t log, jlog_id *last, int *closed)
 } while (0)
 
 restart:
+  __jlog_open_reader(ctx, log);
+  if (!ctx->data) {
+    ctx->last_error = JLOG_ERR_FILE_OPEN;
+    ctx->last_errno = errno;
+    return -1;
+  }
   __jlog_open_indexer(ctx, log);
   if (!ctx->index) {
     ctx->last_error = JLOG_ERR_IDX_OPEN;
