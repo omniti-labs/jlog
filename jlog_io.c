@@ -75,14 +75,15 @@ jlog_file *jlog_file_open(const char *path, int flags, int mode, int multi_proce
     jlog_file *f;
     void *vptr;
   } pun;
-  int fd, realflags = O_RDWR;
+  int fd, realflags = O_RDWR, rv;
 
   if (flags & O_CREAT) realflags |= O_CREAT;
   if (flags & O_EXCL) realflags |= O_EXCL;
 
   if (pthread_mutex_lock(&jlog_files_lock) != 0) return NULL;
 
-  if (stat(path, &sb) == 0) {
+  while ((rv = stat(path, &sb)) == -1 && errno == EINTR);
+  if (rv == 0) {
     if (!S_ISREG(sb.st_mode)) goto out;
     memset(&id, 0, sizeof(id));
     id.st_dev = sb.st_dev;
@@ -98,8 +99,10 @@ jlog_file *jlog_file_open(const char *path, int flags, int mode, int multi_proce
     }
   }
 
-  if ((fd = open(path, realflags, mode)) == -1) goto out;
-  if (fstat(fd, &sb) != 0) {
+  while ((fd = open(path, realflags, mode)) == -1 && errno == EINTR);
+  if (fd == -1) goto out;
+  while ((rv = fstat(fd, &sb)) == -1 && errno == EINTR);
+  if (rv != 0) {
     while (close(fd) == -1 && errno == EINTR) ;
     goto out;
   }
