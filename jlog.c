@@ -612,6 +612,13 @@ static int __jlog_save_metastore(jlog_ctx *ctx, int ilocked)
   fprintf(stderr, "__jlog_save_metastore\n");
 #endif
 
+  if(ctx->context_mode == JLOG_READ) {
+    FASSERT(0, "__jlog_save_metastore: illegal call in JLOG_READ mode");
+    ctx->last_error = JLOG_ERR_ILLEGAL_WRITE;
+    ctx->last_errno = EPERM;
+    return -1;
+  }
+
   if (!ilocked && !jlog_file_lock(ctx->metastore)) {
     FASSERT(0, "__jlog_save_metastore: cannot get lock");
     ctx->last_error = JLOG_ERR_LOCK;
@@ -644,7 +651,7 @@ static int __jlog_save_metastore(jlog_ctx *ctx, int ilocked)
   return 0;
 }
 
-static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
+static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked, int readonly)
 {
   void *base = NULL;
   size_t len = 0;
@@ -661,8 +668,13 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
 
   if(ctx->meta_is_mapped == 0) {
     int rv;
-    rv = jlog_file_map_rdwr(ctx->metastore, &base, &len);
-    FASSERT(rv == 1, "jlog_file_map_rdwr");
+    if (readonly == 1) {
+      rv = jlog_file_map_read(ctx->metastore, &base, &len);
+    } else {
+      rv = jlog_file_map_rdwr(ctx->metastore, &base, &len);
+    }
+
+    FASSERT(rv == 1, "jlog_file_map_r*");
     if(rv != 1) {
       if (!ilocked) jlog_file_unlock(ctx->metastore);
       ctx->last_error = JLOG_ERR_OPEN;
@@ -675,9 +687,13 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked)
        */
        u_int32_t dummy = 0;
        jlog_file_pwrite(ctx->metastore, &dummy, sizeof(dummy), 12);
-       rv = jlog_file_map_rdwr(ctx->metastore, &base, &len);
+       if (readonly == 1) {
+         rv = jlog_file_map_read(ctx->metastore, &base, &len);
+       } else {
+         rv = jlog_file_map_rdwr(ctx->metastore, &base, &len);
+       }
     }
-    FASSERT(rv == 1, "jlog_file_map_rdwr");
+    FASSERT(rv == 1, "jlog_file_map_r*");
     if(rv != 1 || len != sizeof(*ctx->meta)) {
       if (!ilocked) jlog_file_unlock(ctx->metastore);
       ctx->last_error = JLOG_ERR_OPEN;
@@ -943,7 +959,7 @@ static jlog_file *__jlog_open_writer(jlog_ctx *ctx) {
   if(!jlog_file_lock(ctx->metastore))
     SYS_FAIL(JLOG_ERR_LOCK);
   int x;
-  x = __jlog_restore_metastore(ctx, 1);
+  x = __jlog_restore_metastore(ctx, 1, 0);
   if(x) {
     FASSERT(x == 0, "__jlog_open_writer calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
@@ -1491,7 +1507,7 @@ int jlog_ctx_open_writer(jlog_ctx *ctx) {
     FASSERT(0, "jlog_ctx_open_writer calls jlog_open_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
-  if(__jlog_restore_metastore(ctx, 0)) {
+  if(__jlog_restore_metastore(ctx, 0, 0)) {
     FASSERT(0, "jlog_ctx_open_writer calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
@@ -1560,7 +1576,7 @@ int jlog_ctx_open_reader(jlog_ctx *ctx, const char *subscriber) {
   }
   if(jlog_get_checkpoint(ctx, ctx->subscriber_name, &dummy))
     SYS_FAIL(JLOG_ERR_INVALID_SUBSCRIBER);
-  if(__jlog_restore_metastore(ctx, 0)) {
+  if(__jlog_restore_metastore(ctx, 0, 1)) {
     FASSERT(0, "jlog_ctx_open_reader calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
@@ -1638,7 +1654,7 @@ static int __jlog_metastore_atomic_increment(jlog_ctx *ctx) {
   if(ctx->data) SYS_FAIL(JLOG_ERR_NOT_SUPPORTED);
   if (!jlog_file_lock(ctx->metastore))
     SYS_FAIL(JLOG_ERR_LOCK);
-  if(__jlog_restore_metastore(ctx, 1)) {
+  if(__jlog_restore_metastore(ctx, 1, 0)) {
     FASSERT(0,
             "jlog_metastore_atomic_increment calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
@@ -1886,7 +1902,7 @@ int jlog_ctx_add_subscriber(jlog_ctx *ctx, const char *s, jlog_position whence) 
       FASSERT(0, "jlog_ctx_add_subscriber calls jlog_open_metastore");
       SYS_FAIL(JLOG_ERR_META_OPEN);
     }
-    if(__jlog_restore_metastore(ctx, 0)) {
+    if(__jlog_restore_metastore(ctx, 0, 1)) {
       FASSERT(0, "jlog_ctx_add_subscriber calls jlog_restore_metastore");
       SYS_FAIL(JLOG_ERR_META_OPEN);
     }
@@ -2323,7 +2339,7 @@ int jlog_ctx_read_interval(jlog_ctx *ctx, jlog_id *start, jlog_id *finish) {
     return -1;
   }
 
-  __jlog_restore_metastore(ctx, 0);
+  __jlog_restore_metastore(ctx, 0, 1);
   if(jlog_get_checkpoint(ctx, ctx->subscriber_name, &chkpt))
     SYS_FAIL(JLOG_ERR_INVALID_SUBSCRIBER);
   if(__jlog_find_first_log_after(ctx, &chkpt, start, finish) != 0)
@@ -2407,7 +2423,7 @@ int jlog_ctx_last_log_id(jlog_ctx *ctx, jlog_id *id) {
     ctx->last_errno = EPERM;
     return -1;
   }
-  if (__jlog_restore_metastore(ctx, 0) != 0) return -1;
+  if (__jlog_restore_metastore(ctx, 0, 1) != 0) return -1;
   ___jlog_resync_index(ctx, ctx->meta->storage_log, id, NULL);
   if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
   return -1;
