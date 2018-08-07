@@ -747,24 +747,21 @@ static int __jlog_map_pre_commit(jlog_ctx *ctx)
       jlog_file_sync(ctx->pre_commit);
     }
 
-    pre_commit_size = jlog_file_size(ctx->pre_commit);
     free(space);
   }
   
   /* now map it */
-  if (jlog_file_map_rdwr(ctx->pre_commit, &ctx->pre_commit_buffer, &ctx->pre_commit_buffer_len) == 0) {
+  if (jlog_file_map_rdwr(ctx->pre_commit, (void **)&ctx->pre_commit_pointer, &ctx->pre_commit_buffer_len) == 0) {
       jlog_file_unlock(ctx->pre_commit);
       FASSERT(0, "jlog_file_map_rdwr failed");
       ctx->last_error = JLOG_ERR_PRE_COMMIT_OPEN;
       return -1;
   }
 
-  /* set our file pointer to the prefix space in the buffer */
-  ctx->pre_commit_pointer = (uint32_t *)(ctx->pre_commit_buffer);
-
   /* move the writable buffer past the offset pointer */
-  ctx->pre_commit_buffer = ctx->pre_commit_buffer + sizeof(uint32_t);
-  ctx->pre_commit_end = ctx->pre_commit_buffer + ctx->pre_commit_buffer_len;
+  ctx->pre_commit_buffer = (void *)ctx->pre_commit_pointer + sizeof(*ctx->pre_commit_pointer);
+  /* the end is the total size minus the space for the leading write pointer location */
+  ctx->pre_commit_end = ctx->pre_commit_buffer + ctx->pre_commit_buffer_len - sizeof(*ctx->pre_commit_pointer);
 
   /* restore the current pos */
   ctx->pre_commit_pos = ctx->pre_commit_buffer + *ctx->pre_commit_pointer;
@@ -865,7 +862,11 @@ static int __jlog_close_pre_commit(jlog_ctx *ctx) {
     ctx->pre_commit = NULL;
   }
   if (ctx->pre_commit_is_mapped) {
-    munmap((void *)ctx->pre_commit_buffer, ctx->pre_commit_buffer_len);
+    munmap((void *)ctx->pre_commit_pointer, ctx->pre_commit_buffer_len);
+    ctx->pre_commit_pointer = NULL;
+    ctx->pre_commit_buffer = NULL;
+    ctx->pre_commit_end = NULL;
+    ctx->pre_commit_buffer_len = 0;
     ctx->pre_commit_is_mapped = 0;
   }
   return 0;
@@ -1765,8 +1766,8 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
   }
 
   if (ctx->pre_commit_buffer_len > 0 && 
-      ctx->pre_commit_pos + total_size > ctx->pre_commit_end) 
-    {
+      ctx->pre_commit_pos + total_size > ctx->pre_commit_end) {
+
     if ((current_offset = jlog_file_size(ctx->data)) == -1)
       SYS_FAIL(JLOG_ERR_FILE_SEEK);
 
@@ -1774,9 +1775,6 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
       jlog_file_unlock(ctx->data);
       __jlog_close_writer(ctx);
       __jlog_metastore_atomic_increment(ctx);
-      if (IS_COMPRESS_MAGIC(ctx) && v[1].iov_base != compress_space) {
-        free(v[1].iov_base);
-      }
       goto begin;
     }
 
@@ -1787,14 +1785,13 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
       FASSERT(0, "jlog_file_pwrite failed in jlog_ctx_write_message");
       SYS_FAIL(JLOG_ERR_FILE_WRITE);
     }
-
     /* rewind the pre_commit_buffer to beginning */
     ctx->pre_commit_pos = ctx->pre_commit_buffer;
     /* ensure we save this in the mmapped data */
     *ctx->pre_commit_pointer = 0;
   }
- 
-  if (total_size <= ctx->pre_commit_buffer_len) {
+
+  if (total_size <= (ctx->pre_commit_buffer_len - sizeof(*ctx->pre_commit_pointer))) {
     /**
      * Write the iovecs to the pre-commit buffer 
      * 
@@ -1806,7 +1803,7 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
       *ctx->pre_commit_pointer += v[i].iov_len;
     }
   } else {
-    /* incoming message won't fit in pre_commit buffer, write directly */
+    /* incoming message won't fit in pre_commit buffer, it was flushed above so write to file directly. */
     if (!jlog_file_pwritev(ctx->data, v, 2, current_offset)) {
       FASSERT(0, "jlog_file_pwritev failed in jlog_ctx_write_message");
       SYS_FAIL(JLOG_ERR_FILE_WRITE);
@@ -1814,7 +1811,7 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
   }
 
   current_offset += v[0].iov_len + v[1].iov_len;
-  
+
   if (IS_COMPRESS_MAGIC(ctx) && v[1].iov_base != compress_space) {
     free(v[1].iov_base);
   }
