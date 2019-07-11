@@ -2413,6 +2413,18 @@ int jlog_ctx_first_log_id(jlog_ctx *ctx, jlog_id *id) {
   return 0;
 }
 
+int jlog_ctx_last_storage_log(jlog_ctx *ctx, uint32_t *logid) {
+  ctx->last_error = JLOG_ERR_SUCCESS;
+  if(ctx->context_mode != JLOG_READ) {
+    ctx->last_error = JLOG_ERR_ILLEGAL_WRITE;
+    ctx->last_errno = EPERM;
+    return -1;
+  }
+  if (__jlog_restore_metastore(ctx, 0, 1) != 0) return -1;
+  *logid = ctx->meta->storage_log;
+  return 0;
+}
+
 int jlog_ctx_last_log_id(jlog_ctx *ctx, jlog_id *id) {
   ctx->last_error = JLOG_ERR_SUCCESS;
   if(ctx->context_mode != JLOG_READ) {

@@ -94,6 +94,8 @@ jlog_file *jlog_file_open(const char *path, int flags, int mode, int multi_proce
       if (!(flags & O_EXCL)) {
         f = pun.f;
         f->refcnt++;
+      } else {
+        errno = EEXIST;
       }
       goto out;
     }

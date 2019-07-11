@@ -246,6 +246,7 @@ JLOG_API(int)       jlog_pending_readers(jlog_ctx *ctx, u_int32_t log, u_int32_t
 JLOG_API(int)       __jlog_pending_readers(jlog_ctx *ctx, u_int32_t log);
 JLOG_API(int)       jlog_ctx_first_log_id(jlog_ctx *ctx, jlog_id *id);
 JLOG_API(int)       jlog_ctx_last_log_id(jlog_ctx *ctx, jlog_id *id);
+JLOG_API(int)       jlog_ctx_last_storage_log(jlog_ctx *ctx, uint32_t *logid);
 JLOG_API(int)       jlog_ctx_advance_id(jlog_ctx *ctx, jlog_id *cur, 
                                         jlog_id *start, jlog_id *finish);
 JLOG_API(int)       jlog_clean(const char *path);
