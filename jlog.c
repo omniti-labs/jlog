@@ -1462,6 +1462,7 @@ _jlog_ctx_flush_pre_commit_buffer_no_lock(jlog_ctx *ctx)
 int jlog_ctx_flush_pre_commit_buffer(jlog_ctx *ctx) 
 {
   int rv;
+  if (ctx->pre_commit_buffer_len == 0) return 0;
   pthread_mutex_lock(&ctx->write_lock);
   rv = _jlog_ctx_flush_pre_commit_buffer_no_lock(ctx);
   pthread_mutex_unlock(&ctx->write_lock);
