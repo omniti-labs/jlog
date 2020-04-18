@@ -387,7 +387,7 @@ static int __jlog_unlink_datafile(jlog_ctx *ctx, u_int32_t log) {
   return 0;
 }
 
-static int __jlog_open_metastore(jlog_ctx *ctx)
+static int __jlog_open_metastore(jlog_ctx *ctx, int create)
 {
   char file[MAXPATHLEN];
   int len;
@@ -401,7 +401,7 @@ static int __jlog_open_metastore(jlog_ctx *ctx)
 #ifdef ENAMETOOLONG
     ctx->last_errno = ENAMETOOLONG;
 #endif
-    FASSERT(0, "__jlog_open_metastore: filename too long");
+    FASSERT(ctx, 0, "__jlog_open_metastore: filename too long");
     ctx->last_error = JLOG_ERR_CREATE_META;
     return -1;
   }
@@ -409,11 +409,11 @@ static int __jlog_open_metastore(jlog_ctx *ctx)
   file[len++] = IFS_CH;
   memcpy(&file[len], "metastore", 10); /* "metastore" + '\0' */
 
-  ctx->metastore = jlog_file_open(file, O_CREAT, ctx->file_mode, ctx->multi_process);
+  ctx->metastore = jlog_file_open(file, create ? O_CREAT : O_RDWR, ctx->file_mode, ctx->multi_process);
 
   if (!ctx->metastore) {
     ctx->last_errno = errno;
-    FASSERT(0, "__jlog_open_metastore: file create failed");
+    FASSERT(ctx, 0, "__jlog_open_metastore: file create failed");
     ctx->last_error = JLOG_ERR_CREATE_META;
     return -1;
   }
@@ -435,7 +435,7 @@ __jlog_pre_commit_file_name(jlog_ctx *ctx)
 #ifdef ENAMETOOLONG
     ctx->last_errno = ENAMETOOLONG;
 #endif
-    FASSERT(0, "__jlog_open_pre_commit: filename too long");
+    FASSERT(ctx, 0, "__jlog_open_pre_commit: filename too long");
     ctx->last_error = JLOG_ERR_CREATE_PRE_COMMIT;
     return NULL;
   }
@@ -460,7 +460,7 @@ static int __jlog_open_pre_commit(jlog_ctx *ctx)
 
   if (!ctx->pre_commit) {
     ctx->last_errno = errno;
-    FASSERT(0, "__jlog_open_pre_commit: file create failed");
+    FASSERT(ctx, 0, "__jlog_open_pre_commit: file create failed");
     ctx->last_error = JLOG_ERR_CREATE_PRE_COMMIT;
     free(file);
     return -1;
@@ -613,14 +613,14 @@ static int __jlog_save_metastore(jlog_ctx *ctx, int ilocked)
 #endif
 
   if(ctx->context_mode == JLOG_READ) {
-    FASSERT(0, "__jlog_save_metastore: illegal call in JLOG_READ mode");
+    FASSERT(ctx, 0, "__jlog_save_metastore: illegal call in JLOG_READ mode");
     ctx->last_error = JLOG_ERR_ILLEGAL_WRITE;
     ctx->last_errno = EPERM;
     return -1;
   }
 
   if (!ilocked && !jlog_file_lock(ctx->metastore)) {
-    FASSERT(0, "__jlog_save_metastore: cannot get lock");
+    FASSERT(ctx, 0, "__jlog_save_metastore: cannot get lock");
     ctx->last_error = JLOG_ERR_LOCK;
     return -1;
   }
@@ -629,7 +629,7 @@ static int __jlog_save_metastore(jlog_ctx *ctx, int ilocked)
     int rv, flags = MS_INVALIDATE;
     if(ctx->meta->safety == JLOG_SAFE) flags |= MS_SYNC;
     rv = msync((void *)(ctx->meta), sizeof(*ctx->meta), flags);
-    FASSERT(rv >= 0, "jlog_save_metastore");
+    FASSERT(ctx, rv >= 0, "jlog_save_metastore");
     if (!ilocked) jlog_file_unlock(ctx->metastore);
     if ( rv < 0 )
       ctx->last_error = JLOG_ERR_FILE_WRITE;
@@ -638,7 +638,7 @@ static int __jlog_save_metastore(jlog_ctx *ctx, int ilocked)
   else {
     if (!jlog_file_pwrite(ctx->metastore, ctx->meta, sizeof(*ctx->meta), 0)) {
       if (!ilocked) jlog_file_unlock(ctx->metastore);
-      FASSERT(0, "jlog_file_pwrite failed");
+      FASSERT(ctx, 0, "jlog_file_pwrite failed");
       ctx->last_error = JLOG_ERR_FILE_WRITE;
       return -1;
     }
@@ -661,7 +661,7 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked, int readonly)
 #endif
 
   if (!ilocked && !jlog_file_lock(ctx->metastore)) {
-    FASSERT(0, "__jlog_restore_metastore: cannot get lock");
+    FASSERT(ctx, 0, "__jlog_restore_metastore: cannot get lock");
     ctx->last_error = JLOG_ERR_LOCK;
     return -1;
   }
@@ -674,7 +674,7 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked, int readonly)
       rv = jlog_file_map_rdwr(ctx->metastore, &base, &len);
     }
 
-    FASSERT(rv == 1, "jlog_file_map_r*");
+    FASSERT(ctx, rv == 1, "jlog_file_map_r*");
     if(rv != 1) {
       if (!ilocked) jlog_file_unlock(ctx->metastore);
       ctx->last_error = JLOG_ERR_OPEN;
@@ -693,7 +693,7 @@ static int __jlog_restore_metastore(jlog_ctx *ctx, int ilocked, int readonly)
          rv = jlog_file_map_rdwr(ctx->metastore, &base, &len);
        }
     }
-    FASSERT(rv == 1, "jlog_file_map_r*");
+    FASSERT(ctx, rv == 1, "jlog_file_map_r*");
     if(rv != 1 || len != sizeof(*ctx->meta)) {
       if (!ilocked) jlog_file_unlock(ctx->metastore);
       ctx->last_error = JLOG_ERR_OPEN;
@@ -726,7 +726,7 @@ static int __jlog_map_pre_commit(jlog_ctx *ctx)
   }
 
   if (!jlog_file_lock(ctx->pre_commit)) {
-    FASSERT(0, "__jlog_map_pre_commit: cannot get lock");
+    FASSERT(ctx, 0, "__jlog_map_pre_commit: cannot get lock");
     ctx->last_error = JLOG_ERR_LOCK;
     return -1;
   }
@@ -738,7 +738,7 @@ static int __jlog_map_pre_commit(jlog_ctx *ctx)
     char *space = calloc(1, ctx->desired_pre_commit_buffer_len + sizeof(uint32_t));
     if (!jlog_file_pwrite(ctx->pre_commit, space, ctx->desired_pre_commit_buffer_len + sizeof(uint32_t), 0)) {
       jlog_file_unlock(ctx->pre_commit);
-      FASSERT(0, "jlog_file_pwrite failed");
+      FASSERT(ctx, 0, "jlog_file_pwrite failed");
       ctx->last_error = JLOG_ERR_FILE_WRITE;
       free(space);
       return -1;
@@ -753,7 +753,7 @@ static int __jlog_map_pre_commit(jlog_ctx *ctx)
   /* now map it */
   if (jlog_file_map_rdwr(ctx->pre_commit, (void **)&ctx->pre_commit_pointer, &ctx->pre_commit_buffer_len) == 0) {
       jlog_file_unlock(ctx->pre_commit);
-      FASSERT(0, "jlog_file_map_rdwr failed");
+      FASSERT(ctx, 0, "jlog_file_map_rdwr failed");
       ctx->last_error = JLOG_ERR_PRE_COMMIT_OPEN;
       return -1;
   }
@@ -777,9 +777,9 @@ int jlog_get_checkpoint(jlog_ctx *ctx, const char *s, jlog_id *id) {
   jlog_file *f;
   int rv = -1;
 
-  if(ctx->subscriber_name && !strcmp(ctx->subscriber_name, s)) {
+  if(ctx->subscriber_name && (s == NULL || !strcmp(ctx->subscriber_name, s))) {
     if(!ctx->checkpoint) {
-      ctx->checkpoint = __jlog_open_named_checkpoint(ctx, s, 0);
+      ctx->checkpoint = __jlog_open_named_checkpoint(ctx, ctx->subscriber_name, 0);
     }
     f = ctx->checkpoint;
   } else
@@ -822,7 +822,7 @@ static int __jlog_set_checkpoint(jlog_ctx *ctx, const char *s, const jlog_id *id
       goto failset;
   }
   if (!jlog_file_pwrite(f, id, sizeof(*id), 0)) {
-    FASSERT(0, "jlog_file_pwrite failed in jlog_set_checkpoint");
+    FASSERT(ctx, 0, "jlog_file_pwrite failed in jlog_set_checkpoint");
     ctx->last_error = JLOG_ERR_FILE_WRITE;
     goto failset;
   }
@@ -956,13 +956,13 @@ static jlog_file *__jlog_open_writer(jlog_ctx *ctx) {
     return ctx->data;
   }
 
-  FASSERT(ctx != NULL, "__jlog_open_writer");
+  FASSERT(ctx, ctx != NULL, "__jlog_open_writer");
   if(!jlog_file_lock(ctx->metastore))
     SYS_FAIL(JLOG_ERR_LOCK);
   int x;
   x = __jlog_restore_metastore(ctx, 1, 0);
   if(x) {
-    FASSERT(x == 0, "__jlog_open_writer calls jlog_restore_metastore");
+    FASSERT(ctx, x == 0, "__jlog_open_writer calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
   ctx->current_log =  ctx->meta->storage_log;
@@ -971,7 +971,7 @@ static jlog_file *__jlog_open_writer(jlog_ctx *ctx) {
   fprintf(stderr, "opening log file[rw]: '%s'\n", file);
 #endif
   ctx->data = jlog_file_open(file, O_CREAT, ctx->file_mode, ctx->multi_process);
-  FASSERT(ctx->data != NULL, "__jlog_open_writer calls jlog_file_open");
+  FASSERT(ctx, ctx->data != NULL, "__jlog_open_writer calls jlog_file_open");
   if ( ctx->data == NULL )
     ctx->last_error = JLOG_ERR_FILE_OPEN;
   else
@@ -1353,7 +1353,7 @@ int jlog_ctx_alter_safety(jlog_ctx *ctx, jlog_safety safety) {
     ctx->meta->safety = safety;
     if(ctx->context_mode == JLOG_APPEND) {
       if(__jlog_save_metastore(ctx, 0) != 0) {
-        FASSERT(0, "jlog_ctx_alter_safety calls jlog_save_metastore");
+        FASSERT(ctx, 0, "jlog_ctx_alter_safety calls jlog_save_metastore");
         SYS_FAIL(JLOG_ERR_CREATE_META);
       }
     }
@@ -1436,7 +1436,7 @@ _jlog_ctx_flush_pre_commit_buffer_no_lock(jlog_ctx *ctx)
   if (!jlog_file_pwrite(ctx->data, ctx->pre_commit_buffer, 
                         ctx->pre_commit_pos - ctx->pre_commit_buffer, 
                         current_offset)) {
-    FASSERT(0, "jlog_file_pwrite failed in jlog_ctx_write_message");
+    FASSERT(ctx, 0, "jlog_file_pwrite failed in jlog_ctx_write_message");
     SYS_FAIL(JLOG_ERR_FILE_WRITE);
   }
 
@@ -1476,7 +1476,7 @@ int jlog_ctx_alter_journal_size(jlog_ctx *ctx, size_t size) {
     ctx->meta->unit_limit = size;
     if(ctx->context_mode == JLOG_APPEND) {
       if(__jlog_save_metastore(ctx, 0) != 0) {
-        FASSERT(0, "jlog_ctx_alter_journal_size calls jlog_save_metastore");
+        FASSERT(ctx, 0, "jlog_ctx_alter_journal_size calls jlog_save_metastore");
         SYS_FAIL(JLOG_ERR_CREATE_META);
       }
     }
@@ -1504,22 +1504,22 @@ int jlog_ctx_open_writer(jlog_ctx *ctx) {
   while((rv = stat(ctx->path, &sb)) == -1 && errno == EINTR);
   if(rv == -1) SYS_FAIL(JLOG_ERR_OPEN);
   if(!S_ISDIR(sb.st_mode)) SYS_FAIL(JLOG_ERR_NOTDIR);
-  FASSERT(ctx != NULL, "jlog_ctx_open_writer");
-  if(__jlog_open_metastore(ctx) != 0) {
-    FASSERT(0, "jlog_ctx_open_writer calls jlog_open_metastore");
+  FASSERT(ctx, ctx != NULL, "jlog_ctx_open_writer");
+  if(__jlog_open_metastore(ctx, 0) != 0) {
+    FASSERT(ctx, 0, "jlog_ctx_open_writer calls jlog_open_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
   if(__jlog_restore_metastore(ctx, 0, 0)) {
-    FASSERT(0, "jlog_ctx_open_writer calls jlog_restore_metastore");
+    FASSERT(ctx, 0, "jlog_ctx_open_writer calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
   if (__jlog_open_pre_commit(ctx) != 0) {
-    FASSERT(0, "jlog_ctx_open_writer calls jlog_open_pre_commit");
+    FASSERT(ctx, 0, "jlog_ctx_open_writer calls jlog_open_pre_commit");
     SYS_FAIL(JLOG_ERR_PRE_COMMIT_OPEN);
   }
 
   if (__jlog_map_pre_commit(ctx) != 0) {
-    FASSERT(0, "jlog_ctx_open_writer calls jlog_map_pre_commit");
+    FASSERT(ctx, 0, "jlog_ctx_open_writer calls jlog_map_pre_commit");
     SYS_FAIL(JLOG_ERR_PRE_COMMIT_OPEN);
   }
 
@@ -1533,19 +1533,19 @@ int jlog_ctx_open_writer(jlog_ctx *ctx) {
     /* unlink the file */
     char *fn = __jlog_pre_commit_file_name(ctx);
     if (unlink(fn) != 0) {
-      FASSERT(0, "jlog_ctx_open_writer cannot unlink old pre_commit file");
+      FASSERT(ctx, 0, "jlog_ctx_open_writer cannot unlink old pre_commit file");
       SYS_FAIL(JLOG_ERR_PRE_COMMIT_OPEN);
     } 
     free(fn);
 
     /* recreate on new size */
    if (__jlog_open_pre_commit(ctx) != 0) {
-     FASSERT(0, "jlog_ctx_open_writer calls jlog_open_pre_commit");
+     FASSERT(ctx, 0, "jlog_ctx_open_writer calls jlog_open_pre_commit");
      SYS_FAIL(JLOG_ERR_PRE_COMMIT_OPEN);
    }
 
    if (__jlog_map_pre_commit(ctx) != 0) {
-     FASSERT(0, "jlog_ctx_open_writer calls jlog_map_pre_commit");
+     FASSERT(ctx, 0, "jlog_ctx_open_writer calls jlog_map_pre_commit");
      SYS_FAIL(JLOG_ERR_PRE_COMMIT_OPEN);
    }
   }
@@ -1571,15 +1571,15 @@ int jlog_ctx_open_reader(jlog_ctx *ctx, const char *subscriber) {
   while((rv = stat(ctx->path, &sb)) == -1 && errno == EINTR);
   if(rv == -1) SYS_FAIL(JLOG_ERR_OPEN);
   if(!S_ISDIR(sb.st_mode)) SYS_FAIL(JLOG_ERR_NOTDIR);
-  FASSERT(ctx != NULL, "__jlog_ctx_open_reader");
-  if(__jlog_open_metastore(ctx) != 0) {
-    FASSERT(0, "jlog_ctx_open_reader calls jlog_open_metastore");
+  FASSERT(ctx, ctx != NULL, "__jlog_ctx_open_reader");
+  if(__jlog_open_metastore(ctx, 0) != 0) {
+    FASSERT(ctx, 0, "jlog_ctx_open_reader calls jlog_open_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
   if(jlog_get_checkpoint(ctx, ctx->subscriber_name, &dummy))
     SYS_FAIL(JLOG_ERR_INVALID_SUBSCRIBER);
   if(__jlog_restore_metastore(ctx, 0, 1)) {
-    FASSERT(0, "jlog_ctx_open_reader calls jlog_restore_metastore");
+    FASSERT(ctx, 0, "jlog_ctx_open_reader calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
  finish:
@@ -1617,17 +1617,17 @@ int jlog_ctx_init(jlog_ctx *ctx) {
   chmod(ctx->path, dirmode);
   // fassertxsetpath(ctx->path);
   /* Setup our initial state and store our instance metadata */
-  if(__jlog_open_metastore(ctx) != 0) {
-    FASSERT(0, "jlog_ctx_init calls jlog_open_metastore");
+  if(__jlog_open_metastore(ctx,1) != 0) {
+    FASSERT(ctx, 0, "jlog_ctx_init calls jlog_open_metastore");
     SYS_FAIL(JLOG_ERR_CREATE_META);
   }
   if(__jlog_save_metastore(ctx, 0) != 0) {
-    FASSERT(0, "jlog_ctx_init calls jlog_save_metastore");
+    FASSERT(ctx, 0, "jlog_ctx_init calls jlog_save_metastore");
     SYS_FAIL(JLOG_ERR_CREATE_META);
   }
-  //  FASSERT(0, "Start of fassert log");
+  //  FASSERT(ctx, 0, "Start of fassert log");
  finish:
-  FASSERT(ctx->last_error == JLOG_ERR_SUCCESS, "jlog_ctx_init failed");
+  FASSERT(ctx, ctx->last_error == JLOG_ERR_SUCCESS, "jlog_ctx_init failed");
   if(ctx->last_error == JLOG_ERR_SUCCESS) return 0;
   return -1;
 }
@@ -1652,12 +1652,12 @@ static int __jlog_metastore_atomic_increment(jlog_ctx *ctx) {
 #ifdef DEBUG
   fprintf(stderr, "atomic increment on %u\n", ctx->current_log);
 #endif
-  FASSERT(ctx != NULL, "__jlog_metastore_atomic_increment");
+  FASSERT(ctx, ctx != NULL, "__jlog_metastore_atomic_increment");
   if(ctx->data) SYS_FAIL(JLOG_ERR_NOT_SUPPORTED);
   if (!jlog_file_lock(ctx->metastore))
     SYS_FAIL(JLOG_ERR_LOCK);
   if(__jlog_restore_metastore(ctx, 1, 0)) {
-    FASSERT(0,
+    FASSERT(ctx, 0,
             "jlog_metastore_atomic_increment calls jlog_restore_metastore");
     SYS_FAIL(JLOG_ERR_META_OPEN);
   }
@@ -1668,7 +1668,7 @@ static int __jlog_metastore_atomic_increment(jlog_ctx *ctx) {
     ctx->data = jlog_file_open(file, O_CREAT, ctx->file_mode, ctx->multi_process);
     ctx->meta->storage_log = ctx->current_log;
     if(__jlog_save_metastore(ctx, 1)) {
-      FASSERT(0,
+      FASSERT(ctx, 0,
               "jlog_metastore_atomic_increment calls jlog_save_metastore");
       SYS_FAIL(JLOG_ERR_META_OPEN);
     }
@@ -1726,7 +1726,7 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
 
   if (IS_COMPRESS_MAGIC(ctx)) {
     if (jlog_compress(mess->mess, mess->mess_len, (char **)&v[1].iov_base, &compressed_len) != 0) {
-      FASSERT(0, "jlog_compress failed in jlog_ctx_write_message");
+      FASSERT(ctx, 0, "jlog_compress failed in jlog_ctx_write_message");
       SYS_FAIL(JLOG_ERR_FILE_WRITE);
     }
     hdr.compressed_len = compressed_len;
@@ -1783,7 +1783,7 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
     if (!jlog_file_pwrite(ctx->data, ctx->pre_commit_buffer, 
                           ctx->pre_commit_pos - ctx->pre_commit_buffer, 
                           current_offset)) {
-      FASSERT(0, "jlog_file_pwrite failed in jlog_ctx_write_message");
+      FASSERT(ctx, 0, "jlog_file_pwrite failed in jlog_ctx_write_message");
       SYS_FAIL(JLOG_ERR_FILE_WRITE);
     }
     /* rewind the pre_commit_buffer to beginning */
@@ -1806,7 +1806,7 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
   } else {
     /* incoming message won't fit in pre_commit buffer, it was flushed above so write to file directly. */
     if (!jlog_file_pwritev(ctx->data, v, 2, current_offset)) {
-      FASSERT(0, "jlog_file_pwritev failed in jlog_ctx_write_message");
+      FASSERT(ctx, 0, "jlog_file_pwritev failed in jlog_ctx_write_message");
       SYS_FAIL(JLOG_ERR_FILE_WRITE);
     }
   }
@@ -1895,13 +1895,13 @@ int jlog_ctx_add_subscriber(jlog_ctx *ctx, const char *s, jlog_position whence) 
   if(whence == JLOG_END) {
     jlog_id start, finish;
     memset(&chkpt, 0, sizeof(chkpt));
-    FASSERT(ctx != NULL, "__jlog_ctx_add_subscriber");
-    if(__jlog_open_metastore(ctx) != 0) {
-      FASSERT(0, "jlog_ctx_add_subscriber calls jlog_open_metastore");
+    FASSERT(ctx, ctx != NULL, "__jlog_ctx_add_subscriber");
+    if(__jlog_open_metastore(ctx,0) != 0) {
+      FASSERT(ctx, 0, "jlog_ctx_add_subscriber calls jlog_open_metastore");
       SYS_FAIL(JLOG_ERR_META_OPEN);
     }
     if(__jlog_restore_metastore(ctx, 0, 1)) {
-      FASSERT(0, "jlog_ctx_add_subscriber calls jlog_restore_metastore");
+      FASSERT(ctx, 0, "jlog_ctx_add_subscriber calls jlog_restore_metastore");
       SYS_FAIL(JLOG_ERR_META_OPEN);
     }
     chkpt.log = ctx->meta->storage_log;
@@ -2590,9 +2590,9 @@ static int findel(DIR *dir, unsigned int *earp, unsigned int *latp) {
    The final hex number is known as DEFAULT_HDR_MAGIC
 */
 
-static int metastore_ok_p(char *ag, unsigned int lat) {
+static int metastore_ok_p(jlog_ctx *ctx, char *ag, unsigned int lat) {
   int fd = open(ag, O_RDONLY);
-  FASSERT(fd >= 0, "cannot open metastore file");
+  FASSERT(ctx, fd >= 0, "cannot open metastore file");
   if ( fd < 0 )
     return 0;
   // now we use a very slightly tricky way to get the filesize on
@@ -2600,7 +2600,7 @@ static int metastore_ok_p(char *ag, unsigned int lat) {
   off_t oof = lseek(fd, 0, SEEK_END);
   (void)lseek(fd, 0, SEEK_SET);
   size_t fourI = 4*sizeof(unsigned int);
-  FASSERT(oof == (off_t)fourI, "metastore size invalid");
+  FASSERT(ctx, oof == (off_t)fourI, "metastore size invalid");
   if ( oof != (off_t)fourI ) {
     (void)close(fd);
     return 0;
@@ -2614,7 +2614,7 @@ static int metastore_ok_p(char *ag, unsigned int lat) {
   int rd = read(fd, &have[0], fourI);
   (void)close(fd);
   fd = -1;
-  FASSERT(rd == fourI, "read error on metastore file");
+  FASSERT(ctx, rd == fourI, "read error on metastore file");
   if ( rd != fourI )
     return 0;
   int gotem = 0;
@@ -2623,18 +2623,18 @@ static int metastore_ok_p(char *ag, unsigned int lat) {
     if ( goal[i] == have[i] )
       gotem++;
   }
-  FASSERT(gotem == 4, "metastore contents incorrect");
+  FASSERT(ctx, gotem == 4, "metastore contents incorrect");
   return (gotem == 4);
 }
 
-static int repair_metastore(const char *pth, unsigned int lat) {
+static int repair_metastore(jlog_ctx *ctx, const char *pth, unsigned int lat) {
   if ( pth == NULL || pth[0] == '\0' ) {
-    FASSERT(0, "invalid metastore path");
+    FASSERT(ctx, 0, "invalid metastore path");
     return 0;
   }
   size_t leen = strlen(pth);
   if ( (leen == 0) || (leen > (MAXPATHLEN-12)) ) {
-    FASSERT(0, "invalid metastore path length");
+    FASSERT(ctx, 0, "invalid metastore path length");
     return 0;
   }
   size_t leen2 = leen + strlen("metastore") + 4; 
@@ -2642,8 +2642,8 @@ static int repair_metastore(const char *pth, unsigned int lat) {
   if ( ag == NULL )             /* out of memory, so bail */
     return 0;
   (void)snprintf(ag, leen2-1, "%s%cmetastore", pth, IFS_CH);
-  int b = metastore_ok_p(ag, lat);
-  FASSERT(b, "metastore integrity check failed");
+  int b = metastore_ok_p(ctx, ag, lat);
+  FASSERT(ctx, b, "metastore integrity check failed");
   unsigned int goal[4];
   goal[0] = lat;
   goal[1] = 4*1024*1024;
@@ -2653,42 +2653,42 @@ static int repair_metastore(const char *pth, unsigned int lat) {
   int fd = creat(ag, DEFAULT_FILE_MODE);
   free((void *)ag);
   ag = NULL;
-  FASSERT(fd >= 0, "cannot create new metastore file");
+  FASSERT(ctx, fd >= 0, "cannot create new metastore file");
   if ( fd < 0 )
     return 0;
   int wr = write(fd, &goal[0], sizeof(goal));
   (void)close(fd);
-  FASSERT(wr == sizeof(goal), "cannot write new metastore file");
+  FASSERT(ctx, wr == sizeof(goal), "cannot write new metastore file");
   return (wr == sizeof(goal));
 }
 
-static int new_checkpoint(char *ag, int fd, unsigned int ear) {
+static int new_checkpoint(jlog_ctx *ctx, char *ag, int fd, jlog_id point) {
   int newfd = 0;
   int sta = 0;
   if ( ag == NULL || ag[0] == '\0' ) {
-    FASSERT(0, "invalid checkpoint path");
+    FASSERT(ctx, 0, "invalid checkpoint path");
     return 0;
   }
   if ( fd < 0 ) {
     (void)unlink(ag);
     fd = creat(ag, DEFAULT_FILE_MODE);
-    FASSERT(fd >= 0, "cannot create checkpoint file");
+    FASSERT(ctx, fd >= 0, "cannot create checkpoint file");
     if ( fd < 0 )
       return 0;
     else
       newfd = 1;
   }
   int x = ftruncate(fd, 0);
-  FASSERT(x >= 0, "ftruncate failed to zero out checkpoint file");
+  FASSERT(ctx, x >= 0, "ftruncate failed to zero out checkpoint file");
   if ( x >= 0 ) {
     off_t xcvR = lseek(fd, 0, SEEK_SET);
-    FASSERT(xcvR == 0, "cannot seek to beginning of checkpoint file");
+    FASSERT(ctx, xcvR == 0, "cannot seek to beginning of checkpoint file");
     if ( xcvR == 0 ) {
       unsigned int goal[2];
-      goal[0] = ear;
-      goal[1] = 0;
+      goal[0] = point.log;
+      goal[1] = point.marker;
       int wr = write(fd, goal, sizeof(goal));
-      FASSERT(wr == sizeof(goal), "cannot write checkpoint file");
+      FASSERT(ctx, wr == sizeof(goal), "cannot write checkpoint file");
       sta = (wr == sizeof(goal));
     }
   }
@@ -2697,10 +2697,8 @@ static int new_checkpoint(char *ag, int fd, unsigned int ear) {
   return sta;
 }
 
-static const int five = 5;
-
-static int repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
-  FASSERT(dir != NULL, "invalid directory");
+static int repair_checkpointfile(jlog_ctx *ctx, DIR *dir, const char *pth, unsigned int ear, unsigned int lat) {
+  FASSERT(ctx, dir != NULL, "invalid directory");
   if ( dir == NULL )
     return 0;
   struct dirent *ent = NULL;
@@ -2708,71 +2706,73 @@ static int repair_checkpointfile(DIR *dir, const char *pth, unsigned int ear) {
   int   fd = -1;
 
   (void)rewinddir(dir);
-  size_t twoI = 2*sizeof(unsigned int);
-  int sta = 0;
+  const size_t twoI = 2*sizeof(unsigned int);
+  int rv = 0;
   while ( (ent = readdir(dir)) != NULL ) {
-    if ( ent->d_name[0] != '\0' ) {
-      if ( strncmp(ent->d_name, "cp.", 3) == 0 ) {
-        char n[3];
-        n[0] = ent->d_name[3];
-        if ( n[0] != 0 )
-          n[1] = ent->d_name[4];
-        else
-          n[1] = 0;
-        n[2] = 0;
-        int tilde = (int)'~';
-        int mtilde = 0;
-        if ( (sscanf(n, "%d", &mtilde) != 1) || (mtilde != tilde ) ) {
-          sta = 1;
-          break;
+    int sta = 0;
+    /* cp.7e -> cp.~.... */
+    if ( strncmp(ent->d_name, "cp.", 3) != 0) continue;
+    if ( strncmp(ent->d_name, "cp.7e", 5) == 0 ) continue;
+    size_t leen = strlen(pth) + strlen(ent->d_name) + 5;
+    FASSERT(ctx, leen < MAXPATHLEN, "invalid checkpoint path length");
+    if ( leen >= MAXPATHLEN ) continue;
+    ag = (char *)calloc(leen+1, sizeof(char));
+    if ( ag == NULL ) continue;
+    (void)snprintf(ag, leen-1, "%s%c%s", pth, IFS_CH, ent->d_name);
+    int closed;
+    jlog_id last;
+    fd = open(ag, O_RDWR);
+    sta = 0;
+    FASSERT(ctx, fd >= 0, "cannot open checkpoint file %s", ent->d_name);
+    if ( fd >= 0 ) {
+      off_t oof = lseek(fd, 0, SEEK_END);
+      (void)lseek(fd, 0, SEEK_SET);
+      FASSERT(ctx, oof == (off_t)twoI, "checkpoint %s file size incorrect: %zu != %zu", ent->d_name, oof, twoI);
+      if ( oof == (off_t)twoI ) {
+        unsigned int have[2];
+        int rd = read(fd, have, sizeof(have));
+        FASSERT(ctx, rd == sizeof(have), "cannot read checkpoint file %s", ent->d_name);
+        if ( rd == sizeof(have) ) {
+          jlog_id expect, current;
+          expect.log = current.log = have[0];
+          expect.marker = current.marker = have[1];
+          if(expect.log < ear) {
+            FASSERT(ctx, 0, "checkpoint %s log too small %08x -> %08x", ent->d_name, expect.log, ear);
+            expect.log = ear;
+          }
+          if(expect.log > lat) {
+            FASSERT(ctx, 0, "checkpoint %s log too big %08x -> %08x", ent->d_name, expect.log, ear);
+            expect.log = lat;
+          }
+          if(__jlog_resync_index(ctx, expect.log, &last, &closed)) {
+            FASSERT(ctx, 0, "could not resync index for %08x", have[0]);
+            last.log = expect.log;
+            last.marker = 0;
+          }
+          if ( (last.log != current.log) || (last.marker < current.marker) ) {
+            FASSERT(ctx, 0, "fixing checkpoint %s data %08x:%08x != %08x:%08x", ent->d_name,
+                    current.log, current.marker, last.log, last.marker);
+          } else {
+            sta = 1;
+            rv++;
+          }
         }
       }
     }
-  }
-  FASSERT(sta, "could not find a checkpoint file");
-  // we cannot simply create a checkpoint file if we don't have the
-  // filename, so there is nothing to do here
-  if ( sta == 0 )
-    return 1;
-  size_t leen = strlen(pth) + strlen(ent->d_name) + five;
-  FASSERT(leen < MAXPATHLEN, "invalid checkpoint path length");
-  if ( leen >= MAXPATHLEN )
-    return 0;
-  ag = (char *)calloc(leen+1, sizeof(char));
-  if ( ag == NULL )     /* out of memory, so bail */
-    return 0;
-  (void)snprintf(ag, leen-1, "%s%c%s", pth, IFS_CH, ent->d_name);
-  unsigned int goal[2];
-  goal[0] = ear;
-  goal[1] = 0;
-  fd = open(ag, O_RDWR);
-  sta = 0;
-  FASSERT(fd >= 0, "cannot open checkpoint file");
-  if ( fd >= 0 ) {
-    off_t oof = lseek(fd, 0, SEEK_END);
-    (void)lseek(fd, 0, SEEK_SET);
-    FASSERT(oof != (off_t)twoI, "checkpoint file size incorrect");
-    if ( oof == (off_t)twoI ) {
-      unsigned int have[2];
-      int rd = read(fd, have, sizeof(have));
-      FASSERT(rd == sizeof(have), "cannot read checkpoint file");
-      if ( rd == sizeof(have) ) {
-        if ( (goal[0] != have[0]) || (goal[1] != have[1]) ) {
-          FASSERT(0, "invalid checkpoint data");
-        } else
-          sta = 1;
-      }
+    if ( sta == 0 ) {
+      sta = new_checkpoint(ctx, ag, fd, last);
+      FASSERT(ctx, sta, "cannot create new checkpoint file");
+    }
+    if ( fd >= 0 ) {
+      (void)close(fd);
+      fd = -1;
+    }
+    if ( ag != NULL ) {
+      (void)free((void *)ag);
+      ag = NULL;
     }
   }
-  if ( sta == 0 ) {
-    sta = new_checkpoint(ag, fd, ear);
-    FASSERT(sta, "cannot create new checkpoint file");
-  }
-  if ( fd >= 0 )
-    (void)close(fd);
-  if ( ag != NULL )
-    (void)free((void *)ag);
-  return sta;
+  return rv;
 }
 
 #if 0
@@ -2861,7 +2861,7 @@ static void destroy_all_schedule_memory(void)
 
 static void move_one_file(const char *pth, char *parent, int off2fn,
                           char *nam) {
-  size_t leen = strlen(pth) + strlen(nam) + five;
+  size_t leen = strlen(pth) + strlen(nam) + 5;
   if ( leen >= MAXPATHLEN )
     return;
   char *ag = (char *)calloc(leen, sizeof(char));
@@ -2889,7 +2889,7 @@ static void move_the_files(const char *pth, char *parent, int off2fn) {
 #endif
 
 static void delete_one_file(const char *pth, char *nam) {
-  size_t leen = strlen(pth) + strlen(nam) + five;
+  size_t leen = strlen(pth) + strlen(nam) + 5;
   if ( leen >= MAXPATHLEN )
     return;
   char *ag = (char *)calloc(leen, sizeof(char));
@@ -2997,13 +2997,13 @@ int jlog_ctx_repair(jlog_ctx *ctx, int aggressive) {
   else
     pth = NULL; // fassertxgetpath();
   if ( pth == NULL || pth[0] == '\0' ) {
-    FASSERT(0, "repair command cannot find jlog path");
+    FASSERT(ctx, 0, "repair command cannot find jlog path");
     ctx->last_error = JLOG_ERR_NOTDIR;
     return 0;               /* hopeless without a dir name */
   }
   // step 2: find the earliest and the latest files with hex names
   dir = opendir(pth);
-  FASSERT(dir != NULL, "cannot open jlog directory");
+  FASSERT(ctx, dir != NULL, "cannot open jlog directory");
   if ( dir == NULL ) {
     int bx = 0;
     if ( aggressive == 1 )
@@ -3017,16 +3017,16 @@ int jlog_ctx_repair(jlog_ctx *ctx, int aggressive) {
   unsigned int ear = 0;
   unsigned int lat = 0;
   int b0 = findel(dir, &ear, &lat);
-  FASSERT(b0, "cannot find hex files in jlog directory");
+  FASSERT(ctx, b0, "cannot find hex files in jlog directory");
   if ( b0 == 1 ) {
     // step 3: attempt to repair the metastore. It might not need any
     // repair, in which case nothing will happen
-    int b1 = repair_metastore(pth, lat);
-    FASSERT(b1, "cannot repair metastore");
+    int b1 = repair_metastore(ctx, pth, lat);
+    FASSERT(ctx, b1, "cannot repair metastore");
     // step 4: attempt to repair the checkpoint file. It might not need
     // any repair, in which case nothing will happen
-    int b2 = repair_checkpointfile(dir, pth, ear);
-    FASSERT(b2, "cannot repair checkpoint file");
+    int b2 = repair_checkpointfile(ctx, dir, pth, ear, lat);
+    FASSERT(ctx, b2, "cannot repair checkpoint file");
     // if non-aggressive repair succeeded, then declare success
     if ( (b1 == 1) && (b2 == 1) ) {
       (void)closedir(dir);
@@ -3035,7 +3035,6 @@ int jlog_ctx_repair(jlog_ctx *ctx, int aggressive) {
     }
   }
   // if aggressive repair is not authorized, fail
-  FASSERT(aggressive, "non-aggressive repair failed");
   if ( aggressive == 0 ) {
     (void)closedir(dir);
     ctx->last_error = JLOG_ERR_CREATE_META;
@@ -3048,7 +3047,7 @@ int jlog_ctx_repair(jlog_ctx *ctx, int aggressive) {
   // try_to_save_fasserts(pth, dir);
   // step 6: destroy the directory with extreme prejudice
   int b3 = rmcontents_and_dir(pth, dir);
-  FASSERT(b3, "Aggressive repair of jlog directory failed");
+  FASSERT(ctx, b3, "Aggressive repair of jlog directory failed");
   //  (void)closedir(dir);
   if ( b3 == 0 )
     ctx->last_error = JLOG_ERR_NOTDIR;

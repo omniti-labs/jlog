@@ -11,10 +11,17 @@ extern const char *fassertxgetpath(void);
                                                 (const char *)(B)); }
 
 */
-
-#define FASSERT(A,B)  { int tf = (A); if ( tf == 0 ) \
+#ifdef FDEBUG
+#define FASSERT(CTX,A,B)  { int tf = (A); if ( tf == 0 ) \
                                         fprintf(stderr, "%s: %s %d\n", \
                                           (const char *)(B), __FILE__, \
                                                 __LINE__); }
+#else
+#define FASSERT(ctx, predicate, B...) { \
+  if(!(predicate) && (ctx) && ((jlog_ctx *)ctx)->error_func) { \
+    ((jlog_ctx *)ctx)->error_func(((jlog_ctx *)ctx)->error_ctx, B); \
+  } \
+}
+#endif
 
 #endif
