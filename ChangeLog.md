@@ -2,7 +2,7 @@
 
 ## 2
 
-### 2.5.0
+### 2.5.0 (2020-04-22)
 
 * Rework jlogctl to be subcommand-based while preserving old flags.
 * Fix repair to correctly leave checkpoints intact.
