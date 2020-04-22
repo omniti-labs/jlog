@@ -6,7 +6,7 @@
 
 * Rework jlogctl to be subcommand-based while preserving old flags.
 * Fix repair to correctly leave checkpoints intact.
-* Add full repair (and metastore reconstruction) to jlotctl.
+* Add full repair (and metastore reconstruction) to jlogctl.
 
 ### 2.4.0
 
