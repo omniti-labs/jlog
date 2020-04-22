@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include "jlog_config.h"
 #include "jlog_compress.h"
+#include "jlog_private.h"
 #include "fassert.h"
 
 #include "jlog_null_compression_provider.h"
@@ -66,13 +67,13 @@ jlog_set_compression_provider(const jlog_compression_provider_choice jcp)
 int 
 jlog_compress(const char *source, const size_t source_bytes, char **dest, size_t *dest_bytes)
 {
-  FASSERT(dest != NULL, "jlog_compress: dest pointer is NULL");
+  FASSERT(NULL, dest != NULL, "jlog_compress: dest pointer is NULL");
   size_t required = provider->compress_bound(source_bytes);
 
   if (*dest_bytes < required) {
     /* incoming buffer not large enough, must allocate */
     *dest = malloc(required);
-    FASSERT(*dest != NULL, "jlog_compress: malloc failed");
+    FASSERT(NULL, *dest != NULL, "jlog_compress: malloc failed");
   }
 
   int rv = provider->compress(source, *dest, source_bytes, required);
