@@ -1,5 +1,7 @@
 # JLog
 
+[Change](ChangeLog.md)
+
 JLog is short for "journaled log" and this package is really an API and implementation that is libjlog.
 What is libjlog? libjlog is a pure C, **very simple** durable message queue with multiple subscribers and publishers
 (both thread- and multi-process safe). The basic concept is that publishers can open a log and write messages to it
@@ -50,8 +52,8 @@ To build from source, clone this repo and then:
 * Wez Furlong
 * Alec Peterson
 * George Schlossnagle
-* Theo Schlossnagle
-* Alexey Toptygin (current maintainer)
+* Theo Schlossnagle (current maintainer)
+* Alexey Toptygin
 
 ## License
 
