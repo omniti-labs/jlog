@@ -84,6 +84,15 @@ static void usage(const char *progin) {
   printf("\n");
   printf("%s alter [-j <jlogpath>] [-v] [-s <segsize>] [-p <precommit>] [-c <on|off]\n", prog);
   printf("\n");
+  printf("%s meta [-j <jlogpath>] [-c|-f|-l|-m|-p|-s]\n", prog);
+  printf("\t-c\tshow compression setting\n");
+  printf("\t-f\tshow safety setting\n");
+  printf("\t-l\tshow current storage log\n");
+  printf("\t-m\tshow header magic\n");
+  printf("\t-p\tshow precommit size\n");
+  printf("\t-s\tshow segment size\n");
+  printf("\t\tommitting flag shows all with field names\n");
+  printf("\n");
   printf("%s repair [-j <jlogpath>] [-v]\tRepair metadata\n", prog);
   printf("\t-f\t\t\t\talso analyze and repair datafiles\n");
   printf("\n");
@@ -491,6 +500,99 @@ int main_repair(const char *prog, int argc, char **argv) {
   process_jlog(jlog, NULL);
   return 0;
 }
+int main_meta(const char *prog, int argc, char **argv) {
+  int c;
+  int option_index = 0;
+  const char *jlog = ".";
+  enum {
+    SHOW_ALL = 0,
+    SHOW_COMPRESSION,
+    SHOW_SAFETY,
+    SHOW_PRECOMMIT,
+    SHOW_SEGMENTSIZE,
+    SHOW_STORAGELOG,
+    SHOW_MAGIC
+  } mode = SHOW_ALL;
+  while((c = getopt_long(argc,argv,"cfj:lmpsv",NULL,&option_index)) != EOF) {
+    switch(c) {
+      case 'j':
+        jlog = optarg;
+        break;
+      case 'v':
+       verbose++;
+       break;
+#define DOOPT(c, v) case c: if(mode != SHOW_ALL) { usage(prog); exit(-1); } mode = v; break
+      DOOPT('c', SHOW_COMPRESSION);
+      DOOPT('f', SHOW_SAFETY);
+      DOOPT('l', SHOW_STORAGELOG);
+      DOOPT('m', SHOW_MAGIC);
+      DOOPT('p', SHOW_PRECOMMIT);
+      DOOPT('s', SHOW_SEGMENTSIZE);
+      default:
+        usage(prog);
+        exit(-1);
+    }
+  }
+
+  jlog_ctx *log = jlog_new(jlog);
+  if(jlog_ctx_open_writer(log) != 0) {
+    fprintf(stderr, "Failed to alter jlog '%s': %s\n", jlog, jlog_ctx_err_string(log));
+    return -1;
+  }
+
+  if(optind != argc) {
+    fprintf(stderr, "extraneous arguments: %s\n", argv[optind]);
+    usage(prog);
+    exit(-1);
+  }
+
+  switch(mode) {
+    case SHOW_ALL:
+      printf("magic          %08x\n", log->meta->hdr_magic);
+      printf("storagelog     %08x\n", log->meta->storage_log);
+      printf("compression    %s\n",
+        log->meta->hdr_magic == DEFAULT_HDR_MAGIC_COMPRESSION ?
+          "on" :
+          (log->meta->hdr_magic == DEFAULT_HDR_MAGIC ? "off" : "unknown"));
+      printf("safety         ");
+      if(log->meta->safety == JLOG_UNSAFE)
+        printf("unsafe\n");
+      else if(log->meta->safety == JLOG_ALMOST_SAFE)
+        printf("metasafe\n");
+      else if(log->meta->safety == JLOG_SAFE)
+        printf("safe\n");
+      else
+        printf("0x%08x\n", log->meta->safety);
+      printf("precommit      %zu\n",
+             log->pre_commit_buffer_len ?
+               log->pre_commit_buffer_len - sizeof(*log->pre_commit_pointer) : 0);
+      printf("segmentsize    %u\n", log->meta->unit_limit);
+      break;
+    case SHOW_STORAGELOG: printf("%08x\n", log->meta->storage_log); break;
+    case SHOW_MAGIC: printf("%08x\n", log->meta->hdr_magic); break;
+    case SHOW_SAFETY:
+      if(log->meta->safety == JLOG_UNSAFE)
+        printf("unsafe\n");
+      else if(log->meta->safety == JLOG_ALMOST_SAFE)
+        printf("metasafe\n");
+      else if(log->meta->safety == JLOG_SAFE)
+        printf("safe\n");
+      else
+        printf("0x%08x\n", log->meta->safety);
+      break;
+    case SHOW_SEGMENTSIZE: printf("%u\n", log->meta->unit_limit); break;
+    case SHOW_PRECOMMIT: printf("%zu\n", log->pre_commit_buffer_len ? log->pre_commit_buffer_len - sizeof(*log->pre_commit_pointer) : 0); break;
+    case SHOW_COMPRESSION:
+      if(log->meta->hdr_magic == DEFAULT_HDR_MAGIC_COMPRESSION)
+        printf("on\n");
+      else if(log->meta->hdr_magic == DEFAULT_HDR_MAGIC)
+        printf("off\n");
+      else
+        printf("unknown\n");
+      break;
+  }
+  return 0;
+}
 int main_alter(const char *prog, int create, int argc, char **argv) {
   const char *jlog = create ? NULL : ".";
   int option_index = 0;
@@ -548,6 +650,8 @@ int main_alter(const char *prog, int create, int argc, char **argv) {
       fprintf(stderr, "Failed to initialize jlog '%s': %s\n", jlog, jlog_ctx_err_string(log));
       return -1;
     }
+    jlog_ctx_close(log);
+    log = jlog_new(jlog);
   }
   if(jlog_ctx_open_writer(log) != 0) {
     fprintf(stderr, "Failed to alter jlog '%s': %s\n", jlog, jlog_ctx_err_string(log));
@@ -592,6 +696,9 @@ int main(int argc, char **argv) {
     }
     else if(!strcmp(argv[1], "alter")) {
       return main_alter(argv[0], 0, argc-1, argv+1);
+    }
+    else if(!strcmp(argv[1], "meta")) {
+      return main_meta(argv[0], argc-1, argv+1);
     }
     else if(!strcmp(argv[1], "repair")) {
       return main_repair(argv[0], argc-1, argv+1);

@@ -2,6 +2,8 @@
 
 ## 2
 
+* Add a 'meta' subcommand to assist metastore inspection.
+
 ### 2.5.0 (2020-04-22)
 
 * Rework jlogctl to be subcommand-based while preserving old flags.
