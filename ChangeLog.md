@@ -2,7 +2,11 @@
 
 ## 2
 
+### 2.5.1 (2020-06-08)
+
 * Add a 'meta' subcommand to assist metastore inspection.
+* make `jlog_ctx_repair` repair data files when run with `aggressive` != 0
+* Offer `jlog_err_string`
 
 ### 2.5.0 (2020-04-22)
 
