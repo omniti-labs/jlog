@@ -71,7 +71,7 @@ static int _getopt_long(int my_argc,
   } else {
     cur_longopt_len = strlen(cur_longopt);
   }
-  for(i = 0; longopts[i].name; i++) {
+  for(i = 0; longopts && longopts[i].name; i++) {
     if(strlen(longopts[i].name) == cur_longopt_len &&
        !strncmp(longopts[i].name, cur_longopt, cur_longopt_len)) 
     {
