@@ -141,6 +141,7 @@ typedef enum {
 typedef void (*jlog_error_func) (void *ctx, const char *msg, ...);
 
 JLOG_API(jlog_ctx *) jlog_new(const char *path);
+JLOG_API(const char *) jlog_err_string(int);
 JLOG_API(void)      jlog_set_error_func(jlog_ctx *ctx, jlog_error_func Func, void *ptr); 
 JLOG_API(size_t)    jlog_raw_size(jlog_ctx *ctx);
 JLOG_API(int)       jlog_ctx_init(jlog_ctx *ctx);

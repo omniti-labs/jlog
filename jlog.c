@@ -1135,8 +1135,13 @@ restart:
     /* We are adding onto a partial index so we must advance a record */
     if (!jlog_file_pread(ctx->data, &logmhdr, hdr_size, data_off))
       SYS_FAIL(JLOG_ERR_FILE_READ);
-    if ((data_off += hdr_size + *message_disk_len) > data_len)
+    if ((data_off += hdr_size + *message_disk_len) > data_len) {
+#ifdef DEBUG
+      fprintf(stderr, "index overshoots %zd + %zd + %zd > %zd\n",
+              data_off - hdr_size - *message_disk_len, hdr_size, *message_disk_len, data_len);
+#endif
       RESTART;
+    }
   }
 
   i = 0;
@@ -1199,6 +1204,9 @@ restart:
     }
 
     if (recheck_data_len != data_len) {
+#ifdef DEBUG
+      fprintf(stderr, "data len changed, %llu -> %llu\n", data_off, recheck_data_len);
+#endif
       RESTART;
     }
 
@@ -1215,8 +1223,12 @@ restart:
      * next reader; this only happens when segments are repaired */
     if (index_off) {
       index = 0;
-      if (!jlog_file_pwrite(ctx->index, &index, sizeof(u_int64_t), index_off))
+      if (!jlog_file_pwrite(ctx->index, &index, sizeof(u_int64_t), index_off)) {
+#ifdef DEBUG
+        fprintf(stderr, "null index\n");
+#endif
         RESTART;
+      }
       index_off += sizeof(u_int64_t);
     }
     if(closed) *closed = 1;
@@ -1303,7 +1315,10 @@ size_t jlog_raw_size(jlog_ctx *ctx) {
 }
 
 const char *jlog_ctx_err_string(jlog_ctx *ctx) {
-  switch (ctx->last_error) {
+  return jlog_err_string(ctx->last_error);
+}
+const char *jlog_err_string(int err) {
+  switch (err) {
 #define MSG_O_MATIC(x)  case x: return #x;
     MSG_O_MATIC( JLOG_ERR_SUCCESS);
     MSG_O_MATIC( JLOG_ERR_ILLEGAL_INIT);
@@ -1925,7 +1940,7 @@ int jlog_ctx_add_subscriber(jlog_ctx *ctx, const char *s, jlog_position whence) 
 int jlog_ctx_add_subscriber_copy_checkpoint(jlog_ctx *old_ctx, const char *new,
                                 const char *old) {
   jlog_id chkpt;
-  jlog_ctx *new_ctx = NULL;;
+  jlog_ctx *new_ctx = NULL;
 
   /* If there's no old checkpoint available, just return */
   if (jlog_get_checkpoint(old_ctx, old, &chkpt)) {
@@ -2025,6 +2040,9 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
       start->log++;  /* BE SMARTER! */
       goto attempt;
     }
+#ifdef DEBUG
+      fprintf(stderr, "__jlog_resync_index failed in __jlog_find_first_log_after %s\n", jlog_err_string(ctx->last_error));
+#endif
     return -1; /* Just persist resync's error state */
   }
 
@@ -2775,215 +2793,65 @@ static int repair_checkpointfile(jlog_ctx *ctx, DIR *dir, const char *pth, unsig
   return rv;
 }
 
-#if 0
-
-// we want a directory of the form DIRsepDIRsep, with a separator
-// already at the end
-
-static const char *findparentdirectory(const char *pth, int *off2fnp) {
-  size_t strt = 0;
-  size_t leen = strlen(pth);
-  // special case: the top level directory
-  if ( leen == 1 && pth[0] == IFS_CH ) {
-    *off2fnp = 1;
-    return strdup(pth);
-  }
-  // is the last char already a sep?
-  if ( pth[leen-1] == IFS_CH )
-    strt = leen - 2;
-  else
-    strt = leen - 1;
-  char *sep = strrchr(&pth[strt], IFS_CH);
-  *off2fnp = (int)(sep - &pth[0]);
-  char *ag = strdup(pth);
-  if ( ag == NULL )
-    return NULL;
-  ag[*off2fnp] = '\0';
-  return ag;
-}
-
-static char *makeparentname(const char *pth, size_t fnlen, int *off2fnp) {
-  const char *pdir = findparentdirectory(pth, off2fnp);
-  if ( pdir == NULL || pdir[0] == '\0' )
-    return NULL;
-  char *ag = (char *)calloc(fnlen, sizeof(char));
-  if ( ag == NULL )
-    return(NULL);
-  (void)memcpy((void *)ag, pdir, strlen(pdir));
-  free((void *)pdir);
-  return ag;
-}
-
-#endif
-
-typedef struct _strlist {
-  char *entry;
-  struct _strlist *next;
-} strlist;
-
-static strlist *strhead = NULL;
-
 /*
   When doing a directory traveral using readdir(), it is not safe to
   perform a rename() or unlink() during the traversal. So we have to
   save these filenames for processing after the traversal is done.
 */
 
-static void schedule_one_file(char *fn) {
-  if ( fn == NULL || fn[0] == '\0' )
-    return;
-  strlist *snew = (strlist *)calloc(1, sizeof(strlist));
-  if ( snew == NULL )           /* no memory, bail */
-    return;
-  snew->entry = strdup(fn);
-  if ( snew->entry == NULL )
-    return;                     /* dangerous to free memory, if out of mem */
-  snew->next = strhead;
-  strhead = snew;
-}
+static int analyze_datafile(jlog_ctx *ctx, u_int32_t logid) {
+  char idxfile[MAXPATHLEN];
+  int rv = 0;
 
-static void destroy_all_schedule_memory(void)
-{
-  strlist *runn = strhead;
-  while ( runn != NULL ) {
-    strlist *nxt = runn->next;
-    if ( runn->entry != NULL ) {
-      free((void *)(runn->entry));
-      runn->entry = NULL;
-    }
-    free((void *)runn);
-    runn = nxt;
+  if (jlog_inspect_datafile(ctx, logid, 0) > 0) {
+    fprintf(stderr, "REPAIRING %s/%08x\n", ctx->path, logid);
+    rv = jlog_repair_datafile(ctx, logid);
+    STRSETDATAFILE(ctx, idxfile, logid);
+    strcat(idxfile, INDEX_EXT);
+    unlink(idxfile);
   }
-  strhead = NULL;
+  return rv;
 }
 
-#if 0
-
-static void move_one_file(const char *pth, char *parent, int off2fn,
-                          char *nam) {
-  size_t leen = strlen(pth) + strlen(nam) + 5;
-  if ( leen >= MAXPATHLEN )
-    return;
-  char *ag = (char *)calloc(leen, sizeof(char));
-  if ( ag == NULL )
-    return;
-  (void)snprintf(ag, leen-1, "%s%c%s", pth, IFS_CH, nam);
-  (void)memcpy(&parent[off2fn], nam, 1 + strlen(nam)); /* copy the NUL */
-  (void)rename(ag, parent);
-  free((void *)ag);
-}
-
-static void move_the_files(const char *pth, char *parent, int off2fn) {
-#ifdef DUSTY_SPRINGFIELD
-  (void)printf("I'd like the Dusty Springfield special, with extra dust\n");
-#endif
-  strlist *runn = strhead;
-  while ( runn != NULL ) {
-    if ( runn->entry != NULL && runn->entry[0] != '\0' )
-      move_one_file(pth, parent, off2fn, runn->entry);
-    runn = runn->next;
+static int repair_data_files(jlog_ctx *log) {
+  if(log->context_mode == JLOG_READ) {
+    FASSERT(log, 0, "repair_data_files: illegal call in JLOG_READ mode");
+    log->last_error = JLOG_ERR_ILLEGAL_WRITE;
+    log->last_errno = EPERM;
+    return -1;
   }
-  destroy_all_schedule_memory();
-}
-
-#endif
-
-static void delete_one_file(const char *pth, char *nam) {
-  size_t leen = strlen(pth) + strlen(nam) + 5;
-  if ( leen >= MAXPATHLEN )
-    return;
-  char *ag = (char *)calloc(leen, sizeof(char));
-  if ( ag == NULL )
-    return;
-  (void)snprintf(ag, leen-1, "%s%c%s", pth, IFS_CH, nam);
-  (void)unlink(ag);
-  free((void *)ag);
-}
-
-static void delete_the_files(const char *pth) {
-  strlist *runn = strhead;
-  while ( runn != NULL ) {
-    if ( runn->entry != NULL && runn->entry[0] != '\0' )
-      delete_one_file(pth, runn->entry);
-    runn = runn->next;
+  DIR *dir;
+  struct dirent *de;
+  dir = opendir(log->path);
+  if(!dir) {
+    log->last_error = JLOG_ERR_NOTDIR;
+    log->last_errno = errno;
+    return -1;
   }
-  destroy_all_schedule_memory();
-}
-
-#if 0
-
-/*
-  if there are fassert files in the jlog directory, try to move them
-  to the parent directory. It is ok, for the moment, if this fails.
-  Also, not to be circular, never call FASSERT() in this function,
-  or any of its callees. [unused]
-*/
-
-static void try_to_save_fasserts(const char *pth, DIR *dir) {
-  if ( pth == NULL || pth[0] == '\0' || dir == NULL )
-  return;
-  size_t leen = strlen(pth);
-  // an fassert file has the form fassertT, where T is the time as a long
-  size_t flen = strlen("fassert");
-  size_t fnlen = flen + 10 + 3;
-  if ( (leen + fnlen) >= MAXPATHLEN )
-    return;
-  int off2fn = 0;
-  char *parent = makeparentname(pth, fnlen, &off2fn);
-  if ( parent == NULL )
-    return;
-  struct dirent *ent;
-  (void)rewinddir(dir);
-  int ntomove = 0;
-  while ( (ent = readdir(dir)) != NULL ) {
-    if ( ent->d_name[0] != '\0' ) {
-      if ( strncmp("fassert", ent->d_name, flen) == 0 ) {
-        // if we attempt to do a rename() during a directory traversal
-        // using readdir(), the results will be undesirable
-        schedule_one_file(ent->d_name);
-        ntomove++;
-      }
-    }
-  }
-  if ( ntomove > 0 )
-    move_the_files(pth, parent, off2fn);
-  free((void *)parent);
-}
-
-#endif
-
-/*
-  Try as hard as we can to remove all files. Ignore failures of intermediate
-  steps, because the user can always manually remove the directory and its
-  contents if all else fails.
-
-  We cannot use FASSERT in this function because it might create a new file
-  in the directory we are trying to remove.
-*/
-
-static int rmcontents_and_dir(const char *pth, DIR *dir) {
-  int sta = 0;
-  if ( pth == NULL || pth[0] == '\0' )
-    return 0;
-  int ntodelete = 0;
-  if ( dir != NULL ) {
-    struct dirent *ent = NULL;
-    (void)rewinddir(dir);
-    while ( (ent = readdir(dir)) != NULL ) {
-      if ( ent->d_name[0] != '\0' ) {
-        if ( (strcmp(ent->d_name, ".") != 0) &&
-             (strcmp(ent->d_name, "..") != 0) ) {
-          schedule_one_file(ent->d_name);
-          ntodelete++;
+  int rv = 0;
+  while((de = readdir(dir)) != NULL) {
+    u_int32_t logid;
+    if(is_datafile(de->d_name, &logid)) {
+      char fullfile[MAXPATHLEN];
+      char fullidx[MAXPATHLEN];
+      struct stat st;
+      int readers;
+      snprintf(fullfile, sizeof(fullfile), "%s/%s", log->path, de->d_name);
+      snprintf(fullidx, sizeof(fullidx), "%s/%s" INDEX_EXT, log->path, de->d_name);
+      if(stat(fullfile, &st) == 0) {
+        readers = __jlog_pending_readers(log, logid);
+        if(analyze_datafile(log, logid) < 0) {
+          rv = -1;
+        }
+        if(readers == 0) {
+          unlink(fullfile);
+          unlink(fullidx);
         }
       }
     }
-    (void)closedir(dir);
   }
-  if ( ntodelete > 0 )
-    delete_the_files(pth);
-  sta = rmdir(pth);
-  return (sta >= 0);
+  closedir(dir);
+  return rv;
 }
 
 /* exported */
@@ -3006,8 +2874,6 @@ int jlog_ctx_repair(jlog_ctx *ctx, int aggressive) {
   FASSERT(ctx, dir != NULL, "cannot open jlog directory");
   if ( dir == NULL ) {
     int bx = 0;
-    if ( aggressive == 1 )
-      bx = rmcontents_and_dir(pth, NULL);
     if ( bx == 0 )
       ctx->last_error = JLOG_ERR_NOTDIR;
     else
@@ -3022,38 +2888,31 @@ int jlog_ctx_repair(jlog_ctx *ctx, int aggressive) {
     // step 3: attempt to repair the metastore. It might not need any
     // repair, in which case nothing will happen
     int b1 = repair_metastore(ctx, pth, lat);
-    FASSERT(ctx, b1, "cannot repair metastore");
     // step 4: attempt to repair the checkpoint file. It might not need
     // any repair, in which case nothing will happen
     int b2 = repair_checkpointfile(ctx, dir, pth, ear, lat);
-    FASSERT(ctx, b2, "cannot repair checkpoint file");
     // if non-aggressive repair succeeded, then declare success
-    if ( (b1 == 1) && (b2 == 1) ) {
-      (void)closedir(dir);
-      ctx->last_error = JLOG_ERR_SUCCESS;
+    (void)closedir(dir);
+
+    // if aggressive repair is not authorized, fail
+    if ( aggressive != 0 ) {
+      if(repair_data_files(ctx) < 0) {
+        return 1;
+      }
+    }
+
+    if (b1 != 1) {
+      ctx->last_error = JLOG_ERR_CREATE_META;
+      return 0;
+    }
+
+    if (b2 != 1) {
+      ctx->last_error = JLOG_ERR_CHECKPOINT;
       return 1;
     }
   }
-  // if aggressive repair is not authorized, fail
-  if ( aggressive == 0 ) {
-    (void)closedir(dir);
-    ctx->last_error = JLOG_ERR_CREATE_META;
-    return 0;
-  }
-  // step 5: if there are any fassert files, try to save them by
-  // moving them to the parent directory of "pth". Also make sure
-  // to close the current fassert file. [unused]
-  // fassertxend();
-  // try_to_save_fasserts(pth, dir);
-  // step 6: destroy the directory with extreme prejudice
-  int b3 = rmcontents_and_dir(pth, dir);
-  FASSERT(ctx, b3, "Aggressive repair of jlog directory failed");
-  //  (void)closedir(dir);
-  if ( b3 == 0 )
-    ctx->last_error = JLOG_ERR_NOTDIR;
-  else
-    ctx->last_error = JLOG_ERR_SUCCESS;
-  return b3;
+  ctx->last_error = JLOG_ERR_SUCCESS;
+  return 0;
 }
 
 /* -------------end of jlog_ctx_repair() and friends ----------- */
