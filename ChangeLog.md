@@ -2,6 +2,9 @@
 
 ## 2
 
+* Add an ownership check after jlogctl runs to alert operators to potentially
+  unusable file ownership problems.
+
 ### 2.5.1 (2020-06-08)
 
 * Add a 'meta' subcommand to assist metastore inspection.
