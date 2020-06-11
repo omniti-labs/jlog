@@ -2,6 +2,8 @@
 
 ## 2
 
+### 2.5.2 (2020-06-11)
+
 * Add an ownership check after jlogctl runs to alert operators to potentially
   unusable file ownership problems.
 
