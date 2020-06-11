@@ -119,6 +119,7 @@ static void oldusage(const char *prog) {
   printf("\n  * WARNING: the -r and -R options cannot be used on jlogs that are "
          "open by another process\n");
 }
+
 static int is_datafile(const char *f, u_int32_t *logid) {
   int i;
   u_int32_t l = 0;
@@ -134,6 +135,49 @@ static int is_datafile(const char *f, u_int32_t *logid) {
   if(f[i] != '\0') return 0;
   if(logid) *logid = l;
   return 1;
+}
+
+static int ownership_check(const char *path) {
+  DIR *dir;
+  struct dirent *de;
+  struct stat expect, st;
+
+  if(stat(path, &expect) < 0) {
+    fprintf(stderr, "could not stat '%s': %s\n", path, strerror(errno));
+    return -1;
+  }
+  dir = opendir(path);
+  if(!dir) {
+    fprintf(stderr, "error opening '%s': %s\n", path, strerror(errno));
+    return -1;
+  }
+  int rv = 0;
+  while((de = readdir(dir)) != NULL) {
+    char fullfile[MAXPATHLEN];
+    snprintf(fullfile, sizeof(fullfile), "%s/%s", path, de->d_name);
+    if(stat(fullfile, &st) != 0) {
+      fprintf(stderr, "failed to stat %s: %s\n", fullfile, strerror(errno));
+      rv = -1;
+    }
+    else {
+      if(expect.st_uid != st.st_uid ||
+         expect.st_gid != st.st_gid) {
+        fprintf(stderr, "%s owner/group [%d/%d] doesn't match jlog [%d/%d]\n",
+                de->d_name, st.st_uid, st.st_gid, expect.st_uid, expect.st_gid);
+        rv =-1;
+      }
+    }
+  }
+  if(rv != 0) {
+    char fullpath[MAXPATHLEN];
+    const char *tgtpath;
+    tgtpath = realpath(path, fullpath);
+    if(!tgtpath) tgtpath = path;
+    fprintf(stderr, "\nA permissions mismatch can cause these to fail later\n");
+    fprintf(stderr, "*IF* the jlog ownership is correct you can run (as root):\n");
+    fprintf(stderr, "\n  chown -R %d:%d %s\n", expect.st_uid, expect.st_gid, tgtpath);
+  }
+  return rv;
 }
 static void analyze_datafile(jlog_ctx *ctx, u_int32_t logid) {
   char idxfile[MAXPATHLEN];
@@ -403,6 +447,7 @@ int main_subscriber(const char *prog, int argc, char **argv) {
   }
   if(optcnt == 0) show_subscribers = 1;
   process_jlog(jlog, subscriber);
+  ownership_check(jlog);
   return 0;
 }
 int main_data(const char *prog, int argc, char **argv) {
@@ -439,6 +484,7 @@ int main_data(const char *prog, int argc, char **argv) {
     exit(-1);
   }
   process_jlog(jlog, NULL);
+  ownership_check(jlog);
   return 0;
 }
 int main_clean(const char *prog, int argc, char **argv) {
@@ -467,6 +513,7 @@ int main_clean(const char *prog, int argc, char **argv) {
     exit(-1);
   }
   process_jlog(jlog, NULL);
+  ownership_check(jlog);
   return 0;
 }
 int main_repair(const char *prog, int argc, char **argv) {
@@ -498,6 +545,7 @@ int main_repair(const char *prog, int argc, char **argv) {
   }
   do_jlog_repair = 1;
   process_jlog(jlog, NULL);
+  ownership_check(jlog);
   return 0;
 }
 int main_meta(const char *prog, int argc, char **argv) {
@@ -775,6 +823,7 @@ int main(int argc, char **argv) {
   for(i=optind; i<argc; i++) {
     if(!quiet) printf("%s\n", argv[i]);
     process_jlog(argv[i], subscriber);
+    ownership_check(argv[i]);
   }
   return 0;
 }
