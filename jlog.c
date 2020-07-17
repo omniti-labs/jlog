@@ -2007,7 +2007,7 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
     if(ctx->last_error == JLOG_ERR_FILE_OPEN &&
         ctx->last_errno == ENOENT) {
       char file[MAXPATHLEN];
-      int ferr, len;
+      int ferr;
       struct stat sb = {0};
 
       memset(file, 0, sizeof(file));
@@ -2017,20 +2017,6 @@ static int __jlog_find_first_log_after(jlog_ctx *ctx, jlog_id *chkpt,
          advancing the next file that does exist */
       ctx->last_error = JLOG_ERR_SUCCESS;
       if(start->log >= ctx->meta->storage_log || (ferr != 0 && errno != ENOENT)) {
-        /* We don't advance past where people are writing */
-        memcpy(finish, start, sizeof(*start));
-        return 0;
-      }
-      if(__jlog_resync_index(ctx, start->log + 1, &last, &closed) != 0) {
-        /* We don't advance past where people are writing */
-        memcpy(finish, start, sizeof(*start));
-        return 0;
-      }
-      len = strlen(file);
-      if((len + sizeof(INDEX_EXT)) > sizeof(file)) return -1;
-      memcpy(file + len, INDEX_EXT, sizeof(INDEX_EXT));
-      while((ferr = stat(file, &sb)) == -1 && errno == EINTR);
-      if(ferr != 0 || sb.st_size == 0) {
         /* We don't advance past where people are writing */
         memcpy(finish, start, sizeof(*start));
         return 0;
