@@ -2607,41 +2607,56 @@ static int findel(DIR *dir, unsigned int *earp, unsigned int *latp) {
    The final hex number is known as DEFAULT_HDR_MAGIC
 */
 
-static int metastore_ok_p(jlog_ctx *ctx, char *ag, unsigned int lat) {
+static int metastore_ok_p(jlog_ctx *ctx, char *ag, unsigned int lat, struct _jlog_meta_info *out) {
+  struct _jlog_meta_info current;
+  if(out) {
+    /* setup the real defaults */
+    out->storage_log = lat;
+    out->unit_limit = 4*1024*1024;
+    out->safety = 1;
+    out->hdr_magic = DEFAULT_HDR_MAGIC;
+  }
   int fd = open(ag, O_RDONLY);
-  FASSERT(ctx, fd >= 0, "cannot open metastore file");
-  if ( fd < 0 )
-    return 0;
-  // now we use a very slightly tricky way to get the filesize on
-  // systems that don't necessarily have <sys/stat.h>
-  off_t oof = lseek(fd, 0, SEEK_END);
-  (void)lseek(fd, 0, SEEK_SET);
-  size_t fourI = 4*sizeof(unsigned int);
-  FASSERT(ctx, oof == (off_t)fourI, "metastore size invalid");
-  if ( oof != (off_t)fourI ) {
+  if ( fd < 0 ) return 0;
+  if ( lseek(fd, 0, SEEK_END) != sizeof(current) ) {
     (void)close(fd);
     return 0;
   }
-  unsigned int goal[4];
-  goal[0] = lat;
-  goal[1] = 4*1024*1024;
-  goal[2] = 1;
-  goal[3] = DEFAULT_HDR_MAGIC;
-  unsigned int have[4];
-  int rd = read(fd, &have[0], fourI);
+  (void)lseek(fd, 0, SEEK_SET);
+  int rd = read(fd, &current, sizeof(current));
   (void)close(fd);
   fd = -1;
-  FASSERT(ctx, rd == fourI, "read error on metastore file");
-  if ( rd != fourI )
+  if ( rd != sizeof(current) )
     return 0;
-  int gotem = 0;
-  int i;
-  for(i=0;i<4;i++) {
-    if ( goal[i] == have[i] )
-      gotem++;
+
+  /* validate */
+  int valid = 1;
+  if(current.hdr_magic == DEFAULT_HDR_MAGIC ||
+     current.hdr_magic == DEFAULT_HDR_MAGIC_COMPRESSION) {
+    if(out) out->hdr_magic = current.hdr_magic;
   }
-  FASSERT(ctx, gotem == 4, "metastore contents incorrect");
-  return (gotem == 4);
+  else {
+    valid = 0;
+  }
+  if(current.unit_limit > 0) {
+    if(out) out->unit_limit = current.unit_limit;
+  }
+  else {
+    valid = 0;
+  }
+  if(current.safety == JLOG_UNSAFE ||
+     current.safety == JLOG_ALMOST_SAFE ||
+     current.safety == JLOG_SAFE) {
+    if(out) out->safety = current.safety;
+  }
+  else {
+    valid = 0;
+  }
+  if(current.storage_log != lat) {
+    // we don't need to set out->storage_log, as it was set at the outset of this function
+    valid = 0;
+  }
+  return valid;
 }
 
 static int repair_metastore(jlog_ctx *ctx, const char *pth, unsigned int lat) {
@@ -2659,24 +2674,23 @@ static int repair_metastore(jlog_ctx *ctx, const char *pth, unsigned int lat) {
   if ( ag == NULL )             /* out of memory, so bail */
     return 0;
   (void)snprintf(ag, leen2-1, "%s%cmetastore", pth, IFS_CH);
-  int b = metastore_ok_p(ctx, ag, lat);
+  struct _jlog_meta_info out;
+  int b = metastore_ok_p(ctx, ag, lat, &out);
   FASSERT(ctx, b, "metastore integrity check failed");
-  unsigned int goal[4];
-  goal[0] = lat;
-  goal[1] = 4*1024*1024;
-  goal[2] = 1;
-  goal[3] = DEFAULT_HDR_MAGIC;
-  (void)unlink(ag);             /* start from scratch */
-  int fd = creat(ag, DEFAULT_FILE_MODE);
+  if(b != 0) return 1;
+  int fd = open(ag, O_RDWR|O_CREAT, DEFAULT_FILE_MODE);
   free((void *)ag);
   ag = NULL;
   FASSERT(ctx, fd >= 0, "cannot create new metastore file");
   if ( fd < 0 )
     return 0;
-  int wr = write(fd, &goal[0], sizeof(goal));
+  if(ftruncate(fd, sizeof(out)) != 0) {
+    FASSERT(ctx, 0, "ftruncate failed (non-fatal)");
+  }
+  int wr = write(fd, &out, sizeof(out));
   (void)close(fd);
-  FASSERT(ctx, wr == sizeof(goal), "cannot write new metastore file");
-  return (wr == sizeof(goal));
+  FASSERT(ctx, wr == sizeof(out), "cannot write new metastore file");
+  return (wr == sizeof(out));
 }
 
 static int new_checkpoint(jlog_ctx *ctx, char *ag, int fd, jlog_id point) {
