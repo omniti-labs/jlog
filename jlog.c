@@ -1824,9 +1824,8 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
       FASSERT(ctx, 0, "jlog_file_pwritev failed in jlog_ctx_write_message");
       SYS_FAIL(JLOG_ERR_FILE_WRITE);
     }
+    current_offset += v[0].iov_len + v[1].iov_len;
   }
-
-  current_offset += v[0].iov_len + v[1].iov_len;
 
   if (IS_COMPRESS_MAGIC(ctx) && v[1].iov_base != compress_space) {
     free(v[1].iov_base);
