@@ -2,6 +2,13 @@
 
 ## 2
 
+* Correct issue where writing to pre-commit buffer could cause jlog to
+  advance with a zero-sized log segment.
+* Make jlogctl alter -p <X> work.
+* Make jlogctl repair maintain all pre-existing valid meta fields.
+* `jlog_ctx_read_interval` now will automatically advance past more than one
+  missing data files.
+
 ### 2.5.2 (2020-06-11)
 
 * Add an ownership check after jlogctl runs to alert operators to potentially
