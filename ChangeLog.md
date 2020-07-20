@@ -2,6 +2,8 @@
 
 ## 2
 
+### 2.5.3 (2020-07-20)
+
 * Correct issue where writing to pre-commit buffer could cause jlog to
   advance with a zero-sized log segment.
 * Make jlogctl alter -p <X> work.
