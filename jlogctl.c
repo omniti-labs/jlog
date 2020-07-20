@@ -712,9 +712,20 @@ int main_alter(const char *prog, int create, int argc, char **argv) {
     jlog_ctx_set_use_compression(log, use_compression);
   }
   if(precommit_size >= 0) {
-    jlog_ctx_set_pre_commit_buffer_size(log, precommit_size);
+    jlog_ctx_flush_pre_commit_buffer(log);
   }
   jlog_ctx_close(log);
+
+  if(precommit_size >= 0) {
+    log = jlog_new(jlog);
+    jlog_ctx_set_pre_commit_buffer_size(log, precommit_size);
+    if(jlog_ctx_open_writer(log) != 0) {
+      fprintf(stderr, "Failed to alter jlog '%s': %s\n", jlog, jlog_ctx_err_string(log));
+      jlog_ctx_close(log);
+      return -1;
+    }
+    jlog_ctx_close(log);
+  }
   return 0;
 }
 int main(int argc, char **argv) {
