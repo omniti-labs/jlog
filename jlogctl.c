@@ -153,6 +153,10 @@ static int ownership_check(const char *path) {
   }
   int rv = 0;
   while((de = readdir(dir)) != NULL) {
+    /* No need to test our parent directory */
+    if(!strcmp(de->d_name, "..")) {
+      continue;
+    }
     char fullfile[MAXPATHLEN];
     snprintf(fullfile, sizeof(fullfile), "%s/%s", path, de->d_name);
     if(stat(fullfile, &st) != 0) {
