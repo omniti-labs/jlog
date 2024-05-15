@@ -91,7 +91,15 @@ int jlog_file_pread(jlog_file *f, void *buf, size_t nbyte, off_t offset);
 int jlog_file_pwrite(jlog_file *f, const void *buf, size_t nbyte, off_t offset);
 
 /**
- * pwritevs to a jlog_file, retries EINTR
+ * pwritevs to a jlog_file, retries EINTR. takes the expected bytes written as an argument.
+ * @return 1 if the write was fully satisfied, 0 otherwise
+ * @internal
+ */
+int jlog_file_pwritev_verify_return_value(jlog_file *f, const struct iovec *vecs, int iov_count, off_t offset,
+                                          size_t expected_length);
+
+/**
+ * pwritevs to a jlog_file, retries EINTR. calculates the expected bytes written internally.
  * @return 1 if the write was fully satisfied, 0 otherwise
  * @internal
  */

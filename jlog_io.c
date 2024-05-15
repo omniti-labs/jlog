@@ -218,8 +218,8 @@ int jlog_file_pwrite(jlog_file *f, const void *buf, size_t nbyte, off_t offset)
   return 1;
 }
 
-int jlog_file_pwritev(jlog_file *f, const struct iovec *vecs, int iov_count, off_t offset) 
-{
+int jlog_file_pwritev_verify_return_value(jlog_file *f, const struct iovec *vecs, int iov_count, off_t offset,
+                                          size_t expected_length) {
   ssize_t rv = 0;
   while (1) {
 #ifdef HAVE_PWRITEV
@@ -230,9 +230,23 @@ int jlog_file_pwritev(jlog_file *f, const struct iovec *vecs, int iov_count, off
 #endif
     if (rv == -1 && errno == EINTR) continue;
     if (rv <= 0) return 0;
+    if (rv > 0 && rv != expected_length) continue;
     break;
   }
   return 1;
+}
+
+int jlog_file_pwritev(jlog_file *f, const struct iovec *vecs, int iov_count, off_t offset)
+{
+  int i;
+  size_t expected_length = 0;
+  for (i=0; i < iov_count; i++) {
+    expected_length += vecs[i].iov_len;
+  }
+  if (expected_length) {
+    return jlog_file_pwritev_verify_return_value(f, vecs, iov_count, offset, expected_length);
+  }
+  return 0;
 }
 
 int jlog_file_sync(jlog_file *f)
