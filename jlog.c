@@ -1531,6 +1531,10 @@ int jlog_ctx_alter_mode(jlog_ctx *ctx, int mode) {
   ctx->file_mode = mode;
   return 0;
 }
+int jlog_ctx_alter_read_message_style(jlog_ctx *ctx, jlog_read_message_type mode) {
+  ctx->read_message_type = mode;
+  return 0;
+}
 int jlog_ctx_open_writer(jlog_ctx *ctx) {
   int rv;
   struct stat sb;
