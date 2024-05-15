@@ -2083,6 +2083,9 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
   int with_lock = 0;
   size_t hdr_size = 0;
   uint32_t *message_disk_len = &m->aligned_header.mlen;
+  /* We don't want the style to change mid-read, so use whatever
+   * the style is now */
+  jlog_read_message_type read_type = ctx->read_message_type;
 
   if (IS_COMPRESS_MAGIC(ctx)) {
     hdr_size = sizeof(jlog_message_header_compressed);
@@ -2138,6 +2141,12 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
       /* an offset of 0 in the middle of an index means curruption */
       SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
     }
+  }
+
+  /* Temporary in this branch - make sure the type is known,
+   * remove before PR */
+  if (read_type != JLOG_USE_MMAP) {
+    exit(-1);
   }
 
   if(__jlog_mmap_reader(ctx, id->log) != 0)
