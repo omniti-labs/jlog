@@ -1667,6 +1667,7 @@ int jlog_ctx_init(jlog_ctx *ctx) {
     FASSERT(ctx, 0, "jlog_ctx_init calls jlog_save_metastore");
     SYS_FAIL(JLOG_ERR_CREATE_META);
   }
+  ctx->read_message_type = DEFAULT_READ_MESSAGE_TYPE;
   //  FASSERT(ctx, 0, "Start of fassert log");
  finish:
   FASSERT(ctx, ctx->last_error == JLOG_ERR_SUCCESS, "jlog_ctx_init failed");

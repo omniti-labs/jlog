@@ -44,6 +44,7 @@
 #define DEFAULT_HDR_MAGIC 0x663A7318
 #define DEFAULT_HDR_MAGIC_COMPRESSION 0x15106A00
 #define DEFAULT_SAFETY JLOG_ALMOST_SAFE
+#define DEFAULT_READ_MESSAGE_TYPE JLOG_USE_MMAP
 #define INDEX_EXT ".idx"
 #define MAXLOGPATHLEN (MAXPATHLEN - (8+sizeof(INDEX_EXT)))
 
@@ -67,6 +68,7 @@ struct _jlog_meta_info {
 struct _jlog_ctx {
   struct _jlog_meta_info *meta;
   pthread_mutex_t write_lock;
+  jlog_read_message_type read_message_type;
   int       meta_is_mapped;
   int       pre_commit_is_mapped;
   uint8_t   multi_process;
