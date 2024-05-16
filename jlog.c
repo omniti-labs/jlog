@@ -1672,6 +1672,8 @@ int jlog_ctx_init(jlog_ctx *ctx) {
     SYS_FAIL(JLOG_ERR_CREATE_META);
   }
   ctx->read_message_type = DEFAULT_READ_MESSAGE_TYPE;
+  ctx->compressed_data_buffer = NULL;
+  ctx->compressed_data_buffer_len = 0;
   //  FASSERT(ctx, 0, "Start of fassert log");
  finish:
   FASSERT(ctx, ctx->last_error == JLOG_ERR_SUCCESS, "jlog_ctx_init failed");
@@ -1687,8 +1689,9 @@ int jlog_ctx_close(jlog_ctx *ctx) {
   __jlog_close_reader(ctx);
   __jlog_close_metastore(ctx);
   __jlog_close_checkpoint(ctx);
-  if(ctx->subscriber_name) free(ctx->subscriber_name);
-  if(ctx->path) free(ctx->path);
+  free(ctx->subscriber_name);
+  free(ctx->path);
+  free(ctx->compressed_data_buffer);
   free(ctx);
   return 0;
 }
@@ -2187,14 +2190,21 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
       }
       m->header = &m->aligned_header;
       if (ctx->mess_data_size < m->aligned_header.mlen) {
-        ctx->mess_data = realloc(ctx->mess_data, m->aligned_header.mlen * 2);
         ctx->mess_data_size = m->aligned_header.mlen * 2;
+        ctx->mess_data = realloc(ctx->mess_data, ctx->mess_data_size);
       }
       if (IS_COMPRESS_MAGIC(ctx)) {
-        // TODO
+        if (ctx->compressed_data_buffer_len < m->aligned_header.mlen) {
+          ctx->compressed_data_buffer_len = m->aligned_header.mlen * 2;
+          ctx->compressed_data_buffer = realloc(ctx->compressed_data_buffer, ctx->compressed_data_buffer_len);
+        }
+        if (!jlog_file_pread(ctx->data, ctx->compressed_data_buffer, m->aligned_header.mlen, data_off + hdr_size)) {
+          SYS_FAIL(JLOG_ERR_IDX_READ);
+        }
+        jlog_decompress((char *)ctx->compressed_data_buffer,
+                        m->header->compressed_len, ctx->mess_data, ctx->mess_data_size);
       } else {
-        if (!jlog_file_pread(ctx->data, ctx->mess_data, m->aligned_header.mlen, data_off + hdr_size))
-        {
+        if (!jlog_file_pread(ctx->data, ctx->mess_data, m->aligned_header.mlen, data_off + hdr_size)) {
           SYS_FAIL(JLOG_ERR_IDX_READ);
         }
       }
