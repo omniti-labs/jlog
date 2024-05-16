@@ -2195,6 +2195,7 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
         SYS_FAIL(JLOG_ERR_IDX_READ);
       }
       m->mess_len = m->header->mlen;
+      m->mess = ctx->mess_data;
       break;
     default:
       break;
