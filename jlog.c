@@ -2143,46 +2143,61 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
     }
   }
 
-  /* Temporary in this branch - make sure the type is known,
-   * remove before PR */
-  if (read_type != JLOG_USE_MMAP) {
-    exit(-1);
-  }
+  switch(read_type) {
+    case JLOG_USE_MMAP:
 
-  if(__jlog_mmap_reader(ctx, id->log) != 0)
-    SYS_FAIL(JLOG_ERR_FILE_READ);
+      if(__jlog_mmap_reader(ctx, id->log) != 0)
+        SYS_FAIL(JLOG_ERR_FILE_READ);
 
-  if(data_off > ctx->mmap_len - hdr_size) {
+      if(data_off > ctx->mmap_len - hdr_size) {
 #ifdef DEBUG
-    fprintf(stderr, "read idx off end: %llu\n", data_off);
+        fprintf(stderr, "read idx off end: %llu\n", data_off);
 #endif
-    SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
-  }
+        SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
+      }
 
-  memcpy(&m->aligned_header, ((u_int8_t *)ctx->mmap_base) + data_off,
-         hdr_size);
+      memcpy(&m->aligned_header, ((u_int8_t *)ctx->mmap_base) + data_off,
+             hdr_size);
 
-  if(data_off + hdr_size + *message_disk_len > ctx->mmap_len) {
+      if(data_off + hdr_size + *message_disk_len > ctx->mmap_len) {
 #ifdef DEBUG
-    fprintf(stderr, "read idx off end: %llu %llu\n", data_off, ctx->mmap_len);
+        fprintf(stderr, "read idx off end: %llu %llu\n", data_off, ctx->mmap_len);
 #endif
-    SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
-  }
-
-  m->header = &m->aligned_header;
-
-  if (IS_COMPRESS_MAGIC(ctx)) {
-    if (ctx->mess_data_size < m->aligned_header.mlen) {
-      ctx->mess_data = realloc(ctx->mess_data, m->aligned_header.mlen * 2);
-      ctx->mess_data_size = m->aligned_header.mlen * 2;
-    }
-    jlog_decompress((((char *)ctx->mmap_base) + data_off + hdr_size),
-                    m->header->compressed_len, ctx->mess_data, ctx->mess_data_size);
-    m->mess_len = m->header->mlen;
-    m->mess = ctx->mess_data;
-  } else {
-    m->mess_len = m->header->mlen;
-    m->mess = (((u_int8_t *)ctx->mmap_base) + data_off + hdr_size);
+        SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
+      }
+      m->header = &m->aligned_header;
+      if (IS_COMPRESS_MAGIC(ctx)) {
+        if (ctx->mess_data_size < m->aligned_header.mlen) {
+          ctx->mess_data = realloc(ctx->mess_data, m->aligned_header.mlen * 2);
+          ctx->mess_data_size = m->aligned_header.mlen * 2;
+        }
+        jlog_decompress((((char *)ctx->mmap_base) + data_off + hdr_size),
+                        m->header->compressed_len, ctx->mess_data, ctx->mess_data_size);
+        m->mess_len = m->header->mlen;
+        m->mess = ctx->mess_data;
+      } else {
+        m->mess_len = m->header->mlen;
+        m->mess = (((u_int8_t *)ctx->mmap_base) + data_off + hdr_size);
+      }
+      break;
+    case JLOG_USE_PREAD:
+      if (!jlog_file_pread(ctx->data, &m->aligned_header, hdr_size, data_off))
+      {
+        SYS_FAIL(JLOG_ERR_IDX_READ);
+      }
+      m->header = &m->aligned_header;
+      if (ctx->mess_data_size < m->aligned_header.mlen) {
+        ctx->mess_data = realloc(ctx->mess_data, m->aligned_header.mlen * 2);
+        ctx->mess_data_size = m->aligned_header.mlen * 2;
+      }
+      if (!jlog_file_pread(ctx->data, ctx->mess_data, m->aligned_header.mlen, data_off + hdr_size))
+      {
+        SYS_FAIL(JLOG_ERR_IDX_READ);
+      }
+      m->mess_len = m->header->mlen;
+      break;
+    default:
+      break;
   }
 
  finish:
