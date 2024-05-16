@@ -1847,11 +1847,11 @@ int jlog_ctx_write_message(jlog_ctx *ctx, jlog_message *mess, struct timeval *wh
     }
   } else {
     /* incoming message won't fit in pre_commit buffer, it was flushed above so write to file directly. */
-    if (!jlog_file_pwritev(ctx->data, v, 2, current_offset)) {
+    if (!jlog_file_pwritev_verify_return_value(ctx->data, v, 2, current_offset, total_size)) {
       FASSERT(ctx, 0, "jlog_file_pwritev failed in jlog_ctx_write_message");
       SYS_FAIL(JLOG_ERR_FILE_WRITE);
     }
-    current_offset += v[0].iov_len + v[1].iov_len;
+    current_offset += total_size;;
   }
 
   if (IS_COMPRESS_MAGIC(ctx) && v[1].iov_base != compress_space) {
