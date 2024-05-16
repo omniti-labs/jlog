@@ -2190,9 +2190,13 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
         ctx->mess_data = realloc(ctx->mess_data, m->aligned_header.mlen * 2);
         ctx->mess_data_size = m->aligned_header.mlen * 2;
       }
-      if (!jlog_file_pread(ctx->data, ctx->mess_data, m->aligned_header.mlen, data_off + hdr_size))
-      {
-        SYS_FAIL(JLOG_ERR_IDX_READ);
+      if (IS_COMPRESS_MAGIC(ctx)) {
+        // TODO
+      } else {
+        if (!jlog_file_pread(ctx->data, ctx->mess_data, m->aligned_header.mlen, data_off + hdr_size))
+        {
+          SYS_FAIL(JLOG_ERR_IDX_READ);
+        }
       }
       m->mess_len = m->header->mlen;
       m->mess = ctx->mess_data;
