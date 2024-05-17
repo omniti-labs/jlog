@@ -1692,6 +1692,7 @@ int jlog_ctx_close(jlog_ctx *ctx) {
   free(ctx->subscriber_name);
   free(ctx->path);
   free(ctx->compressed_data_buffer);
+  free(ctx->mess_data);
   free(ctx);
   return 0;
 }
