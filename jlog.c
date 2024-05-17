@@ -2298,16 +2298,16 @@ int jlog_ctx_bulk_read_messages(jlog_ctx *ctx, const jlog_id *id, const int coun
       SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
     }
   }
+  if (read_type == JLOG_USE_MMAP) {
+    if(__jlog_mmap_reader(ctx, id->log) != 0)
+      SYS_FAIL(JLOG_ERR_FILE_READ);
+  }
 
-  switch(read_type) {
-    case JLOG_USE_MMAP:
-      if(__jlog_mmap_reader(ctx, id->log) != 0)
-        SYS_FAIL(JLOG_ERR_FILE_READ);
-
-      for (i=0; i < count; i++) {
-        jlog_message *msg = &m[i];
-        message_disk_len = &msg->aligned_header.mlen;
-
+  for (i=0; i < count; i++) {
+    jlog_message *msg = &m[i];
+    message_disk_len = &msg->aligned_header.mlen;
+    switch(read_type) {
+      case JLOG_USE_MMAP:
         if (IS_COMPRESS_MAGIC(ctx)) {
           hdr_size = sizeof(jlog_message_header_compressed);
           message_disk_len = &msg->aligned_header.compressed_len;
@@ -2350,24 +2350,19 @@ int jlog_ctx_bulk_read_messages(jlog_ctx *ctx, const jlog_id *id, const int coun
           data_off += msg->mess_len;
         }
         data_off += hdr_size;
-      }
-      break;
-    case JLOG_USE_PREAD:
-      for (i=0; i < count; i++) {
-        jlog_message *msg = &m[i];
-        message_disk_len = &msg->aligned_header.mlen;
-
+        break;
+      case JLOG_USE_PREAD:
         if (IS_COMPRESS_MAGIC(ctx)) {
           hdr_size = sizeof(jlog_message_header_compressed);
           message_disk_len = &msg->aligned_header.compressed_len;
         } else {
           hdr_size = sizeof(jlog_message_header);
         }
-      }
-      break;
-    default:
-      // TODO
-      break;
+        break;
+      default:
+        // TODO
+        break;
+    }
   }
  finish:
   if(with_lock) jlog_file_unlock(ctx->index);
