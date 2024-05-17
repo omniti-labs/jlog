@@ -2302,19 +2302,20 @@ int jlog_ctx_bulk_read_messages(jlog_ctx *ctx, const jlog_id *id, const int coun
     if(__jlog_mmap_reader(ctx, id->log) != 0)
       SYS_FAIL(JLOG_ERR_FILE_READ);
   }
+  if (IS_COMPRESS_MAGIC(ctx)) {
+    hdr_size = sizeof(jlog_message_header_compressed);
+  } else {
+    hdr_size = sizeof(jlog_message_header);
+  }
 
   for (i=0; i < count; i++) {
     jlog_message *msg = &m[i];
     message_disk_len = &msg->aligned_header.mlen;
+    if (IS_COMPRESS_MAGIC(ctx)) {
+      message_disk_len = &msg->aligned_header.compressed_len;
+    }
     switch(read_type) {
       case JLOG_USE_MMAP:
-        if (IS_COMPRESS_MAGIC(ctx)) {
-          hdr_size = sizeof(jlog_message_header_compressed);
-          message_disk_len = &msg->aligned_header.compressed_len;
-        } else {
-          hdr_size = sizeof(jlog_message_header);
-        }
-
         if(data_off > ctx->mmap_len - hdr_size) {
 #ifdef DEBUG
           fprintf(stderr, "read idx off end: %llu\n", data_off);
@@ -2352,12 +2353,7 @@ int jlog_ctx_bulk_read_messages(jlog_ctx *ctx, const jlog_id *id, const int coun
         data_off += hdr_size;
         break;
       case JLOG_USE_PREAD:
-        if (IS_COMPRESS_MAGIC(ctx)) {
-          hdr_size = sizeof(jlog_message_header_compressed);
-          message_disk_len = &msg->aligned_header.compressed_len;
-        } else {
-          hdr_size = sizeof(jlog_message_header);
-        }
+        //TODO
         break;
       default:
         // TODO
