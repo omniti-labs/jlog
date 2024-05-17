@@ -2183,8 +2183,7 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
       }
       break;
     case JLOG_USE_PREAD:
-      if (!jlog_file_pread(ctx->data, &m->aligned_header, hdr_size, data_off))
-      {
+      if (!jlog_file_pread(ctx->data, &m->aligned_header, hdr_size, data_off)) {
         SYS_FAIL(JLOG_ERR_IDX_READ);
       }
       m->header = &m->aligned_header;
@@ -2354,7 +2353,17 @@ int jlog_ctx_bulk_read_messages(jlog_ctx *ctx, const jlog_id *id, const int coun
       }
       break;
     case JLOG_USE_PREAD:
-      // TODO
+      for (i=0; i < count; i++) {
+        jlog_message *msg = &m[i];
+        message_disk_len = &msg->aligned_header.mlen;
+
+        if (IS_COMPRESS_MAGIC(ctx)) {
+          hdr_size = sizeof(jlog_message_header_compressed);
+          message_disk_len = &msg->aligned_header.compressed_len;
+        } else {
+          hdr_size = sizeof(jlog_message_header);
+        }
+      }
       break;
     default:
       // TODO
