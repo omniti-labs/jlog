@@ -1305,6 +1305,7 @@ jlog_ctx *jlog_new(const char *path) {
   ctx->desired_pre_commit_buffer_len = PRE_COMMIT_BUFFER_SIZE_DEFAULT;
   ctx->pre_commit_buffer_size_specified = 0;
   ctx->multi_process = 1;
+  ctx->read_message_type = DEFAULT_READ_MESSAGE_TYPE;
   pthread_mutex_init(&ctx->write_lock, NULL);
   //  fassertxsetpath(path);
   return ctx;
@@ -1671,11 +1672,6 @@ int jlog_ctx_init(jlog_ctx *ctx) {
     FASSERT(ctx, 0, "jlog_ctx_init calls jlog_save_metastore");
     SYS_FAIL(JLOG_ERR_CREATE_META);
   }
-  ctx->read_message_type = DEFAULT_READ_MESSAGE_TYPE;
-  ctx->mess_data = NULL;
-  ctx->mess_data_size = 0;
-  ctx->compressed_data_buffer = NULL;
-  ctx->compressed_data_buffer_len = 0;
   //  FASSERT(ctx, 0, "Start of fassert log");
  finish:
   FASSERT(ctx, ctx->last_error == JLOG_ERR_SUCCESS, "jlog_ctx_init failed");
