@@ -1672,6 +1672,8 @@ int jlog_ctx_init(jlog_ctx *ctx) {
     SYS_FAIL(JLOG_ERR_CREATE_META);
   }
   ctx->read_message_type = DEFAULT_READ_MESSAGE_TYPE;
+  ctx->mess_data = NULL;
+  ctx->mess_data_size = 0;
   ctx->compressed_data_buffer = NULL;
   ctx->compressed_data_buffer_len = 0;
   //  FASSERT(ctx, 0, "Start of fassert log");
