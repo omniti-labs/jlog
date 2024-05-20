@@ -2246,16 +2246,17 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
   uint32_t *message_disk_len = NULL;
   const size_t hdr_size = sizeof(jlog_message_header_compressed);
   jlog_message *msg = NULL;
+  u_int64_t data_off_iter = data_off;
 
   for (i=0; i < count; i++) {
     msg = &m[i];
     message_disk_len = &msg->aligned_header.mlen;
     switch(read_type) {
       case JLOG_USE_MMAP:
-        memcpy(&msg->aligned_header, ((u_int8_t *)ctx->mmap_base) + data_off, hdr_size);
+        memcpy(&msg->aligned_header, ((u_int8_t *)ctx->mmap_base) + data_off_iter, hdr_size);
         break;
       case JLOG_USE_PREAD:
-        if (!jlog_file_pread(ctx->data, &msg->aligned_header, hdr_size, data_off)) {
+        if (!jlog_file_pread(ctx->data, &msg->aligned_header, hdr_size, data_off_iter)) {
           SYS_FAIL(JLOG_ERR_IDX_READ);
         }
         break;
@@ -2265,9 +2266,9 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
     }
     msg->header = &msg->aligned_header;
     uncompressed_size += *message_disk_len;
-    data_off += (hdr_size + *message_disk_len);
+    data_off_iter += (hdr_size + msg->aligned_header.compressed_len);
   }
-  data_off = 0;
+  data_off_iter = data_off;
   if (ctx->mess_data_size < uncompressed_size) {
     ctx->mess_data = realloc(ctx->mess_data, uncompressed_size + 1);
     ctx->mess_data_size = uncompressed_size;
@@ -2278,19 +2279,17 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
     message_disk_len = &msg->aligned_header.mlen;
     switch(read_type) {
       case JLOG_USE_MMAP:
-        jlog_decompress((((char *)ctx->mmap_base) + data_off + hdr_size),
+        jlog_decompress((((char *)ctx->mmap_base) + data_off_iter + hdr_size),
                         msg->header->compressed_len, uncompressed_data_ptr, *message_disk_len);
         msg->mess_len = msg->header->mlen;
         msg->mess = uncompressed_data_ptr;
-        data_off += msg->header->compressed_len;
-        uncompressed_data_ptr += msg->header->compressed_len;
         break;
       case JLOG_USE_PREAD:
         if (ctx->compressed_data_buffer_len < msg->aligned_header.mlen) {
           ctx->compressed_data_buffer_len = msg->aligned_header.mlen * 2;
           ctx->compressed_data_buffer = realloc(ctx->compressed_data_buffer, ctx->compressed_data_buffer_len);
         }
-        if (!jlog_file_pread(ctx->data, ctx->compressed_data_buffer, m->aligned_header.mlen, data_off + hdr_size)) {
+        if (!jlog_file_pread(ctx->data, ctx->compressed_data_buffer, m->aligned_header.compressed_len, data_off_iter + hdr_size)) {
           SYS_FAIL(JLOG_ERR_IDX_READ);
         }
         jlog_decompress((char *)ctx->compressed_data_buffer,
@@ -2300,6 +2299,8 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
         SYS_FAIL(JLOG_ERR_NOT_SUPPORTED);
         break;
     }
+    data_off_iter += (hdr_size + msg->aligned_header.compressed_len);
+    uncompressed_data_ptr += msg->header->mlen;
   }
  finish:
   if(ctx->last_error == JLOG_ERR_SUCCESS) {
