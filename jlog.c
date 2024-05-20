@@ -2285,8 +2285,8 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
         msg->mess = uncompressed_data_ptr;
         break;
       case JLOG_USE_PREAD:
-        if (ctx->compressed_data_buffer_len < msg->aligned_header.mlen) {
-          ctx->compressed_data_buffer_len = msg->aligned_header.mlen * 2;
+        if (ctx->compressed_data_buffer_len < msg->aligned_header.compressed_len) {
+          ctx->compressed_data_buffer_len = msg->aligned_header.compressed_len * 2;
           ctx->compressed_data_buffer = realloc(ctx->compressed_data_buffer, ctx->compressed_data_buffer_len);
         }
         if (!jlog_file_pread(ctx->data, ctx->compressed_data_buffer, m->aligned_header.compressed_len, data_off_iter + hdr_size)) {
