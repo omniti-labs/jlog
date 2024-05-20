@@ -2194,11 +2194,11 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
         ctx->mess_data = realloc(ctx->mess_data, ctx->mess_data_size);
       }
       if (IS_COMPRESS_MAGIC(ctx)) {
-        if (ctx->compressed_data_buffer_len < m->aligned_header.mlen) {
-          ctx->compressed_data_buffer_len = m->aligned_header.mlen * 2;
+        if (ctx->compressed_data_buffer_len < m->aligned_header.compressed_len) {
+          ctx->compressed_data_buffer_len = m->aligned_header.compressed_len * 2;
           ctx->compressed_data_buffer = realloc(ctx->compressed_data_buffer, ctx->compressed_data_buffer_len);
         }
-        if (!jlog_file_pread(ctx->data, ctx->compressed_data_buffer, m->aligned_header.mlen, data_off + hdr_size)) {
+        if (!jlog_file_pread(ctx->data, ctx->compressed_data_buffer, m->aligned_header.compressed_len, data_off + hdr_size)) {
           SYS_FAIL(JLOG_ERR_IDX_READ);
         }
         jlog_decompress((char *)ctx->compressed_data_buffer,
