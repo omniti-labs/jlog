@@ -2281,8 +2281,6 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
       case JLOG_USE_MMAP:
         jlog_decompress((((char *)ctx->mmap_base) + data_off_iter + hdr_size),
                         msg->header->compressed_len, uncompressed_data_ptr, *message_disk_len);
-        msg->mess_len = msg->header->mlen;
-        msg->mess = uncompressed_data_ptr;
         break;
       case JLOG_USE_PREAD:
         if (ctx->compressed_data_buffer_len < msg->aligned_header.compressed_len) {
@@ -2299,6 +2297,8 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
         SYS_FAIL(JLOG_ERR_NOT_SUPPORTED);
         break;
     }
+    msg->mess_len = msg->header->mlen;
+    msg->mess = uncompressed_data_ptr;
     data_off_iter += (hdr_size + msg->aligned_header.compressed_len);
     uncompressed_data_ptr += msg->header->mlen;
   }
