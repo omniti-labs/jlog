@@ -137,8 +137,8 @@ typedef enum {
 } jlog_compression_provider_choice;
 
 typedef enum {
-  JLOG_USE_MMAP = 0,
-  JLOG_USE_PREAD
+  JLOG_READ_METHOD_MMAP = 0,
+  JLOG_READ_METHOD_PREAD
 } jlog_read_method_type;
 
 typedef void (*jlog_error_func) (void *ctx, const char *msg, ...);
