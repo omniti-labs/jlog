@@ -68,7 +68,7 @@ struct _jlog_meta_info {
 struct _jlog_ctx {
   struct _jlog_meta_info *meta;
   pthread_mutex_t write_lock;
-  jlog_read_message_type read_message_type;
+  jlog_read_method_type read_method;
   int       meta_is_mapped;
   int       pre_commit_is_mapped;
   uint8_t   multi_process;

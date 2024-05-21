@@ -139,7 +139,7 @@ typedef enum {
 typedef enum {
   JLOG_USE_MMAP = 0,
   JLOG_USE_PREAD
-} jlog_read_message_type;
+} jlog_read_method_type;
 
 typedef void (*jlog_error_func) (void *ctx, const char *msg, ...);
 
@@ -163,7 +163,7 @@ JLOG_API(int)       jlog_ctx_alter_mode(jlog_ctx *ctx, int mode);
 JLOG_API(int)       jlog_ctx_alter_journal_size(jlog_ctx *ctx, size_t size);
 JLOG_API(int)       jlog_ctx_repair(jlog_ctx *ctx, int aggressive);
 JLOG_API(int)       jlog_ctx_alter_safety(jlog_ctx *ctx, jlog_safety safety);
-JLOG_API(int)       jlog_ctx_alter_read_message_style(jlog_ctx *ctx, jlog_read_message_type mode);
+JLOG_API(int)       jlog_ctx_alter_read_method(jlog_ctx *ctx, jlog_read_method_type method);
 
 /**
  * Control whether this jlog process should use multi-process safe file locks when performing 

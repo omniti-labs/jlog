@@ -1301,7 +1301,7 @@ jlog_ctx *jlog_new(const char *path) {
   ctx->pre_init.safety = DEFAULT_SAFETY;
   ctx->pre_init.hdr_magic = DEFAULT_HDR_MAGIC;
   ctx->file_mode = DEFAULT_FILE_MODE;
-  ctx->read_message_type = DEFAULT_READ_MESSAGE_TYPE;
+  ctx->read_method = DEFAULT_READ_MESSAGE_TYPE;
   ctx->context_mode = JLOG_NEW;
   ctx->path = strdup(path);
   ctx->desired_pre_commit_buffer_len = PRE_COMMIT_BUFFER_SIZE_DEFAULT;
@@ -1533,8 +1533,8 @@ int jlog_ctx_alter_mode(jlog_ctx *ctx, int mode) {
   ctx->file_mode = mode;
   return 0;
 }
-int jlog_ctx_alter_read_message_style(jlog_ctx *ctx, jlog_read_message_type mode) {
-  ctx->read_message_type = mode;
+int jlog_ctx_alter_read_method(jlog_ctx *ctx, jlog_read_method_type method) {
+  ctx->read_method = method;
   return 0;
 }
 int jlog_ctx_open_writer(jlog_ctx *ctx) {
@@ -2088,7 +2088,7 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
   uint32_t *message_disk_len = &m->aligned_header.mlen;
   /* We don't want the style to change mid-read, so use whatever
    * the style is now */
-  jlog_read_message_type read_type = ctx->read_message_type;
+  jlog_read_method_type read_type = ctx->read_method;
 
   if (IS_COMPRESS_MAGIC(ctx)) {
     hdr_size = sizeof(jlog_message_header_compressed);
@@ -2237,7 +2237,7 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
 
 static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id *id, const int count,
                                                     jlog_message *m, u_int64_t data_off,
-                                                    jlog_read_message_type read_type) {
+                                                    jlog_read_method_type read_type) {
   assert(IS_COMPRESS_MAGIC(ctx));
 
   int i = 0;
@@ -2367,7 +2367,7 @@ int jlog_ctx_bulk_read_messages(jlog_ctx *ctx, const jlog_id *id, const int coun
   int i;
   /* We don't want the style to change mid-read, so use whatever
    * the style is now */
-  jlog_read_message_type read_type = ctx->read_message_type;
+  jlog_read_method_type read_type = ctx->read_method;
 
   if (count <= 0) {
     return 0;
