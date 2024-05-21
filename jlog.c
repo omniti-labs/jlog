@@ -2312,6 +2312,52 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
   return -1;
 }
 
+static int __jlog_ctx_bulk_pread_messages_uncompressed(jlog_ctx *ctx, const jlog_id *id, const int count,
+                                                       jlog_message *m, u_int64_t data_off) {
+  assert(!IS_COMPRESS_MAGIC(ctx));
+
+  int i = 0;
+  uint64_t total_size = 0;
+  uint32_t *message_disk_len = NULL;
+  const size_t hdr_size = sizeof(jlog_message_header);
+  jlog_message *msg = NULL;
+  u_int64_t data_off_iter = data_off;
+
+  for (i=0; i < count; i++) {
+    msg = &m[i];
+    message_disk_len = &msg->aligned_header.mlen;
+    if (!jlog_file_pread(ctx->data, &msg->aligned_header, hdr_size, data_off_iter)) {
+      SYS_FAIL(JLOG_ERR_IDX_READ);
+    }
+    msg->header = &msg->aligned_header;
+    total_size += *message_disk_len;
+    data_off_iter += (hdr_size + *message_disk_len);
+  }
+  data_off_iter = data_off;
+  if (ctx->mess_data_size < total_size) {
+    ctx->mess_data_size = total_size + 1;
+    ctx->mess_data = realloc(ctx->mess_data, ctx->mess_data_size);
+  }
+  char *data_ptr = ctx->mess_data;
+  for (i=0; i < count; i++) {
+    msg = &m[i];
+    message_disk_len = &msg->header->mlen;
+    if (!jlog_file_pread(ctx->data, data_ptr, msg->header->mlen, data_off_iter + hdr_size)) {
+      SYS_FAIL(JLOG_ERR_IDX_READ);
+    }
+    msg->mess_len = msg->header->mlen;
+    msg->mess = data_ptr;
+    data_off_iter += (hdr_size + *message_disk_len);
+    data_ptr += *message_disk_len;
+  }
+
+ finish:
+  if(ctx->last_error == JLOG_ERR_SUCCESS) {
+    return count;
+  }
+  return -1;
+}
+
 int jlog_ctx_bulk_read_messages(jlog_ctx *ctx, const jlog_id *id, const int count, jlog_message *m) {
   off_t index_len;
   u_int64_t data_off;
@@ -2386,37 +2432,47 @@ int jlog_ctx_bulk_read_messages(jlog_ctx *ctx, const jlog_id *id, const int coun
     goto finish;
   }
 
-  if (read_type == JLOG_USE_MMAP) {
-    if(__jlog_mmap_reader(ctx, id->log) != 0)
-      SYS_FAIL(JLOG_ERR_FILE_READ);
-  }
+  switch(read_type) {
+    case JLOG_USE_PREAD:
+      if (__jlog_ctx_bulk_pread_messages_uncompressed(ctx, id, count, m, data_off) < 0) {
+        SYS_FAIL(ctx->last_error);
+      }
+      break;
+    case JLOG_USE_MMAP:
+      if(__jlog_mmap_reader(ctx, id->log) != 0)
+        SYS_FAIL(JLOG_ERR_FILE_READ);
 
-  for (i=0; i < count; i++) {
-    jlog_message *msg = &m[i];
-    message_disk_len = &msg->aligned_header.mlen;
-    hdr_size = sizeof(jlog_message_header);
+      for (i=0; i < count; i++) {
+        jlog_message *msg = &m[i];
+        message_disk_len = &msg->aligned_header.mlen;
+        hdr_size = sizeof(jlog_message_header);
 
-    if(data_off > ctx->mmap_len - hdr_size) {
+        if(data_off > ctx->mmap_len - hdr_size) {
 #ifdef DEBUG
-      fprintf(stderr, "read idx off end: %llu\n", data_off);
+          fprintf(stderr, "read idx off end: %llu\n", data_off);
 #endif
-      SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
-    }
+          SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
+        }
 
-    memcpy(&msg->aligned_header, ((u_int8_t *)ctx->mmap_base) + data_off,
-           hdr_size);
+        memcpy(&msg->aligned_header, ((u_int8_t *)ctx->mmap_base) + data_off,
+               hdr_size);
 
-    if(data_off + hdr_size + *message_disk_len > ctx->mmap_len) {
+        if(data_off + hdr_size + *message_disk_len > ctx->mmap_len) {
 #ifdef DEBUG
-      fprintf(stderr, "read idx off end: %llu %llu\n", data_off, ctx->mmap_len);
+          fprintf(stderr, "read idx off end: %llu %llu\n", data_off, ctx->mmap_len);
 #endif
-      SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
-    }
+          SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
+        }
 
-    msg->header = &msg->aligned_header;
-    msg->mess_len = msg->header->mlen;
-    msg->mess = (((u_int8_t *)ctx->mmap_base) + data_off + hdr_size);
-    data_off += (msg->mess_len + hdr_size);
+        msg->header = &msg->aligned_header;
+        msg->mess_len = msg->header->mlen;
+        msg->mess = (((u_int8_t *)ctx->mmap_base) + data_off + hdr_size);
+        data_off += (msg->mess_len + hdr_size);
+      }
+      break;
+    default:
+      SYS_FAIL(JLOG_ERR_NOT_SUPPORTED);
+      break;
   }
  finish:
   if(with_lock) jlog_file_unlock(ctx->index);
