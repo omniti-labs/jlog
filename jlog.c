@@ -2235,7 +2235,6 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
   return -1;
 }
 
-//PHIL
 static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id *id, const int count,
                                                     jlog_message *m, u_int64_t data_off,
                                                     jlog_read_message_type read_type) {
@@ -2247,6 +2246,10 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
   const size_t hdr_size = sizeof(jlog_message_header_compressed);
   jlog_message *msg = NULL;
   u_int64_t data_off_iter = data_off;
+  if (read_type == JLOG_USE_MMAP) {
+    if(__jlog_mmap_reader(ctx, id->log) != 0)
+      SYS_FAIL(JLOG_ERR_FILE_READ);
+  }
 
   for (i=0; i < count; i++) {
     msg = &m[i];
@@ -2376,14 +2379,16 @@ int jlog_ctx_bulk_read_messages(jlog_ctx *ctx, const jlog_id *id, const int coun
     }
   }
 
-  if(__jlog_mmap_reader(ctx, id->log) != 0)
-    SYS_FAIL(JLOG_ERR_FILE_READ);
-
   if (IS_COMPRESS_MAGIC(ctx)) {
     if (__jlog_ctx_bulk_read_messages_compressed(ctx, id, count, m, data_off, read_type) < 0) {
       SYS_FAIL(ctx->last_error);
     }
     goto finish;
+  }
+
+  if (read_type == JLOG_USE_MMAP) {
+    if(__jlog_mmap_reader(ctx, id->log) != 0)
+      SYS_FAIL(JLOG_ERR_FILE_READ);
   }
 
   for (i=0; i < count; i++) {
