@@ -2232,6 +2232,12 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
       }
       break;
     case JLOG_READ_METHOD_PREAD:
+      if(data_off > ctx->data_file_size - hdr_size) {
+#ifdef DEBUG
+        fprintf(stderr, "read idx off end: %llu\n", data_off);
+#endif
+        SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
+      }
       if (!jlog_file_pread(ctx->data, &m->aligned_header, hdr_size, data_off))
       {
         SYS_FAIL(JLOG_ERR_IDX_READ);
