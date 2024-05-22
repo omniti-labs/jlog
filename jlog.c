@@ -1560,6 +1560,10 @@ int jlog_ctx_alter_mode(jlog_ctx *ctx, int mode) {
   return 0;
 }
 int jlog_ctx_alter_read_method(jlog_ctx *ctx, jlog_read_method_type method) {
+  /* Cannot change read method mid-processing */
+  if (ctx->mmap_base || ctx->file_size) {
+    return -1;
+  }
   ctx->read_method = method;
   return 0;
 }
