@@ -255,5 +255,6 @@ JLOG_API(int)       jlog_ctx_last_storage_log(jlog_ctx *ctx, uint32_t *logid);
 JLOG_API(int)       jlog_ctx_advance_id(jlog_ctx *ctx, jlog_id *cur, 
                                         jlog_id *start, jlog_id *finish);
 JLOG_API(int)       jlog_clean(const char *path);
+JLOG_API(int)       jlog_alter_max_message_size(u_int64_t new_size);
 
 #endif

@@ -106,6 +106,7 @@
 #define IS_COMPRESS_MAGIC_HDR(hdr) ((hdr & DEFAULT_HDR_MAGIC_COMPRESSION) == DEFAULT_HDR_MAGIC_COMPRESSION)
 #define IS_COMPRESS_MAGIC(ctx) IS_COMPRESS_MAGIC_HDR((ctx)->meta->hdr_magic)
 
+static u_int64_t ALTERNATIVE_MAX_MESSAGE_SIZE = 1048576;
 
 static jlog_file *__jlog_open_writer(jlog_ctx *ctx);
 static int __jlog_close_writer(jlog_ctx *ctx);
@@ -2670,6 +2671,19 @@ int jlog_clean(const char *file) {
  out:
   jlog_ctx_close(log);
   return rv;
+}
+
+int jlog_alter_max_message_size(u_int64_t size) {
+  static pthread_mutex_t max_message_size_lock = PTHREAD_MUTEX_INITIALIZER;
+  pthread_mutex_lock(&max_message_size_lock);;
+  /* A max message size of zero makes no sense, so return an error */
+  if (size == 0) {
+    pthread_mutex_unlock(&max_message_size_lock);;
+    return 1;
+  }
+  ALTERNATIVE_MAX_MESSAGE_SIZE = size;
+  pthread_mutex_unlock(&max_message_size_lock);;
+  return 0;
 }
 
 /* ------------------ jlog_ctx_repair() and friends ----------- */
