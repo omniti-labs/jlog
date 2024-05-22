@@ -2187,12 +2187,11 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
     }
   }
 
+  if(__jlog_setup_reader(ctx, id->log) != 0)
+    SYS_FAIL(ctx->last_error);
+
   switch(read_method) {
     case JLOG_READ_METHOD_MMAP:
-
-      if(__jlog_setup_reader(ctx, id->log) != 0)
-        SYS_FAIL(ctx->last_error);
-
       if(data_off > ctx->mmap_len - hdr_size) {
 #ifdef DEBUG
         fprintf(stderr, "read idx off end: %llu\n", data_off);
@@ -2280,16 +2279,13 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
                                                     jlog_message *m, u_int64_t data_off,
                                                     jlog_read_method_type read_method) {
   assert(IS_COMPRESS_MAGIC(ctx));
+  assert(ctx->reader_is_initialized);
 
   int i = 0;
   uint64_t uncompressed_size = 0;
   const size_t hdr_size = sizeof(jlog_message_header_compressed);
   jlog_message *msg = NULL;
   u_int64_t data_off_iter = data_off;
-  if (read_method == JLOG_READ_METHOD_MMAP) {
-    if(__jlog_setup_reader(ctx, id->log) != 0)
-      SYS_FAIL(ctx->last_error);
-  }
 
   for (i=0; i < count; i++) {
     msg = &m[i];
@@ -2353,6 +2349,7 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
 static int __jlog_ctx_bulk_pread_messages_uncompressed(jlog_ctx *ctx, const jlog_id *id, const int count,
                                                        jlog_message *m, u_int64_t data_off) {
   assert(!IS_COMPRESS_MAGIC(ctx));
+  assert(ctx->reader_is_initialized);
 
   int i = 0;
   uint64_t total_size = 0;
@@ -2460,6 +2457,9 @@ int jlog_ctx_bulk_read_messages(jlog_ctx *ctx, const jlog_id *id, const int coun
     }
   }
 
+  if(__jlog_setup_reader(ctx, id->log) != 0)
+    SYS_FAIL(ctx->last_error);
+
   if (IS_COMPRESS_MAGIC(ctx)) {
     if (__jlog_ctx_bulk_read_messages_compressed(ctx, id, count, m, data_off, read_method) < 0) {
       SYS_FAIL(ctx->last_error);
@@ -2474,9 +2474,6 @@ int jlog_ctx_bulk_read_messages(jlog_ctx *ctx, const jlog_id *id, const int coun
       }
       break;
     case JLOG_READ_METHOD_MMAP:
-      if(__jlog_setup_reader(ctx, id->log) != 0)
-        SYS_FAIL(ctx->last_error);
-
       for (i=0; i < count; i++) {
         jlog_message *msg = &m[i];
         message_disk_len = &msg->aligned_header.mlen;
