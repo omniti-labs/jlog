@@ -2236,6 +2236,12 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
       {
         SYS_FAIL(JLOG_ERR_IDX_READ);
       }
+      if(data_off + hdr_size + *message_disk_len > ctx->data_file_size) {
+#ifdef DEBUG
+        fprintf(stderr, "read idx off end: %llu %llu\n", data_off, ctx->mmap_data_file_size);
+#endif
+        SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
+      }
       m->header = &m->aligned_header;
       if (ctx->mess_data_size < m->aligned_header.mlen) {
         ctx->mess_data_size = m->aligned_header.mlen * 2;
