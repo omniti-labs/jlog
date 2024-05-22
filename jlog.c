@@ -118,8 +118,9 @@ static int __jlog_close_indexer(jlog_ctx *ctx);
 static int __jlog_resync_index(jlog_ctx *ctx, u_int32_t log, jlog_id *last, int *c);
 static jlog_file *__jlog_open_named_checkpoint(jlog_ctx *ctx, const char *cpname, int flags);
 static int __jlog_mmap_reader(jlog_ctx *ctx, u_int32_t log);
-static int __jlog_setup_reader(jlog_ctx *ctx, u_int32_t log);
 static int __jlog_munmap_reader(jlog_ctx *ctx);
+static int __jlog_setup_reader(jlog_ctx *ctx, u_int32_t log);
+static int __jlog_teardown_reader(jlog_ctx *ctx);
 static int __jlog_metastore_atomic_increment(jlog_ctx *ctx);
 static int __jlog_get_storage_bounds(jlog_ctx *ctx, unsigned int *earliest, unsigned *latest);
 static int repair_metastore(jlog_ctx *ctx, const char *pth, unsigned int lat);
@@ -232,7 +233,7 @@ int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
 } while (0)
 
   if (invalid_count > 0) {
-    __jlog_munmap_reader(ctx);
+    __jlog_teardown_reader(ctx);
     dst = invalid[0].start;
     for (i = 0; i < invalid_count - 1; ) {
       src = invalid[i].end;
@@ -955,7 +956,6 @@ static int __jlog_munmap_reader(jlog_ctx *ctx) {
     ctx->mmap_base = NULL;
     ctx->mmap_len = 0;
   }
-  ctx->file_size = 0;
   return 0;
 }
 
@@ -987,6 +987,25 @@ static int __jlog_setup_reader(jlog_ctx *ctx, u_int32_t log) {
       }
       ctx->file_size = file_size;
       return 0;
+      break;
+    default:
+     SYS_FAIL(JLOG_ERR_NOT_SUPPORTED);
+     break;
+  }
+ finish:
+  return -1;
+}
+
+static int __jlog_teardown_reader(jlog_ctx *ctx) {
+  jlog_read_method_type read_method = ctx->read_method;
+  int rv = 0;
+  switch (read_method) {
+    case JLOG_READ_METHOD_MMAP:
+      rv = __jlog_munmap_reader(ctx);
+    /* Fall through */
+    case JLOG_READ_METHOD_PREAD:
+      ctx->file_size = 0;
+      return rv;
       break;
     default:
      SYS_FAIL(JLOG_ERR_NOT_SUPPORTED);
@@ -1039,7 +1058,7 @@ static int __jlog_close_writer(jlog_ctx *ctx) {
 }
 
 static int __jlog_close_reader(jlog_ctx *ctx) {
-  __jlog_munmap_reader(ctx);
+  __jlog_teardown_reader(ctx);
   if (ctx->data) {
     jlog_file_close(ctx->data);
     ctx->data = NULL;
@@ -2566,7 +2585,7 @@ int jlog_ctx_read_interval(jlog_ctx *ctx, jlog_id *start, jlog_id *finish) {
   }
 
   /* We need to munmap it, so that we can remap it with more data if needed */
-  __jlog_munmap_reader(ctx);
+  __jlog_teardown_reader(ctx);
  finish:
   if(ctx->last_error == JLOG_ERR_SUCCESS) return count;
   return -1;
