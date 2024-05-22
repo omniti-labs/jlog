@@ -2242,7 +2242,7 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
       }
       if(data_off + hdr_size + *message_disk_len > ctx->data_file_size) {
 #ifdef DEBUG
-        fprintf(stderr, "read idx off end: %llu %llu\n", data_off, ctx->mmap_data_file_size);
+        fprintf(stderr, "read idx off end: %llu %llu\n", data_off, ctx->data_file_size);
 #endif
         SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
       }
@@ -2377,8 +2377,20 @@ static int __jlog_ctx_bulk_pread_messages_uncompressed(jlog_ctx *ctx, const jlog
 
   for (i=0; i < count; i++) {
     msg = &m[i];
+    if(data_off_iter > ctx->data_file_size - hdr_size) {
+#ifdef DEBUG
+      fprintf(stderr, "read idx off end: %llu\n", data_off_iter);
+#endif
+      SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
+    }
     if (!jlog_file_pread(ctx->data, &msg->aligned_header, hdr_size, data_off_iter)) {
       SYS_FAIL(JLOG_ERR_IDX_READ);
+    }
+    if(data_off_iter + hdr_size + msg->aligned_header.mlen > ctx->data_file_size) {
+#ifdef DEBUG
+        fprintf(stderr, "read idx off end: %llu %llu\n", data_off_iter, ctx->data_file_size);
+#endif
+        SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
     }
     msg->header = &msg->aligned_header;
     total_size += msg->header->mlen;
