@@ -970,7 +970,7 @@ static int __jlog_mmap_reader(jlog_ctx *ctx, u_int32_t log) {
     ctx->last_errno = errno;
     return -1;
   }
-  ctx->file_size = ctx->mmap_len;
+  ctx->data_file_size = ctx->mmap_len;
   return 0;
 }
 
@@ -979,13 +979,18 @@ static int __jlog_setup_reader(jlog_ctx *ctx, u_int32_t log) {
 
   switch (read_method) {
     case JLOG_READ_METHOD_MMAP:
-      return __jlog_mmap_reader(ctx, log);
+      int rv = __jlog_mmap_reader(ctx, log);
+      if (rv > 0) {
+        return -1;
+      }
+      ctx->reader_is_initialized = 1;
     case JLOG_READ_METHOD_PREAD:
       off_t file_size = jlog_file_size(ctx->data);
       if (file_size < 0) {
         SYS_FAIL(JLOG_ERR_FILE_SEEK);
       }
-      ctx->file_size = file_size;
+      ctx->data_file_size = file_size;
+      ctx->reader_is_initialized = 1;
       return 0;
       break;
     default:
@@ -997,7 +1002,8 @@ static int __jlog_setup_reader(jlog_ctx *ctx, u_int32_t log) {
 }
 
 static int __jlog_teardown_reader(jlog_ctx *ctx) {
-  ctx->file_size = 0;
+  ctx->reader_is_initialized = 0;
+  ctx->data_file_size = 0;
   return __jlog_munmap_reader(ctx);
 }
 
@@ -1566,7 +1572,7 @@ int jlog_ctx_alter_mode(jlog_ctx *ctx, int mode) {
 }
 int jlog_ctx_alter_read_method(jlog_ctx *ctx, jlog_read_method_type method) {
   /* Cannot change read method mid-processing */
-  if (ctx->mmap_base || ctx->file_size) {
+  if (ctx->reader_is_initialized) {
     return -1;
   }
   ctx->read_method = method;

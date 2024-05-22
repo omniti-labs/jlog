@@ -91,7 +91,8 @@ struct _jlog_ctx {
   jlog_file *pre_commit;
   void     *mmap_base;
   size_t    mmap_len;
-  size_t    file_size;
+  size_t    data_file_size;
+  uint8_t   reader_is_initialized;
   void     *compressed_data_buffer;
   size_t    compressed_data_buffer_len;
   char     *subscriber_name;
