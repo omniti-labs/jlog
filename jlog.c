@@ -2386,15 +2386,15 @@ static int __jlog_ctx_bulk_pread_messages_uncompressed(jlog_ctx *ctx, const jlog
     if (!jlog_file_pread(ctx->data, &msg->aligned_header, hdr_size, data_off_iter)) {
       SYS_FAIL(JLOG_ERR_IDX_READ);
     }
-    if(data_off_iter + hdr_size + msg->aligned_header.mlen > ctx->data_file_size) {
-#ifdef DEBUG
-        fprintf(stderr, "read idx off end: %llu %llu\n", data_off_iter, ctx->data_file_size);
-#endif
-        SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
-    }
     msg->header = &msg->aligned_header;
     total_size += msg->header->mlen;
     data_off_iter += (hdr_size + msg->header->mlen);
+  }
+  if(data_off + (hdr_size * count) + total_size > ctx->data_file_size) {
+#ifdef DEBUG
+    fprintf(stderr, "read idx off end: %llu %llu\n", data_off, ctx->data_file_size);
+#endif
+    SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
   }
   data_off_iter = data_off;
   if (ctx->mess_data_size < total_size) {
