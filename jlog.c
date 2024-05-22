@@ -119,7 +119,7 @@ static int __jlog_resync_index(jlog_ctx *ctx, u_int32_t log, jlog_id *last, int 
 static jlog_file *__jlog_open_named_checkpoint(jlog_ctx *ctx, const char *cpname, int flags);
 static int __jlog_mmap_reader(jlog_ctx *ctx, u_int32_t log);
 static int __jlog_munmap_reader(jlog_ctx *ctx);
-static int __jlog_setup_reader(jlog_ctx *ctx, u_int32_t log);
+static int __jlog_setup_reader(jlog_ctx *ctx, u_int32_t log, u_int8_t force_mmap);
 static int __jlog_teardown_reader(jlog_ctx *ctx);
 static int __jlog_metastore_atomic_increment(jlog_ctx *ctx);
 static int __jlog_get_storage_bounds(jlog_ctx *ctx, unsigned int *earliest, unsigned *latest);
@@ -171,7 +171,7 @@ int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
     ctx->last_errno = errno;
     return -1;
   }
-  if (__jlog_setup_reader(ctx, log) != 0)
+  if (__jlog_setup_reader(ctx, log, 1) != 0)
     SYS_FAIL(ctx->last_error);
 
   orig_len = ctx->mmap_len;
@@ -277,7 +277,7 @@ int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log, int verbose)
   __jlog_open_reader(ctx, log);
   if (!ctx->data)
     SYS_FAIL(JLOG_ERR_FILE_OPEN);
-  if (__jlog_setup_reader(ctx, log) != 0)
+  if (__jlog_setup_reader(ctx, log, 1) != 0)
     SYS_FAIL(ctx->last_error);
 
   mmap_end = (char*)ctx->mmap_base + ctx->mmap_len;
@@ -974,7 +974,7 @@ static int __jlog_mmap_reader(jlog_ctx *ctx, u_int32_t log) {
   return 0;
 }
 
-static int __jlog_setup_reader(jlog_ctx *ctx, u_int32_t log) {
+static int __jlog_setup_reader(jlog_ctx *ctx, u_int32_t log, u_int8_t force_mmap) {
   jlog_read_method_type read_method = ctx->read_method;
 
   switch (read_method) {
@@ -985,11 +985,19 @@ static int __jlog_setup_reader(jlog_ctx *ctx, u_int32_t log) {
       }
       ctx->reader_is_initialized = 1;
     case JLOG_READ_METHOD_PREAD:
-      off_t file_size = jlog_file_size(ctx->data);
-      if (file_size < 0) {
-        SYS_FAIL(JLOG_ERR_FILE_SEEK);
+      if (force_mmap) {
+        int rv = __jlog_mmap_reader(ctx, log);
+        if (rv > 0) {
+          return -1;
+        }
       }
-      ctx->data_file_size = file_size;
+      else {
+        off_t file_size = jlog_file_size(ctx->data);
+        if (file_size < 0) {
+          SYS_FAIL(JLOG_ERR_FILE_SEEK);
+        }
+        ctx->data_file_size = file_size;
+      }
       ctx->reader_is_initialized = 1;
       return 0;
       break;
@@ -2187,7 +2195,7 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
     }
   }
 
-  if(__jlog_setup_reader(ctx, id->log) != 0)
+  if(__jlog_setup_reader(ctx, id->log, 0) != 0)
     SYS_FAIL(ctx->last_error);
 
   switch(read_method) {
@@ -2457,7 +2465,7 @@ int jlog_ctx_bulk_read_messages(jlog_ctx *ctx, const jlog_id *id, const int coun
     }
   }
 
-  if(__jlog_setup_reader(ctx, id->log) != 0)
+  if(__jlog_setup_reader(ctx, id->log, 0) != 0)
     SYS_FAIL(ctx->last_error);
 
   if (IS_COMPRESS_MAGIC(ctx)) {
