@@ -118,6 +118,7 @@ static int __jlog_close_indexer(jlog_ctx *ctx);
 static int __jlog_resync_index(jlog_ctx *ctx, u_int32_t log, jlog_id *last, int *c);
 static jlog_file *__jlog_open_named_checkpoint(jlog_ctx *ctx, const char *cpname, int flags);
 static int __jlog_mmap_reader(jlog_ctx *ctx, u_int32_t log);
+static int __jlog_setup_reader(jlog_ctx *ctx, u_int32_t log);
 static int __jlog_munmap_reader(jlog_ctx *ctx);
 static int __jlog_metastore_atomic_increment(jlog_ctx *ctx);
 static int __jlog_get_storage_bounds(jlog_ctx *ctx, unsigned int *earliest, unsigned *latest);
@@ -169,8 +170,8 @@ int jlog_repair_datafile(jlog_ctx *ctx, u_int32_t log)
     ctx->last_errno = errno;
     return -1;
   }
-  if (__jlog_mmap_reader(ctx, log) != 0)
-    SYS_FAIL(JLOG_ERR_FILE_READ);
+  if (__jlog_setup_reader(ctx, log) != 0)
+    SYS_FAIL(ctx->last_error);
 
   orig_len = ctx->mmap_len;
   mmap_end = (char*)ctx->mmap_base + ctx->mmap_len;
@@ -275,8 +276,8 @@ int jlog_inspect_datafile(jlog_ctx *ctx, u_int32_t log, int verbose)
   __jlog_open_reader(ctx, log);
   if (!ctx->data)
     SYS_FAIL(JLOG_ERR_FILE_OPEN);
-  if (__jlog_mmap_reader(ctx, log) != 0)
-    SYS_FAIL(JLOG_ERR_FILE_READ);
+  if (__jlog_setup_reader(ctx, log) != 0)
+    SYS_FAIL(ctx->last_error);
 
   mmap_end = (char*)ctx->mmap_base + ctx->mmap_len;
   this = ctx->mmap_base;
@@ -954,6 +955,7 @@ static int __jlog_munmap_reader(jlog_ctx *ctx) {
     ctx->mmap_base = NULL;
     ctx->mmap_len = 0;
   }
+  ctx->file_size = 0;
   return 0;
 }
 
@@ -968,7 +970,30 @@ static int __jlog_mmap_reader(jlog_ctx *ctx, u_int32_t log) {
     ctx->last_errno = errno;
     return -1;
   }
+  ctx->file_size = ctx->mmap_len;
   return 0;
+}
+
+static int __jlog_setup_reader(jlog_ctx *ctx, u_int32_t log) {
+  jlog_read_method_type read_method = ctx->read_method;
+
+  switch (read_method) {
+    case JLOG_READ_METHOD_MMAP:
+      return __jlog_mmap_reader(ctx, log);
+    case JLOG_READ_METHOD_PREAD:
+      off_t file_size = jlog_file_size(ctx->data);
+      if (file_size < 0) {
+        SYS_FAIL(JLOG_ERR_FILE_SEEK);
+      }
+      ctx->file_size = file_size;
+      return 0;
+      break;
+    default:
+     SYS_FAIL(JLOG_ERR_NOT_SUPPORTED);
+     break;
+  }
+ finish:
+  return -1;
 }
 
 static jlog_file *__jlog_open_writer(jlog_ctx *ctx) {
@@ -2150,8 +2175,8 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
   switch(read_method) {
     case JLOG_READ_METHOD_MMAP:
 
-      if(__jlog_mmap_reader(ctx, id->log) != 0)
-        SYS_FAIL(JLOG_ERR_FILE_READ);
+      if(__jlog_setup_reader(ctx, id->log) != 0)
+        SYS_FAIL(ctx->last_error);
 
       if(data_off > ctx->mmap_len - hdr_size) {
 #ifdef DEBUG
@@ -2247,8 +2272,8 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
   jlog_message *msg = NULL;
   u_int64_t data_off_iter = data_off;
   if (read_method == JLOG_READ_METHOD_MMAP) {
-    if(__jlog_mmap_reader(ctx, id->log) != 0)
-      SYS_FAIL(JLOG_ERR_FILE_READ);
+    if(__jlog_setup_reader(ctx, id->log) != 0)
+      SYS_FAIL(ctx->last_error);
   }
 
   for (i=0; i < count; i++) {
@@ -2434,8 +2459,8 @@ int jlog_ctx_bulk_read_messages(jlog_ctx *ctx, const jlog_id *id, const int coun
       }
       break;
     case JLOG_READ_METHOD_MMAP:
-      if(__jlog_mmap_reader(ctx, id->log) != 0)
-        SYS_FAIL(JLOG_ERR_FILE_READ);
+      if(__jlog_setup_reader(ctx, id->log) != 0)
+        SYS_FAIL(ctx->last_error);
 
       for (i=0; i < count; i++) {
         jlog_message *msg = &m[i];
