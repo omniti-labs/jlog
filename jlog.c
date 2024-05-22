@@ -2190,7 +2190,7 @@ int jlog_ctx_read_message(jlog_ctx *ctx, const jlog_id *id, jlog_message *m) {
       if(with_lock) jlog_file_unlock(ctx->index);
       return -1;
     } else {
-      /* an offset of 0 in the middle of an index means curruption */
+      /* an offset of 0 in the middle of an index means corruption */
       SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
     }
   }
