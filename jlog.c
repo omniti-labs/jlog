@@ -997,22 +997,8 @@ static int __jlog_setup_reader(jlog_ctx *ctx, u_int32_t log) {
 }
 
 static int __jlog_teardown_reader(jlog_ctx *ctx) {
-  jlog_read_method_type read_method = ctx->read_method;
-  int rv = 0;
-  switch (read_method) {
-    case JLOG_READ_METHOD_MMAP:
-      rv = __jlog_munmap_reader(ctx);
-    /* Fall through */
-    case JLOG_READ_METHOD_PREAD:
-      ctx->file_size = 0;
-      return rv;
-      break;
-    default:
-     SYS_FAIL(JLOG_ERR_NOT_SUPPORTED);
-     break;
-  }
- finish:
-  return -1;
+  ctx->file_size = 0;
+  return __jlog_munmap_reader(ctx);
 }
 
 static jlog_file *__jlog_open_writer(jlog_ctx *ctx) {
