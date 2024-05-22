@@ -2309,9 +2309,21 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
     msg = &m[i];
     switch(read_method) {
       case JLOG_READ_METHOD_MMAP:
+        if(data_off_iter > ctx->mmap_len - hdr_size) {
+#ifdef DEBUG
+          fprintf(stderr, "read idx off end: %llu\n", data_off_iter);
+#endif
+          SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
+        }
         memcpy(&msg->aligned_header, ((u_int8_t *)ctx->mmap_base) + data_off_iter, hdr_size);
         break;
       case JLOG_READ_METHOD_PREAD:
+        if(data_off_iter > ctx->data_file_size - hdr_size) {
+#ifdef DEBUG
+          fprintf(stderr, "read idx off end: %llu\n", data_off_iter);
+#endif
+          SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
+        }
         if (!jlog_file_pread(ctx->data, &msg->aligned_header, hdr_size, data_off_iter)) {
           SYS_FAIL(JLOG_ERR_IDX_READ);
         }
