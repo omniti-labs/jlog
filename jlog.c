@@ -2300,7 +2300,7 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
   assert(ctx->reader_is_initialized);
 
   int i = 0;
-  uint64_t uncompressed_size = 0;
+  uint64_t uncompressed_size = 0, compressed_size = 0;
   const size_t hdr_size = sizeof(jlog_message_header_compressed);
   jlog_message *msg = NULL;
   u_int64_t data_off_iter = data_off;
@@ -2333,8 +2333,15 @@ static int __jlog_ctx_bulk_read_messages_compressed(jlog_ctx *ctx, const jlog_id
         break;
     }
     msg->header = &msg->aligned_header;
+    compressed_size += msg->header->compressed_len;
     uncompressed_size += msg->header->mlen;
     data_off_iter += (hdr_size + msg->header->compressed_len);
+  }
+  if(data_off + (hdr_size * count) + compressed_size > ctx->data_file_size) {
+#ifdef DEBUG
+    fprintf(stderr, "read idx off end: %llu %llu\n", data_off, ctx->data_file_size);
+#endif
+    SYS_FAIL(JLOG_ERR_IDX_CORRUPT);
   }
   data_off_iter = data_off;
   if (ctx->mess_data_size < uncompressed_size) {
