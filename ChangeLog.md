@@ -2,6 +2,13 @@
 
 ## 2
 
+ * Add support for switch from `mmap` to `pread` for message reads due to
+   bad interaction with `mmap` on certain filesystems.
+ * Correct issue where bulk message reads did not work with compression
+   enabled.
+ * Fix issue where short writes could happen due to failing to check the
+   return value of `pwritev`.
+
 ### 2.5.3 (2020-07-20)
 
 * Correct issue where writing to pre-commit buffer could cause jlog to
