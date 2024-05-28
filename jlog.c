@@ -977,9 +977,11 @@ static int __jlog_setup_reader(jlog_ctx *ctx, u_int32_t log, u_int8_t force_mmap
 
   switch (read_method) {
     case JLOG_READ_METHOD_MMAP:
-      int rv = __jlog_mmap_reader(ctx, log);
-      if (rv > 0) {
-        return -1;
+      {
+        int rv = __jlog_mmap_reader(ctx, log);
+        if (rv > 0) {
+          return -1;
+        }
       }
       ctx->reader_is_initialized = 1;
     case JLOG_READ_METHOD_PREAD:
