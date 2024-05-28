@@ -2,12 +2,19 @@
 
 ## 2
 
+### 2.6.0 (2024-05-28)
+
  * Add support for switch from `mmap` to `pread` for message reads due to
    bad interaction with `mmap` on certain filesystems.
  * Correct issue where bulk message reads did not work with compression
    enabled.
  * Fix issue where short writes could happen due to failing to check the
    return value of `pwritev`.
+
+### 2.5.4 (2022-09-20)
+
+ * No longer perform an unneeded ownership check on the parent directory. This
+   silences an erroneous/misleading jlogctl error message.
 
 ### 2.5.3 (2020-07-20)
 
